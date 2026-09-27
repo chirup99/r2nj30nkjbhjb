@@ -34,6 +34,7 @@ import {
   Mail,
   MapPinned,
   Navigation,
+  Info,
 } from "lucide-react";
 import {
   motion,
@@ -286,14 +287,18 @@ function PersonaMapThumbnail() {
       <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border border-white/30 bg-black/45 text-white backdrop-blur-sm">
         <MapPinned className="h-3.5 w-3.5" strokeWidth={2.5} />
       </div>
-      <span className="absolute bottom-1 left-1 text-[6px] font-medium text-white/60">
-        © CARTO
-      </span>
+      <Info
+        className="absolute bottom-1 left-1 h-3 w-3 text-white/70"
+        strokeWidth={2.25}
+        aria-hidden="true"
+      />
     </div>
   );
 }
 
 function PersonaMapOverlay({ onClose }: { onClose: () => void }) {
+  const [showMapInfo, setShowMapInfo] = useState(false);
+
   const networkLocation: PersonaMapLocation = {
     id: "persona-network",
     name: "Persona Network",
@@ -316,6 +321,7 @@ function PersonaMapOverlay({ onClose }: { onClose: () => void }) {
         center={PERSONA_NETWORK_CENTER}
         zoom={4.25}
         theme="dark"
+        attributionControl={false}
         className="h-full w-full"
       >
         <MapMarker
@@ -353,6 +359,21 @@ function PersonaMapOverlay({ onClose }: { onClose: () => void }) {
         aria-label="Close map"
       >
         <X className="h-5 w-5" />
+      </button>
+
+      {showMapInfo && (
+        <div className="absolute bottom-16 right-4 z-20 max-w-[260px] rounded-xl border border-white/15 bg-black/75 px-3 py-2 text-[10px] text-white/70 shadow-xl backdrop-blur-md">
+          Map tiles © CARTO · © OpenStreetMap contributors
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={() => setShowMapInfo((visible) => !visible)}
+        className="absolute bottom-4 right-4 z-20 rounded-full border border-white/15 bg-black/45 p-2.5 text-white/70 backdrop-blur-md transition-colors hover:bg-white/15 hover:text-white"
+        aria-label="Map information"
+        title="Map information"
+      >
+        <Info className="h-4 w-4" />
       </button>
     </motion.div>
   );
