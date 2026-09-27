@@ -18,6 +18,7 @@ import {
   MarkerPopup,
   MarkerTooltip,
   RouteProgress,
+  useMap,
 } from "@/components/ui/map";
 
 type PropertyProject = {
@@ -165,6 +166,83 @@ function createCurvedRoute(
   });
 }
 
+function MagicProjectRoute({
+  project,
+  intent,
+  progress,
+}: {
+  project: PropertyProject;
+  intent: (typeof MAGIC_INTENTS)[number];
+  progress: number;
+}) {
+  const { map, isLoaded } = useMap();
+  const [routeStart, setRouteStart] =
+    useState<[number, number]>(MAGIC_ANCHOR);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    const updateRouteStart = () => {
+      const button = document.querySelector<HTMLElement>(
+        `[data-magic-intent="${intent.id}"]`,
+      );
+      const container = map.getContainer();
+      if (!button || !container) return;
+
+      const buttonBounds = button.getBoundingClientRect();
+      const mapBounds = container.getBoundingClientRect();
+      const startPoint: [number, number] = [
+        buttonBounds.left + buttonBounds.width / 2 - mapBounds.left,
+        buttonBounds.top - mapBounds.top,
+      ];
+      const start = map.unproject(startPoint);
+      setRouteStart([start.lng, start.lat]);
+    };
+
+    updateRouteStart();
+    const frame = requestAnimationFrame(updateRouteStart);
+    window.addEventListener("resize", updateRouteStart);
+    map.on("move", updateRouteStart);
+    map.on("resize", updateRouteStart);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updateRouteStart);
+      map.off("move", updateRouteStart);
+      map.off("resize", updateRouteStart);
+    };
+  }, [intent.id, isLoaded, map]);
+
+  const route = createCurvedRoute(routeStart, [
+    project.longitude,
+    project.latitude,
+  ]);
+
+  return (
+    <MapRoute
+      id="magic-project-route"
+      coordinates={route}
+      color="#f9a8d4"
+      width={2}
+      opacity={0.45}
+      dashArray={[2, 2]}
+      active
+      activeColor={intent.accent}
+      activeWidth={4}
+      activeOpacity={0.95}
+      activeDashArray={[1.5, 1.5]}
+      progress={progress}
+    >
+      <RouteProgress
+        color="#fff7ed"
+        width={5}
+        opacity={0.9}
+        dashArray={[1, 1]}
+      />
+    </MapRoute>
+  );
+}
+
 function PropertyPin({
   accent,
   selected = false,
@@ -264,12 +342,6 @@ export function HyderabadPropertyMapOverlay({
   const selectedProject = PROJECTS.find(
     (project) => project.id === selectedIntent?.projectId,
   );
-  const magicRoute = selectedProject
-    ? createCurvedRoute(MAGIC_ANCHOR, [
-        selectedProject.longitude,
-        selectedProject.latitude,
-      ])
-    : [];
 
   useEffect(() => {
     if (!selectedProject) {
@@ -318,30 +390,12 @@ export function HyderabadPropertyMapOverlay({
           showLocate
           className="!bottom-28"
         />
-        {selectedProject && (
-          <>
-            <MapRoute
-              id="magic-project-route"
-              coordinates={magicRoute}
-              color="#f9a8d4"
-              width={2}
-              opacity={0.45}
-              dashArray={[2, 2]}
-              active
-              activeColor={selectedIntent?.accent ?? "#c084fc"}
-              activeWidth={4}
-              activeOpacity={0.95}
-              activeDashArray={[1.5, 1.5]}
-              progress={routeProgress}
-            >
-              <RouteProgress
-                color="#fff7ed"
-                width={5}
-                opacity={0.9}
-                dashArray={[1, 1]}
-              />
-            </MapRoute>
-          </>
+        {selectedProject && selectedIntent && (
+          <MagicProjectRoute
+            project={selectedProject}
+            intent={selectedIntent}
+            progress={routeProgress}
+          />
         )}
         {visibleProjects.map((project) => (
           <MapMarker
@@ -433,6 +487,7 @@ export function HyderabadPropertyMapOverlay({
                   <button
                     key={intent.id}
                     type="button"
+                    data-magic-intent={intent.id}
                     onClick={() => chooseMagicIntent(intent.id)}
                     className={`shrink-0 rounded-full border px-3 py-2 text-left transition-all ${
                       isSelected
