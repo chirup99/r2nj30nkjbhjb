@@ -63,6 +63,10 @@ import {
   MarkerPopup,
   MarkerTooltip,
 } from "@/components/ui/map";
+import {
+  HyderabadPropertyMapOverlay,
+  HyderabadPropertyMapThumbnail,
+} from "@/components/HyderabadPropertyMap";
 
 type AuthMode = "login" | "register" | "customize" | "swipe";
 
@@ -2672,7 +2676,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 <div className="flex flex-col items-start">
                   <div className="flex items-center gap-1">
                     <span className="font-bold text-xs tracking-tight">
-                      {loggedInUser.name || "Persona User"}
+                      {loggedInUser.name || "Property User"}
                     </span>
                     <div className="w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
                       <Check className="w-2 h-2 text-black" strokeWidth={4} />
@@ -2692,7 +2696,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-purple-400" />
                     <span className="font-bold text-[10px] tracking-widest uppercase">
-                      Persona
+                      Property Profile
                     </span>
                   </div>
                   {isPersonaExpanded ? (
@@ -2713,7 +2717,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                       <div className="mt-1 p-4 bg-white/5 border border-white/10 rounded-xl space-y-4">
                         <div className="space-y-1.5">
                           <label className="text-[8px] text-white/40 uppercase tracking-widest font-bold">
-                            Persona Code
+                            Profile Code
                           </label>
                           <div className="flex items-center justify-between group/item gap-2">
                             {isEditingSlug ? (
@@ -3181,10 +3185,10 @@ export default function AuthPage({ slug }: { slug?: string }) {
               exit={{ opacity: 0, scale: 0.5 }}
               onClick={() => setShowMapDialog(true)}
               className="fixed bottom-8 right-8 z-50 h-[76px] w-[76px] overflow-hidden rounded-2xl border border-purple-300/50 bg-[#171222] text-white shadow-[0_12px_30px_rgba(124,58,237,0.4)] transition-shadow hover:shadow-[0_16px_36px_rgba(124,58,237,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-              aria-label="Open full-screen Persona map"
-              title="Open full-screen Persona map"
+              aria-label="Open Hyderabad property map"
+              title="Open Hyderabad property map"
             >
-              <PersonaMapThumbnail />
+              <HyderabadPropertyMapThumbnail />
             </motion.button>
           )}
         </AnimatePresence>
@@ -3419,33 +3423,33 @@ export default function AuthPage({ slug }: { slug?: string }) {
           className="w-full max-w-md text-center mb-6 z-10"
         >
           <h1 className="text-2xl font-display font-bold tracking-widest uppercase text-white">
-            PERSONA
+            NEST AI
           </h1>
           <p className="text-[10px] tracking-[0.3em] text-white/50 font-medium mb-6 flex items-center justify-center gap-2">
-            CONNECT . COLLABORATE . EXPOSE{" "}
+            DISCOVER . COMPARE . MOVE{" "}
             <InfinityIcon
               className="w-3.5 h-3.5 text-purple-500/50"
               strokeWidth={2.5}
             />
           </p>
           <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">
-            Networking & Exposure
+            Hyderabad Property Discovery
           </h2>
           <p className="text-white/70 text-base mb-6 max-w-sm mx-auto">
-            Persona: Your Digital Identity & Collaboration Hub.
+            AI-guided real estate intelligence for your next move.
           </p>
 
           <div className="flex items-center justify-center gap-6 mb-4">
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
               <span className="text-[11px] font-medium text-emerald-500/90 uppercase tracking-wider">
-                Smart Networking
+                Smart Property Search
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
               <span className="text-[11px] font-medium text-emerald-500/90 uppercase tracking-wider">
-                Startup Exposure
+                Area Intelligence
               </span>
             </div>
           </div>
@@ -3468,7 +3472,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                     : "text-white/50",
                 )}
               >
-                Persona
+                    Properties
               </button>
               <button
                 onClick={() => setMode("swipe")}
@@ -3477,7 +3481,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   mode === "swipe" ? "text-white" : "text-white/50",
                 )}
               >
-                Mini-Cards
+                    AI Briefs
               </button>
               <motion.div
                 layoutId="activeTab"
@@ -3511,7 +3515,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                       {form.watch("name")?.[0] || "P"}
                     </div>
                     <h3 className="text-xl font-bold text-white tracking-tight">
-                      {form.watch("name") || "Networking Profile"}
+                      {form.watch("name") || "Property Profile"}
                     </h3>
                     <p className="text-white/40 text-xs">
                       {ROLES.find((r) => r.value === form.watch("role"))
@@ -4432,7 +4436,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 }}
                 className="w-full bg-white text-black hover:bg-white/90 rounded-lg py-3 font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg mt-2"
               >
-                create your persona
+                create your property profile
               </button>
             )}
           </div>
@@ -4476,7 +4480,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                         : "text-white/40 hover:text-white/60",
                     )}
                   >
-                    Persona Code
+                          Profile Code
                   </button>
                 </div>
 
@@ -4540,7 +4544,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                           onClick={handleVerifyPersona}
                           className="w-full bg-white text-black rounded-xl py-4 font-bold text-sm flex items-center justify-center gap-2 hover:bg-white/90 transition-all active:scale-95"
                         >
-                          Preview Persona <ArrowRight className="w-4 h-4" />
+                          Preview Profile <ArrowRight className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -4559,7 +4563,11 @@ export default function AuthPage({ slug }: { slug?: string }) {
         </AnimatePresence>
 
         <AnimatePresence>
-          {showMapDialog && <PersonaMapOverlay onClose={() => setShowMapDialog(false)} />}
+          {showMapDialog && (
+            <HyderabadPropertyMapOverlay
+              onClose={() => setShowMapDialog(false)}
+            />
+          )}
         </AnimatePresence>
 
         <AnimatePresence>
@@ -4587,7 +4595,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
 
                 <div className="text-center space-y-2 mb-8">
                   <h3 className="text-2xl font-bold text-white uppercase tracking-widest">
-                    Access Persona
+                    Access Property Profile
                   </h3>
                   <p className="text-white/40 text-xs uppercase tracking-wider">
                     Enter your unique credentials
@@ -4597,7 +4605,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-[10px] text-white/40 uppercase tracking-widest font-bold ml-1">
-                      Persona Code
+                      Profile Code
                     </label>
                     <input
                       type="text"
@@ -5084,7 +5092,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                     }}
                     className="w-full bg-white text-black rounded-xl py-4 font-bold text-sm hover:bg-white/90 transition-all active:scale-95"
                   >
-                    Load Persona
+                    Load Property Profile
                   </button>
                 </div>
               </motion.div>

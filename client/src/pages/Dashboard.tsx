@@ -7,7 +7,7 @@ export default function Dashboard() {
       <nav className="flex items-center justify-between max-w-7xl mx-auto bg-card/50 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-4 shadow-xl">
         <div className="flex items-center gap-3">
           <InfinityIcon className="w-8 h-8 text-purple-500" strokeWidth={2.5} />
-          <span className="text-xl font-display font-bold tracking-widest uppercase">PERSONA</span>
+          <span className="text-xl font-display font-bold tracking-widest uppercase">NEST AI</span>
         </div>
         
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/60">
@@ -25,13 +25,13 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <header className="mb-8">
-            <h1 className="text-4xl font-display font-bold mb-2">Welcome to your Hub.</h1>
-            <p className="text-white/50">Your advanced tracking environment is ready.</p>
+            <h1 className="text-4xl font-display font-bold mb-2">Your property intelligence hub.</h1>
+            <p className="text-white/50">Explore Hyderabad projects, areas and AI-backed insights.</p>
           </header>
           
           <div className="bg-card/50 backdrop-blur-md border border-white/10 rounded-3xl p-8 h-64 flex flex-col items-center justify-center text-white/30 border-dashed">
             <Activity className="w-12 h-12 mb-4 opacity-50" />
-            <p>No activity recorded today.</p>
+              <p>Your property watchlist is ready.</p>
           </div>
         </div>
 
@@ -43,12 +43,12 @@ export default function Dashboard() {
             </h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                <span className="text-white/50">Focus Score</span>
+                <span className="text-white/50">Market Match</span>
                 <span className="font-mono text-green-400 font-semibold">94%</span>
               </div>
               <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                <span className="text-white/50">Tasks Completed</span>
-                <span className="font-mono font-semibold">0/12</span>
+                <span className="text-white/50">Saved Projects</span>
+                <span className="font-mono font-semibold">0</span>
               </div>
             </div>
           </div>
@@ -58,8 +58,8 @@ export default function Dashboard() {
               <Settings className="w-6 h-6 text-white/70" />
             </div>
             <div>
-              <h4 className="font-semibold text-sm">Configure Persona</h4>
-              <p className="text-xs text-white/40 mt-1">Connect your data sources</p>
+                <h4 className="font-semibold text-sm">Configure your search</h4>
+                <p className="text-xs text-white/40 mt-1">Set areas, budget and property preferences</p>
             </div>
           </div>
         </div>

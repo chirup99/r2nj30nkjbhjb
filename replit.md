@@ -1,6 +1,6 @@
 # Project Overview
 
-A persona/profile sharing web app built with React + Express (TypeScript). Users can create profiles with cards (pitch, reel, revenue, product), share via unique slug links, and optionally use LiveKit for real-time features.
+A React + Express (TypeScript) property discovery concept branded as NEST AI. The current experience keeps the imported profile/auth foundation while presenting Hyderabad real-estate discovery, AI-guided search language, and a full-screen project map with curated demo pins.
 
 ## Architecture
 
@@ -22,6 +22,7 @@ A persona/profile sharing web app built with React + Express (TypeScript). Users
 - `client/src/App.tsx` — React router
 - `client/src/pages/` — AuthPage, Dashboard, NotFound
 - `vite.config.ts` — Vite config with path aliases (@, @shared, @assets)
+- `client/src/components/HyderabadPropertyMap.tsx` — Hyderabad discovery map, filters, project pins, and pin popups
 
 ## Environment Variables
 
@@ -40,6 +41,12 @@ A persona/profile sharing web app built with React + Express (TypeScript). Users
 - **Development**: `npm run dev` (runs tsx server/index.ts with NODE_ENV=development)
 - **Build**: `npm run build`
 - **Production**: `npm start`
+
+## Current Product Direction
+
+- The main entry point is branded **NEST AI** and positioned as Hyderabad Property Discovery.
+- The floating Hyderabad map opens a MapLibre view centered on Hyderabad with curated demo pins for My Home Bhooja, Rajapushpa Provincia, Aparna Sarovar Zenith, Prestige City Hyderabad, and a Kokapet area watchlist.
+- Map prices, availability, and project coordinates are concept data for the product direction. Replace them with a verified listings source before treating the map as live inventory.
 
 ## Port Configuration
 
