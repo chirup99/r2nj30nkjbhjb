@@ -407,20 +407,7 @@ export function HyderabadPropertyMapOverlay({
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-4 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="pointer-events-auto w-full max-w-[430px] rounded-2xl border border-white/60 bg-white/90 p-3 shadow-2xl backdrop-blur-xl sm:p-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-950 text-cyan-300">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-500">
-                  NEST AI · PROPERTY INTELLIGENCE
-                </p>
-                <h2 className="text-base font-bold tracking-tight text-slate-950">
-                  Hyderabad project map
-                </h2>
-              </div>
-            </div>
-            <label className="mt-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+             <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
               <Search className="h-4 w-4 text-slate-400" />
               <input
                 value={query}
@@ -430,26 +417,6 @@ export function HyderabadPropertyMapOverlay({
                 aria-label="Search Hyderabad projects"
               />
             </label>
-            <div className="mt-3 flex gap-2 overflow-x-auto">
-              {[
-                { value: "all" as const, label: "All projects" },
-                { value: "ready" as const, label: "Ready to move" },
-                { value: "new" as const, label: "New & upcoming" },
-              ].map((filter) => (
-                <button
-                  key={filter.value}
-                  type="button"
-                  onClick={() => setActiveType(filter.value)}
-                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-bold transition-colors ${
-                    activeType === filter.value
-                      ? "bg-slate-950 text-white"
-                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
           </div>
 
           <button
@@ -463,7 +430,7 @@ export function HyderabadPropertyMapOverlay({
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-10 pt-3 sm:px-5 sm:pb-8 sm:pt-5">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-0 pt-3 sm:px-5 sm:pb-0 sm:pt-5">
         <div className="relative mx-auto w-full max-w-[680px]">
           <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
             <Sparkles className="ml-1.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
