@@ -430,7 +430,7 @@ export function HyderabadPropertyMapOverlay({
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-0 pt-3 sm:px-5 sm:pb-0 sm:pt-5">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-10 pt-3 sm:px-5 sm:pb-8 sm:pt-5">
         <div className="relative mx-auto w-full max-w-[680px]">
           <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
             <Sparkles className="ml-1.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
@@ -460,7 +460,7 @@ export function HyderabadPropertyMapOverlay({
           <button
             type="button"
             onClick={() => setShowMapInfo((visible) => !visible)}
-            className="pointer-events-auto absolute bottom-1 left-0 flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-slate-950/80 p-0 text-white/80 shadow-lg backdrop-blur-md transition-colors hover:text-white sm:-left-10"
+            className="pointer-events-auto absolute -bottom-10 left-0 flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-slate-950/80 p-0 text-white/80 shadow-lg backdrop-blur-md transition-colors hover:text-white sm:-bottom-8 sm:-left-10"
             aria-label="Map information"
             title="Map information"
           >
