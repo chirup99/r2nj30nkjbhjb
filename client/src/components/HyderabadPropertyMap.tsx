@@ -362,6 +362,11 @@ export function HyderabadPropertyMapOverlay({
   }, [selectedProject?.id]);
 
   const chooseMagicIntent = (intentId: string) => {
+    if (selectedIntentId === intentId) {
+      setSelectedIntentId(null);
+      return;
+    }
+
     setSelectedIntentId(intentId);
     setActiveType("all");
     setQuery("");
