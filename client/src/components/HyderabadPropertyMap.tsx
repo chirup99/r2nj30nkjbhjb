@@ -204,7 +204,6 @@ export function HyderabadPropertyMapOverlay({
           position="bottom-right"
           showZoom={false}
           showLocate
-          className="scale-75 origin-bottom-right"
         />
         {visibleProjects.map((project) => (
           <MapMarker
@@ -335,11 +334,11 @@ export function HyderabadPropertyMapOverlay({
           <button
             type="button"
             onClick={() => setShowMapInfo((visible) => !visible)}
-            className="pointer-events-auto absolute bottom-0 left-0 flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-slate-950/80 p-0 text-white/80 shadow-xl backdrop-blur-md transition-colors hover:text-white"
+            className="pointer-events-auto absolute bottom-0 left-0 flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-slate-950/80 p-0 text-white/80 shadow-lg backdrop-blur-md transition-colors hover:text-white"
             aria-label="Map information"
             title="Map information"
           >
-            <Info className="h-3.5 w-3.5" />
+            <Info className="h-2.5 w-2.5" />
           </button>
         </div>
         {showMapInfo && (
