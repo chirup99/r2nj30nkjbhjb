@@ -341,14 +341,6 @@ export function HyderabadPropertyMapOverlay({
                 dashArray={[1, 1]}
               />
             </MapRoute>
-            <MapMarker longitude={MAGIC_ANCHOR[0]} latitude={MAGIC_ANCHOR[1]}>
-              <MarkerContent>
-                <div className="flex items-center gap-1.5 rounded-full border border-white/80 bg-slate-950/90 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-white shadow-xl backdrop-blur-md">
-                  <Sparkles className="h-3 w-3 text-cyan-300" />
-                  AI pick
-                </div>
-              </MarkerContent>
-            </MapMarker>
           </>
         )}
         {visibleProjects.map((project) => (
