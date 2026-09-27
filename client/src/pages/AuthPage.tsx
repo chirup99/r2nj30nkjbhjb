@@ -3162,15 +3162,18 @@ export default function AuthPage({ slug }: { slug?: string }) {
             <motion.button
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.9 }}
               exit={{ opacity: 0, scale: 0.5 }}
               onClick={() => setShowMapDialog(true)}
-              className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg border border-white/20"
-              aria-label="Open Persona Maps"
-              title="Open Persona Maps"
+              className="fixed bottom-8 right-8 z-50 flex h-[72px] w-[72px] flex-col items-center justify-center gap-1 rounded-2xl border border-purple-300/40 bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-[0_12px_30px_rgba(124,58,237,0.4)] transition-shadow hover:shadow-[0_16px_36px_rgba(124,58,237,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              aria-label="Open full-screen Persona map"
+              title="Open full-screen Persona map"
             >
-              <MapPinned className="w-6 h-6 text-black" strokeWidth={2.5} />
+              <MapPinned className="h-6 w-6" strokeWidth={2.5} />
+              <span className="text-[9px] font-bold uppercase tracking-[0.16em]">
+                Open map
+              </span>
             </motion.button>
           )}
         </AnimatePresence>
