@@ -201,10 +201,10 @@ export function HyderabadPropertyMapOverlay({
         className="h-full w-full"
       >
         <MapControls
-          position="bottom-left"
+          position="bottom-right"
           showZoom={false}
           showLocate
-          className="scale-75 origin-bottom-left"
+          className="scale-75 origin-bottom-right"
         />
         {visibleProjects.map((project) => (
           <MapMarker
@@ -335,7 +335,7 @@ export function HyderabadPropertyMapOverlay({
           <button
             type="button"
             onClick={() => setShowMapInfo((visible) => !visible)}
-            className="pointer-events-auto mb-0.5 flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-slate-950/80 p-0 text-white/80 shadow-xl backdrop-blur-md transition-colors hover:text-white"
+            className="pointer-events-auto absolute bottom-0 left-0 flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-slate-950/80 p-0 text-white/80 shadow-xl backdrop-blur-md transition-colors hover:text-white"
             aria-label="Map information"
             title="Map information"
           >
@@ -343,7 +343,7 @@ export function HyderabadPropertyMapOverlay({
           </button>
         </div>
         {showMapInfo && (
-          <div className="pointer-events-auto mt-2 max-w-[280px] rounded-xl border border-white/20 bg-slate-950/90 px-3 py-2 text-[10px] text-white/70 shadow-xl backdrop-blur-md">
+          <div className="pointer-events-auto absolute bottom-10 left-0 max-w-[280px] rounded-xl border border-white/20 bg-slate-950/90 px-3 py-2 text-[10px] text-white/70 shadow-xl backdrop-blur-md">
             Map tiles © OpenStreetMap contributors · project pins are curated
             demo data for the product concept.
           </div>
