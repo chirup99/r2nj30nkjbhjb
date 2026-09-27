@@ -1,0 +1,1 @@
+- [Node dependency setup](node-dependency-setup.md) — package installation can upgrade semver ranges in the manifest; restore imported manifests when setup does not require dependency changes.
