@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Building2,
@@ -14,9 +14,11 @@ import {
   Map as PropertyMap,
   MapControls,
   MapMarker,
+  MapRoute,
   MarkerContent,
   MarkerPopup,
   MarkerTooltip,
+  RouteProgress,
 } from "@/components/ui/map";
 
 type PropertyProject = {
@@ -34,6 +36,7 @@ type PropertyProject = {
 };
 
 const HYDERABAD_CENTER: [number, number] = [78.385, 17.42];
+const MAGIC_ANCHOR: [number, number] = [78.386, 17.455];
 
 // Curated demo pins for the Hyderabad discovery experience. Exact availability
 // and pricing should come from a verified listings feed before launch.
@@ -105,11 +108,82 @@ const PROJECTS: PropertyProject[] = [
   },
 ];
 
-function PropertyPin({ accent }: { accent: string }) {
+const MAGIC_INTENTS = [
+  {
+    id: "uber-class",
+    label: "Uber-class",
+    detail: "Signature living",
+    projectId: "my-home-bhooja",
+    accent: "#8b5cf6",
+  },
+  {
+    id: "ultra-luxury",
+    label: "Ultra luxury",
+    detail: "Premium shortlist",
+    projectId: "aparna-sarovar-zenith",
+    accent: "#ec4899",
+  },
+  {
+    id: "ready-now",
+    label: "Ready to move",
+    detail: "Move in sooner",
+    projectId: "my-home-bhooja",
+    accent: "#10b981",
+  },
+  {
+    id: "growth-pick",
+    label: "Growth pick",
+    detail: "West Hyderabad",
+    projectId: "rajapushpa-provincia",
+    accent: "#f59e0b",
+  },
+] as const;
+
+function createCurvedRoute(
+  start: [number, number],
+  end: [number, number],
+): [number, number][] {
+  const dx = end[0] - start[0];
+  const dy = end[1] - start[1];
+  const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+  const bend = Math.min(0.055, Math.max(0.018, distance * 0.22));
+  const control: [number, number] = [
+    (start[0] + end[0]) / 2 - (dy / distance) * bend,
+    (start[1] + end[1]) / 2 + (dx / distance) * bend,
+  ];
+
+  return Array.from({ length: 32 }, (_, index) => {
+    const t = index / 31;
+    const inverse = 1 - t;
+    return [
+      inverse * inverse * start[0] +
+        2 * inverse * t * control[0] +
+        t * t * end[0],
+      inverse * inverse * start[1] +
+        2 * inverse * t * control[1] +
+        t * t * end[1],
+    ];
+  });
+}
+
+function PropertyPin({
+  accent,
+  selected = false,
+}: {
+  accent: string;
+  selected?: boolean;
+}) {
   return (
-    <div className="relative h-10 w-10" aria-hidden="true">
+    <div
+      className={`relative h-10 w-10 transition-transform ${
+        selected ? "scale-125" : ""
+      }`}
+      aria-hidden="true"
+    >
       <span
-        className="absolute inset-0 animate-pulse rounded-full opacity-30"
+        className={`absolute inset-0 rounded-full opacity-30 ${
+          selected ? "animate-ping" : "animate-pulse"
+        }`}
         style={{ backgroundColor: accent, boxShadow: `0 0 24px ${accent}` }}
       />
       <span
@@ -166,6 +240,8 @@ export function HyderabadPropertyMapOverlay({
   const [query, setQuery] = useState("");
   const [activeType, setActiveType] = useState<"all" | "ready" | "new">("all");
   const [showMapInfo, setShowMapInfo] = useState(false);
+  const [selectedIntentId, setSelectedIntentId] = useState<string | null>(null);
+  const [routeProgress, setRouteProgress] = useState(0);
 
   const visibleProjects = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -182,6 +258,43 @@ export function HyderabadPropertyMapOverlay({
       return matchesQuery && matchesType;
     });
   }, [activeType, query]);
+
+  const selectedIntent = MAGIC_INTENTS.find(
+    (intent) => intent.id === selectedIntentId,
+  );
+  const selectedProject = PROJECTS.find(
+    (project) => project.id === selectedIntent?.projectId,
+  );
+  const magicRoute = selectedProject
+    ? createCurvedRoute(MAGIC_ANCHOR, [
+        selectedProject.longitude,
+        selectedProject.latitude,
+      ])
+    : [];
+
+  useEffect(() => {
+    if (!selectedProject) {
+      setRouteProgress(0);
+      return;
+    }
+
+    setRouteProgress(0);
+    const startedAt = performance.now();
+    let frame = 0;
+    const animateRoute = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / 850);
+      setRouteProgress(progress);
+      if (progress < 1) frame = requestAnimationFrame(animateRoute);
+    };
+    frame = requestAnimationFrame(animateRoute);
+    return () => cancelAnimationFrame(frame);
+  }, [selectedProject?.id]);
+
+  const chooseMagicIntent = (intentId: string) => {
+    setSelectedIntentId(intentId);
+    setActiveType("all");
+    setQuery("");
+  };
 
   return (
     <motion.div
@@ -205,6 +318,39 @@ export function HyderabadPropertyMapOverlay({
           showZoom={false}
           showLocate
         />
+        {selectedProject && (
+          <>
+            <MapRoute
+              id="magic-project-route"
+              coordinates={magicRoute}
+              color="#f9a8d4"
+              width={2}
+              opacity={0.45}
+              dashArray={[2, 2]}
+              active
+              activeColor={selectedIntent?.accent ?? "#c084fc"}
+              activeWidth={4}
+              activeOpacity={0.95}
+              activeDashArray={[1.5, 1.5]}
+              progress={routeProgress}
+            >
+              <RouteProgress
+                color="#fff7ed"
+                width={5}
+                opacity={0.9}
+                dashArray={[1, 1]}
+              />
+            </MapRoute>
+            <MapMarker longitude={MAGIC_ANCHOR[0]} latitude={MAGIC_ANCHOR[1]}>
+              <MarkerContent>
+                <div className="flex items-center gap-1.5 rounded-full border border-white/80 bg-slate-950/90 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-white shadow-xl backdrop-blur-md">
+                  <Sparkles className="h-3 w-3 text-cyan-300" />
+                  AI pick
+                </div>
+              </MarkerContent>
+            </MapMarker>
+          </>
+        )}
         {visibleProjects.map((project) => (
           <MapMarker
             key={project.id}
@@ -212,7 +358,10 @@ export function HyderabadPropertyMapOverlay({
             latitude={project.latitude}
           >
             <MarkerContent>
-              <PropertyPin accent={project.accent} />
+              <PropertyPin
+                accent={project.accent}
+                selected={project.id === selectedProject?.id}
+              />
             </MarkerContent>
             <MarkerTooltip>{project.name}</MarkerTooltip>
             <MarkerPopup closeButton>
@@ -300,6 +449,59 @@ export function HyderabadPropertyMapOverlay({
                   {filter.label}
                 </button>
               ))}
+            </div>
+            <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-2.5 shadow-inner">
+              <div className="flex items-center gap-2 px-1">
+                <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-white">
+                  Magic bar
+                </p>
+                <span className="ml-auto text-[9px] text-white/40">
+                  AI picks
+                </span>
+              </div>
+              <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
+                {MAGIC_INTENTS.map((intent) => {
+                  const isSelected = selectedIntentId === intent.id;
+                  return (
+                    <button
+                      key={intent.id}
+                      type="button"
+                      onClick={() => chooseMagicIntent(intent.id)}
+                      className={`min-w-max rounded-lg border px-2.5 py-2 text-left transition-all ${
+                        isSelected
+                          ? "border-white/80 bg-white text-slate-950 shadow-lg"
+                          : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
+                      }`}
+                    >
+                      <span className="block text-[10px] font-bold">
+                        {intent.label}
+                      </span>
+                      <span
+                        className={`mt-0.5 block text-[8px] ${
+                          isSelected ? "text-slate-500" : "text-white/40"
+                        }`}
+                      >
+                        {intent.detail}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedProject && selectedIntent && (
+                <div className="mt-2 flex items-center gap-2 border-t border-white/10 px-1 pt-2">
+                  <span
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: selectedIntent.accent }}
+                  />
+                  <p className="truncate text-[10px] text-white/80">
+                    {selectedIntent.label}:{" "}
+                    <span className="font-bold text-white">
+                      {selectedProject.name}
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
