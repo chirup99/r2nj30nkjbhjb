@@ -232,6 +232,26 @@ type PersonaMapLocation = {
 
 const PERSONA_NETWORK_CENTER: [number, number] = [78.9629, 20.5937];
 
+function PersonaLocationDot({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      className={compact ? "relative h-5 w-5" : "relative h-7 w-7"}
+      aria-hidden="true"
+    >
+      <span
+        className={`absolute inset-0 rounded-full bg-purple-500/25 ring-1 ring-purple-300/40 ${
+          compact ? "" : "shadow-[0_0_18px_rgba(168,85,247,0.7)]"
+        }`}
+      />
+      <span
+        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-purple-600 ${
+          compact ? "h-2.5 w-2.5" : "h-3.5 w-3.5"
+        }`}
+      />
+    </div>
+  );
+}
+
 function PersonaMapThumbnail() {
   const previewZoom = 3;
   const centerX =
@@ -281,8 +301,8 @@ function PersonaMapThumbnail() {
         ))}
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/20" />
-      <div className="absolute left-1/2 top-1/2 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white bg-purple-600 text-white shadow-[0_0_14px_rgba(168,85,247,0.85)]">
-        <MapPinned className="h-3 w-3" strokeWidth={2.5} />
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <PersonaLocationDot compact />
       </div>
       <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border border-white/30 bg-black/45 text-white backdrop-blur-sm">
         <MapPinned className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -329,9 +349,7 @@ function PersonaMapOverlay({ onClose }: { onClose: () => void }) {
           latitude={networkLocation.latitude}
         >
           <MarkerContent>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-purple-600 text-white shadow-[0_0_24px_rgba(168,85,247,0.65)] transition-transform hover:scale-110">
-              <MapPinned className="h-5 w-5" />
-            </div>
+            <PersonaLocationDot />
           </MarkerContent>
           <MarkerTooltip>{networkLocation.name}</MarkerTooltip>
           <MarkerPopup closeButton>
