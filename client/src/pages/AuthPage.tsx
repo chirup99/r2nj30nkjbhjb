@@ -243,7 +243,7 @@ function PersonaLocationDot() {
 }
 
 function PersonaMapThumbnail() {
-  const previewZoom = 3;
+  const previewZoom = 4;
   const centerX =
     ((PERSONA_NETWORK_CENTER[0] + 180) / 360) * 2 ** previewZoom;
   const centerY =
@@ -286,7 +286,8 @@ function PersonaMapThumbnail() {
               height: tileSize,
               left: tile.left,
               top: tile.top,
-              filter: "brightness(0.55) saturate(0.75) contrast(1.15)",
+              filter:
+                "invert(0.9) hue-rotate(180deg) brightness(0.65) saturate(0.8) contrast(1.15)",
             }}
           />
         ))}
