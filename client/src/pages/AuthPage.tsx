@@ -232,6 +232,68 @@ type PersonaMapLocation = {
 
 const PERSONA_NETWORK_CENTER: [number, number] = [78.9629, 20.5937];
 
+function PersonaMapThumbnail() {
+  const previewZoom = 3;
+  const centerX =
+    ((PERSONA_NETWORK_CENTER[0] + 180) / 360) * 2 ** previewZoom;
+  const centerY =
+    ((1 -
+      Math.asinh(
+        Math.tan((PERSONA_NETWORK_CENTER[1] * Math.PI) / 180),
+      ) /
+        Math.PI) /
+      2) *
+    2 ** previewZoom;
+  const tileOriginX = Math.floor(centerX) - 1;
+  const tileOriginY = Math.floor(centerY) - 1;
+  const tileSize = 256;
+  const tilePositions = Array.from({ length: 9 }, (_, index) => {
+    const column = index % 3;
+    const row = Math.floor(index / 3);
+    const tileX = tileOriginX + column;
+    const tileY = tileOriginY + row;
+
+    return {
+      src: `https://basemaps.cartocdn.com/dark_all/${previewZoom}/${tileX}/${tileY}.png`,
+      left: (tileX - centerX) * tileSize + 38,
+      top: (tileY - centerY) * tileSize + 38,
+    };
+  });
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
+      <div className="absolute inset-0 bg-[#171222]">
+        {tilePositions.map((tile) => (
+          <img
+            key={tile.src}
+            src={tile.src}
+            alt=""
+            draggable={false}
+            referrerPolicy="no-referrer"
+            className="pointer-events-none absolute max-w-none select-none"
+            style={{
+              width: tileSize,
+              height: tileSize,
+              left: tile.left,
+              top: tile.top,
+            }}
+          />
+        ))}
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/20" />
+      <div className="absolute left-1/2 top-1/2 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white bg-purple-600 text-white shadow-[0_0_14px_rgba(168,85,247,0.85)]">
+        <MapPinned className="h-3 w-3" strokeWidth={2.5} />
+      </div>
+      <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border border-white/30 bg-black/45 text-white backdrop-blur-sm">
+        <MapPinned className="h-3.5 w-3.5" strokeWidth={2.5} />
+      </div>
+      <span className="absolute bottom-1 left-1 text-[6px] font-medium text-white/60">
+        © CARTO
+      </span>
+    </div>
+  );
+}
+
 function PersonaMapOverlay({ onClose }: { onClose: () => void }) {
   const [currentLocation, setCurrentLocation] = useState<{
     longitude: number;
@@ -3166,14 +3228,11 @@ export default function AuthPage({ slug }: { slug?: string }) {
               whileTap={{ scale: 0.9 }}
               exit={{ opacity: 0, scale: 0.5 }}
               onClick={() => setShowMapDialog(true)}
-              className="fixed bottom-8 right-8 z-50 flex h-[72px] w-[72px] flex-col items-center justify-center gap-1 rounded-2xl border border-purple-300/40 bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-[0_12px_30px_rgba(124,58,237,0.4)] transition-shadow hover:shadow-[0_16px_36px_rgba(124,58,237,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="fixed bottom-8 right-8 z-50 h-[76px] w-[76px] overflow-hidden rounded-2xl border border-purple-300/50 bg-[#171222] text-white shadow-[0_12px_30px_rgba(124,58,237,0.4)] transition-shadow hover:shadow-[0_16px_36px_rgba(124,58,237,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               aria-label="Open full-screen Persona map"
               title="Open full-screen Persona map"
             >
-              <MapPinned className="h-6 w-6" strokeWidth={2.5} />
-              <span className="text-[9px] font-bold uppercase tracking-[0.16em]">
-                Open map
-              </span>
+              <PersonaMapThumbnail />
             </motion.button>
           )}
         </AnimatePresence>
