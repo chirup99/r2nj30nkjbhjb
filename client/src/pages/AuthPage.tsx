@@ -32,6 +32,8 @@ import {
   Palette,
   Layout,
   Mail,
+  MapPinned,
+  Navigation,
 } from "lucide-react";
 import {
   motion,
@@ -54,6 +56,14 @@ import avatarWoman from "@assets/female.png";
 import avatarMan from "@assets/male.png";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
+import {
+  Map as PersonaMap,
+  MapControls,
+  MapMarker,
+  MarkerContent,
+  MarkerPopup,
+  MarkerTooltip,
+} from "@/components/ui/map";
 
 type AuthMode = "login" | "register" | "customize" | "swipe";
 
@@ -211,6 +221,147 @@ const CARDS = [
     bgStack2: "bg-orange-900/40",
   },
 ];
+
+type PersonaMapLocation = {
+  id: string;
+  name: string;
+  description: string;
+  longitude: number;
+  latitude: number;
+};
+
+const PERSONA_NETWORK_CENTER: [number, number] = [78.9629, 20.5937];
+
+function PersonaMapOverlay({ onClose }: { onClose: () => void }) {
+  const [currentLocation, setCurrentLocation] = useState<{
+    longitude: number;
+    latitude: number;
+  } | null>(null);
+
+  const networkLocation: PersonaMapLocation = {
+    id: "persona-network",
+    name: "Persona Network",
+    description: "Explore the Persona network and find your next connection.",
+    longitude: PERSONA_NETWORK_CENTER[0],
+    latitude: PERSONA_NETWORK_CENTER[1],
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[140] overflow-hidden bg-[#050505]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Persona map"
+    >
+      <PersonaMap
+        center={
+          currentLocation
+            ? [currentLocation.longitude, currentLocation.latitude]
+            : PERSONA_NETWORK_CENTER
+        }
+        zoom={currentLocation ? 13 : 4.25}
+        theme="dark"
+        className="h-full w-full"
+      >
+        <MapMarker
+          longitude={networkLocation.longitude}
+          latitude={networkLocation.latitude}
+        >
+          <MarkerContent>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-purple-600 text-white shadow-[0_0_24px_rgba(168,85,247,0.65)] transition-transform hover:scale-110">
+              <MapPinned className="h-5 w-5" />
+            </div>
+          </MarkerContent>
+          <MarkerTooltip>{networkLocation.name}</MarkerTooltip>
+          <MarkerPopup closeButton>
+            <div className="min-w-[190px] space-y-2">
+              <p className="text-foreground text-sm font-bold">
+                {networkLocation.name}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {networkLocation.description}
+              </p>
+              <div className="flex items-center gap-1.5 pt-1 text-[10px] font-semibold uppercase tracking-wider text-purple-500">
+                <Navigation className="h-3.5 w-3.5" />
+                Network starting point
+              </div>
+            </div>
+          </MarkerPopup>
+        </MapMarker>
+
+        {currentLocation && (
+          <MapMarker
+            longitude={currentLocation.longitude}
+            latitude={currentLocation.latitude}
+          >
+            <MarkerContent>
+              <div className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-blue-500 shadow-[0_0_18px_rgba(59,130,246,0.85)]">
+                <span className="absolute h-9 w-9 animate-ping rounded-full bg-blue-400/30" />
+                <span className="relative h-1.5 w-1.5 rounded-full bg-white" />
+              </div>
+            </MarkerContent>
+            <MarkerTooltip>You are here</MarkerTooltip>
+            <MarkerPopup closeButton>
+              <div className="space-y-1">
+                <p className="text-foreground text-sm font-bold">You are here</p>
+                <p className="text-muted-foreground text-xs">
+                  Your location is only used in this map view.
+                </p>
+              </div>
+            </MarkerPopup>
+          </MapMarker>
+        )}
+
+        <MapControls
+          position="bottom-right"
+          showZoom
+          showLocate
+          showFullscreen
+          onLocate={setCurrentLocation}
+          className="bottom-6 right-4"
+        />
+      </PersonaMap>
+
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/80 via-black/35 to-transparent px-4 pb-16 pt-5 sm:px-8">
+        <div className="mx-auto flex max-w-5xl items-start justify-between gap-4">
+          <div>
+            <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.28em] text-purple-300">
+              <MapPinned className="h-3.5 w-3.5" />
+              Persona Maps
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">
+              Find your next connection
+            </h2>
+            <p className="mt-1 max-w-sm text-xs text-white/55">
+              Use the locate control to place yourself on the map.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="pointer-events-auto rounded-full border border-white/15 bg-black/45 p-3 text-white/75 backdrop-blur-md transition-colors hover:bg-white/15 hover:text-white"
+            aria-label="Close map"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute bottom-6 left-4 z-20 max-w-[calc(100%-6rem)] rounded-2xl border border-white/10 bg-black/55 px-4 py-3 text-white backdrop-blur-md sm:left-8">
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
+          Nearby network
+        </p>
+        <p className="mt-1 text-sm font-semibold">Persona network map</p>
+        <p className="mt-0.5 text-[10px] text-white/45">
+          Live profile locations can be added next.
+        </p>
+      </div>
+    </motion.div>
+  );
+}
 
 interface SwipeCardProps {
   card: {
@@ -1865,6 +2016,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
 
   const [showQRDialog, setShowQRDialog] = useState(false);
   const [showScannerDialog, setShowScannerDialog] = useState(false);
+  const [showMapDialog, setShowMapDialog] = useState(false);
   const [scannerTab, setScannerTab] = useState<"scan" | "code">("scan");
   const [showNavToggle, setShowNavToggle] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
@@ -3006,17 +3158,19 @@ export default function AuthPage({ slug }: { slug?: string }) {
         </button>
 
         <AnimatePresence>
-          {!showScannerDialog && (
+          {!showScannerDialog && !showMapDialog && (
             <motion.button
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               exit={{ opacity: 0, scale: 0.5 }}
-              onClick={() => setShowScannerDialog(true)}
+              onClick={() => setShowMapDialog(true)}
               className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg border border-white/20"
+              aria-label="Open Persona Maps"
+              title="Open Persona Maps"
             >
-              <QrCode className="w-6 h-6 text-black" strokeWidth={2.5} />
+              <MapPinned className="w-6 h-6 text-black" strokeWidth={2.5} />
             </motion.button>
           )}
         </AnimatePresence>
@@ -4388,6 +4542,10 @@ export default function AuthPage({ slug }: { slug?: string }) {
               </motion.div>
             </div>
           )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showMapDialog && <PersonaMapOverlay onClose={() => setShowMapDialog(false)} />}
         </AnimatePresence>
 
         <AnimatePresence>
