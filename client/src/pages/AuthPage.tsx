@@ -32,7 +32,6 @@ import {
   Palette,
   Layout,
   Mail,
-  MapPinned,
   Navigation,
   Info,
 } from "lucide-react";
@@ -232,21 +231,12 @@ type PersonaMapLocation = {
 
 const PERSONA_NETWORK_CENTER: [number, number] = [78.9629, 20.5937];
 
-function PersonaLocationDot({ compact = false }: { compact?: boolean }) {
+function PersonaLocationDot() {
   return (
-    <div
-      className={compact ? "relative h-5 w-5" : "relative h-7 w-7"}
-      aria-hidden="true"
-    >
+    <div className="relative h-7 w-7" aria-hidden="true">
+      <span className="absolute inset-0 rounded-full bg-purple-500/25 shadow-[0_0_18px_rgba(168,85,247,0.7)] ring-1 ring-purple-300/40" />
       <span
-        className={`absolute inset-0 rounded-full bg-purple-500/25 ring-1 ring-purple-300/40 ${
-          compact ? "" : "shadow-[0_0_18px_rgba(168,85,247,0.7)]"
-        }`}
-      />
-      <span
-        className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-purple-600 ${
-          compact ? "h-2.5 w-2.5" : "h-3.5 w-3.5"
-        }`}
+        className="absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-purple-600"
       />
     </div>
   );
@@ -274,7 +264,7 @@ function PersonaMapThumbnail() {
     const tileY = tileOriginY + row;
 
     return {
-      src: `https://basemaps.cartocdn.com/dark_all/${previewZoom}/${tileX}/${tileY}.png`,
+      src: `https://tile.openstreetmap.de/${previewZoom}/${tileX}/${tileY}.png`,
       left: (tileX - centerX) * tileSize + 38,
       top: (tileY - centerY) * tileSize + 38,
     };
@@ -296,22 +286,11 @@ function PersonaMapThumbnail() {
               height: tileSize,
               left: tile.left,
               top: tile.top,
+              filter: "brightness(0.55) saturate(0.75) contrast(1.15)",
             }}
           />
         ))}
       </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/20" />
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-        <PersonaLocationDot compact />
-      </div>
-      <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border border-white/30 bg-black/45 text-white backdrop-blur-sm">
-        <MapPinned className="h-3.5 w-3.5" strokeWidth={2.5} />
-      </div>
-      <Info
-        className="absolute bottom-1 left-1 h-3 w-3 text-white/70"
-        strokeWidth={2.25}
-        aria-hidden="true"
-      />
     </div>
   );
 }
@@ -381,7 +360,7 @@ function PersonaMapOverlay({ onClose }: { onClose: () => void }) {
 
       {showMapInfo && (
         <div className="absolute bottom-16 right-4 z-20 max-w-[260px] rounded-xl border border-white/15 bg-black/75 px-3 py-2 text-[10px] text-white/70 shadow-xl backdrop-blur-md">
-          Map tiles © CARTO · © OpenStreetMap contributors
+          Map tiles © OpenStreetMap contributors
         </div>
       )}
       <button
