@@ -464,26 +464,9 @@ export function HyderabadPropertyMapOverlay({
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-3 sm:p-5">
         <div className="relative mx-auto w-full max-w-[680px]">
-          <div className="pointer-events-auto rounded-2xl border border-white/20 bg-slate-950/90 p-2.5 text-white shadow-2xl backdrop-blur-xl sm:p-3">
-            <div className="flex items-center gap-2 px-1">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10">
-                <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-white">
-                  Magic bar
-                </p>
-                <p className="truncate text-[10px] text-white/45">
-                  {selectedProject
-                    ? `AI route to ${selectedProject.name}`
-                    : "Choose your property brief"}
-                </p>
-              </div>
-              <span className="ml-auto hidden rounded-full bg-cyan-300/10 px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-cyan-200 sm:inline">
-                AI picks
-              </span>
-            </div>
-            <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+          <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
+            <Sparkles className="ml-1.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
+            <div className="flex min-w-max gap-1.5">
               {MAGIC_INTENTS.map((intent) => {
                 const isSelected = selectedIntentId === intent.id;
                 return (
@@ -491,7 +474,7 @@ export function HyderabadPropertyMapOverlay({
                     key={intent.id}
                     type="button"
                     onClick={() => chooseMagicIntent(intent.id)}
-                    className={`min-w-0 rounded-xl border px-2.5 py-2 text-left transition-all ${
+                    className={`shrink-0 rounded-full border px-3 py-2 text-left transition-all ${
                       isSelected
                         ? "border-white/80 bg-white text-slate-950 shadow-lg"
                         : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
@@ -499,13 +482,6 @@ export function HyderabadPropertyMapOverlay({
                   >
                     <span className="block truncate text-[10px] font-bold">
                       {intent.label}
-                    </span>
-                    <span
-                      className={`mt-0.5 block truncate text-[8px] ${
-                        isSelected ? "text-slate-500" : "text-white/40"
-                      }`}
-                    >
-                      {intent.detail}
                     </span>
                   </button>
                 );
