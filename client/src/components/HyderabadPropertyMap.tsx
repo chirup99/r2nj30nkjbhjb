@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import {
   Building2,
   Check,
-  CircleDollarSign,
   Info,
   MapPin,
   Search,
@@ -450,59 +449,6 @@ export function HyderabadPropertyMapOverlay({
                 </button>
               ))}
             </div>
-            <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950 p-2.5 shadow-inner">
-              <div className="flex items-center gap-2 px-1">
-                <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-white">
-                  Magic bar
-                </p>
-                <span className="ml-auto text-[9px] text-white/40">
-                  AI picks
-                </span>
-              </div>
-              <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
-                {MAGIC_INTENTS.map((intent) => {
-                  const isSelected = selectedIntentId === intent.id;
-                  return (
-                    <button
-                      key={intent.id}
-                      type="button"
-                      onClick={() => chooseMagicIntent(intent.id)}
-                      className={`min-w-max rounded-lg border px-2.5 py-2 text-left transition-all ${
-                        isSelected
-                          ? "border-white/80 bg-white text-slate-950 shadow-lg"
-                          : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
-                      }`}
-                    >
-                      <span className="block text-[10px] font-bold">
-                        {intent.label}
-                      </span>
-                      <span
-                        className={`mt-0.5 block text-[8px] ${
-                          isSelected ? "text-slate-500" : "text-white/40"
-                        }`}
-                      >
-                        {intent.detail}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              {selectedProject && selectedIntent && (
-                <div className="mt-2 flex items-center gap-2 border-t border-white/10 px-1 pt-2">
-                  <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ backgroundColor: selectedIntent.accent }}
-                  />
-                  <p className="truncate text-[10px] text-white/80">
-                    {selectedIntent.label}:{" "}
-                    <span className="font-bold text-white">
-                      {selectedProject.name}
-                    </span>
-                  </p>
-                </div>
-              )}
-            </div>
           </div>
 
           <button
@@ -516,27 +462,61 @@ export function HyderabadPropertyMapOverlay({
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-4 sm:p-6">
-        <div className="flex items-end justify-between gap-4">
-          <div className="pointer-events-auto max-w-[390px] rounded-2xl border border-white/20 bg-slate-950/85 p-4 text-white shadow-2xl backdrop-blur-xl">
-            <div className="flex items-center gap-2">
-              <CircleDollarSign className="h-4 w-4 text-cyan-300" />
-              <p className="text-xs font-bold">
-                {visibleProjects.length} curated project pins
-              </p>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-3 sm:p-5">
+        <div className="relative mx-auto w-full max-w-[680px]">
+          <div className="pointer-events-auto rounded-2xl border border-white/20 bg-slate-950/90 p-2.5 text-white shadow-2xl backdrop-blur-xl sm:p-3">
+            <div className="flex items-center gap-2 px-1">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10">
+                <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-white">
+                  Magic bar
+                </p>
+                <p className="truncate text-[10px] text-white/45">
+                  {selectedProject
+                    ? `AI route to ${selectedProject.name}`
+                    : "Choose your property brief"}
+                </p>
+              </div>
+              <span className="ml-auto hidden rounded-full bg-cyan-300/10 px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-cyan-200 sm:inline">
+                AI picks
+              </span>
             </div>
-            <p className="mt-1 text-[10px] leading-relaxed text-white/55">
-              Explore sample locations across HITEC City, Kokapet, Narsingi,
-              Nallagandla and Rajendra Nagar.
-            </p>
-            <p className="mt-2 text-[9px] uppercase tracking-wider text-cyan-300/80">
-              Demo discovery layer · verify listings before purchase
-            </p>
+            <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+              {MAGIC_INTENTS.map((intent) => {
+                const isSelected = selectedIntentId === intent.id;
+                return (
+                  <button
+                    key={intent.id}
+                    type="button"
+                    onClick={() => chooseMagicIntent(intent.id)}
+                    className={`min-w-0 rounded-xl border px-2.5 py-2 text-left transition-all ${
+                      isSelected
+                        ? "border-white/80 bg-white text-slate-950 shadow-lg"
+                        : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
+                    }`}
+                  >
+                    <span className="block truncate text-[10px] font-bold">
+                      {intent.label}
+                    </span>
+                    <span
+                      className={`mt-0.5 block truncate text-[8px] ${
+                        isSelected ? "text-slate-500" : "text-white/40"
+                      }`}
+                    >
+                      {intent.detail}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
           <button
             type="button"
             onClick={() => setShowMapInfo((visible) => !visible)}
-            className="pointer-events-auto absolute bottom-0 left-0 flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-slate-950/80 p-0 text-white/80 shadow-lg backdrop-blur-md transition-colors hover:text-white"
+            className="pointer-events-auto absolute bottom-1 left-0 flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-slate-950/80 p-0 text-white/80 shadow-lg backdrop-blur-md transition-colors hover:text-white sm:-left-10"
             aria-label="Map information"
             title="Map information"
           >
@@ -544,7 +524,7 @@ export function HyderabadPropertyMapOverlay({
           </button>
         </div>
         {showMapInfo && (
-          <div className="pointer-events-auto absolute bottom-10 left-0 max-w-[280px] rounded-xl border border-white/20 bg-slate-950/90 px-3 py-2 text-[10px] text-white/70 shadow-xl backdrop-blur-md">
+          <div className="pointer-events-auto absolute bottom-14 left-3 max-w-[280px] rounded-xl border border-white/20 bg-slate-950/90 px-3 py-2 text-[10px] text-white/70 shadow-xl backdrop-blur-md sm:left-5">
             Map tiles © OpenStreetMap contributors · project pins are curated
             demo data for the product concept.
           </div>
