@@ -316,7 +316,7 @@ export function HyderabadPropertyMapOverlay({
           position="bottom-right"
           showZoom={false}
           showLocate
-          className="!bottom-16"
+          className="!bottom-28"
         />
         {selectedProject && (
           <>
