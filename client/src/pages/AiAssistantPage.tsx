@@ -7,9 +7,9 @@ import {
   ListFilter,
   MapPin,
   Send,
-  Sparkles,
   Wallet,
 } from "lucide-react";
+import { PropertyMeetupMark } from "@/components/PropertyMeetupMark";
 
 type Message = {
   id: number;
@@ -80,7 +80,7 @@ export default function AiAssistantPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-purple-300" />
+            <PropertyMeetupMark className="h-5 w-6" />
             <span className="font-display text-sm font-bold tracking-[0.16em]">
               R Cliq +AI
             </span>
@@ -90,8 +90,8 @@ export default function AiAssistantPage() {
         <section className="scrollbar-hide flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-8 sm:px-8">
           {messages.length === 0 ? (
             <div className="m-auto max-w-md text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-purple-300/20 bg-purple-500/10">
-                <Sparkles className="h-6 w-6 text-purple-200" />
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                <PropertyMeetupMark className="h-8 w-9" />
               </div>
               <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.24em] text-purple-300">
                 Property assistant
@@ -135,9 +135,9 @@ export default function AiAssistantPage() {
                 key={label}
                 type="button"
                 onClick={() => setDraft(prompt)}
-                className="flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/65 transition-colors hover:border-purple-300/40 hover:bg-purple-500/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-white bg-white px-2.5 py-1.5 text-[10px] font-semibold text-[#141419] transition-colors hover:border-white/80 hover:bg-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
-                <Icon className="h-3.5 w-3.5 text-purple-300" />
+                <Icon className="h-3 w-3 text-[#7c2cff]" />
                 {label}
               </button>
             ))}
@@ -157,7 +157,7 @@ export default function AiAssistantPage() {
             <button
               type="submit"
               disabled={!draft.trim()}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-purple-500 text-white transition-colors hover:bg-purple-400 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#141419] transition-colors hover:bg-white/85 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label="Send question"
             >
               <Send className="h-4 w-4" />
