@@ -116,18 +116,22 @@ function parseQuery(text: string): AssistantQuery {
       .sort((a, b) => b.length - a.length)
       .find((locality) => normalized.includes(locality.toLowerCase()));
 
-  const propertyType = normalized.includes("villa") || normalized.includes("house")
+  const propertyType =
+    /villa|bungalow|independent home|independent house/.test(normalized)
     ? "villa"
-    : normalized.includes("flat") || normalized.includes("apartment")
+    : /flat|apartment|\bbhk\b/.test(normalized)
       ? "flat"
-      : normalized.includes("farm") || normalized.includes("land")
+      : /farm|farmland|agricultural land/.test(normalized)
         ? "farm"
-        : normalized.includes("plot")
+        : /plot|open site|residential site|residential land/.test(normalized)
           ? "plot"
           : undefined;
 
   return {
-    intent: /loan|emi|interest|tenure|finance|down payment/.test(normalized)
+    intent:
+      /loan|emi|interest|tenure|finance|mortgage|borrow|down payment|monthly payment|home finance/.test(
+        normalized,
+      )
       ? "loan"
       : "property",
     location,
@@ -187,21 +191,6 @@ function getPropertyMatches(query: AssistantQuery): PropertyMatch[] {
     })
     .sort((a, b) => a.estimatedEntryPrice - b.estimatedEntryPrice)
     .slice(0, 4);
-}
-
-async function askGeminiForQuery(text: string): Promise<Partial<AssistantQuery> | null> {
-  try {
-    const response = await fetch("/api/assistant/understand", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-    if (!response.ok) return null;
-    const result = await response.json();
-    return result.available ? result.query : null;
-  } catch {
-    return null;
-  }
 }
 
 function getLoanPayment(settings: LoanSettings) {
@@ -365,14 +354,9 @@ export default function AiAssistantPage() {
     ]);
   };
 
-  const respondToQuery = async (text: string) => {
+  const respondToQuery = (text: string) => {
     const localQuery = parseQuery(text);
-    const modelQuery = await askGeminiForQuery(text);
-    const query: AssistantQuery = {
-      ...localQuery,
-      ...modelQuery,
-      intent: modelQuery?.intent || localQuery.intent,
-    };
+    const query: AssistantQuery = localQuery;
 
     if (query.intent === "loan") {
       setShowLoanPlanner(true);
@@ -414,7 +398,7 @@ export default function AiAssistantPage() {
     setDraft("");
     setIsThinking(true);
     try {
-      await respondToQuery(text);
+      respondToQuery(text);
     } finally {
       setIsThinking(false);
     }
