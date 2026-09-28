@@ -662,8 +662,8 @@ function PropertySearchPlanner({
         </span>
         <input
           type="range"
-          min={1_000_000}
-          max={50_000_000}
+          min={1_500_000}
+          max={500_000_000}
           step={500_000}
           value={settings.maxBudget}
           onChange={(event) =>
@@ -676,8 +676,8 @@ function PropertySearchPlanner({
           aria-label="Maximum property budget"
         />
         <span className="mt-1 flex justify-between text-[10px] text-white/35">
-          <span>₹10L</span>
-          <span>₹5Cr</span>
+          <span>₹15L</span>
+          <span>₹50Cr</span>
         </span>
       </label>
 
