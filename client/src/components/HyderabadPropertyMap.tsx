@@ -491,6 +491,15 @@ function RadiusFilterLayer({
     });
   }, [center, isLoaded, map]);
 
+  const dialSize = Math.min(
+    292,
+    Math.max(164, radiusInKilometers * 3.2),
+  );
+  const estimatedMinutes = Math.max(
+    1,
+    Math.round(radiusInKilometers * 0.32),
+  );
+
   return (
     <>
       <MapGeoJSON
@@ -509,10 +518,36 @@ function RadiusFilterLayer({
       />
       <MapMarker longitude={center[0]} latitude={center[1]}>
         <MarkerContent>
-          <div className="relative flex h-12 w-12 items-center justify-center">
-            <span className="absolute inset-0 animate-ping rounded-full bg-cyan-300/25" />
-            <span className="absolute h-5 w-5 rounded-full border-2 border-white bg-cyan-400 shadow-[0_0_0_4px_rgba(34,211,238,0.35),0_0_22px_rgba(34,211,238,0.9)]" />
-            <MapPin className="relative h-4 w-4 -translate-y-0.5 text-slate-950" strokeWidth={3} />
+          <div
+            className="pointer-events-none relative flex items-center justify-center rounded-full border border-white/55 bg-slate-100/35 shadow-[0_0_30px_rgba(34,211,238,0.22)] backdrop-blur-[1px]"
+            style={{ height: dialSize, width: dialSize }}
+          >
+            <span className="absolute inset-2 rounded-full border border-white/35" />
+            <span className="absolute inset-5 rounded-full border border-white/20 border-dashed" />
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              animate={{ scale: [1, 1.035, 1], opacity: [0.6, 0.95, 0.6] }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <span className="absolute inset-0 rounded-full border border-cyan-200/55" />
+            </motion.div>
+            <motion.div
+              className="absolute inset-0"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
+            >
+              <span className="absolute left-1/2 top-0 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-cyan-500 shadow-[0_0_0_5px_rgba(34,211,238,0.28),0_0_24px_rgba(34,211,238,0.95)]">
+                <span className="h-2.5 w-2.5 rounded-full bg-white" />
+              </span>
+            </motion.div>
+            <div className="relative flex h-16 w-16 flex-col items-center justify-center rounded-full border border-white/20 bg-slate-950/95 text-white shadow-2xl">
+              <span className="text-xl font-bold leading-none">
+                {estimatedMinutes}
+              </span>
+              <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">
+                min
+              </span>
+            </div>
           </div>
         </MarkerContent>
       </MapMarker>
@@ -922,6 +957,7 @@ function RadiusFilterPanel({
               strokeLinecap="round"
               strokeWidth="5"
               strokeDasharray={dialCircumference}
+              initial={{ strokeDashoffset: dialCircumference }}
               animate={{
                 strokeDashoffset:
                   dialCircumference * (1 - dialProgress),
