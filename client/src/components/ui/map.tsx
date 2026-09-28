@@ -859,6 +859,23 @@ function ControlButton({
   );
 }
 
+type UserLocation = {
+  longitude: number;
+  latitude: number;
+};
+
+function UserLocationMarker() {
+  return (
+    <div
+      className="pointer-events-none relative flex size-8 items-center justify-center"
+      aria-label="Your location"
+    >
+      <div className="absolute size-8 animate-ping rounded-full bg-blue-500/25" />
+      <div className="relative size-4 rounded-full border-2 border-white bg-blue-600 shadow-[0_0_0_2px_rgba(37,99,235,0.35)]" />
+    </div>
+  );
+}
+
 function MapControls({
   position = "bottom-right",
   showZoom = true,
@@ -870,6 +887,7 @@ function MapControls({
 }: MapControlsProps) {
   const { map } = useMap();
   const [waitingForLocation, setWaitingForLocation] = useState(false);
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
   const handleZoomIn = useCallback(() => {
     map?.zoomTo(map.getZoom() + 1, { duration: 300 });
@@ -884,7 +902,11 @@ function MapControls({
   }, [map]);
 
   const handleLocate = useCallback(() => {
-    if (!("geolocation" in navigator)) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      console.error("This browser does not support location services.");
+      return;
+    }
+
     setWaitingForLocation(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -892,6 +914,7 @@ function MapControls({
           longitude: pos.coords.longitude,
           latitude: pos.coords.latitude,
         };
+        setUserLocation(coords);
         map?.flyTo({
           center: [coords.longitude, coords.latitude],
           zoom: 14,
@@ -906,7 +929,9 @@ function MapControls({
       },
       // Without a timeout the spec default is Infinity: a dismissed permission
       // prompt would leave the button disabled forever.
-      { timeout: 10000 },
+      // Request a fresh, accurate position so Safari does not reuse a stale
+      // cached location after the permission prompt has been accepted.
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
     );
   }, [map, onLocate]);
 
@@ -921,51 +946,63 @@ function MapControls({
   }, [map]);
 
   return (
-    <div
-      className={cn(
-        "absolute z-10 flex flex-col gap-1.5",
-        positionClasses[position],
-        className,
+    <>
+      <div
+        className={cn(
+          "absolute z-10 flex flex-col gap-1.5",
+          positionClasses[position],
+          className,
+        )}
+      >
+        {showZoom && (
+          <ControlGroup>
+            <ControlButton onClick={handleZoomIn} label="Zoom in">
+              <Plus className="size-4" />
+            </ControlButton>
+            <ControlButton onClick={handleZoomOut} label="Zoom out">
+              <Minus className="size-4" />
+            </ControlButton>
+          </ControlGroup>
+        )}
+        {showCompass && (
+          <ControlGroup>
+            <CompassButton onClick={handleResetBearing} />
+          </ControlGroup>
+        )}
+        {showLocate && (
+          <ControlGroup>
+            <ControlButton
+              onClick={handleLocate}
+              label="Find my location"
+              disabled={waitingForLocation}
+            >
+              {waitingForLocation ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Locate className="size-4" />
+              )}
+            </ControlButton>
+          </ControlGroup>
+        )}
+        {showFullscreen && (
+          <ControlGroup>
+            <ControlButton onClick={handleFullscreen} label="Toggle fullscreen">
+              <Maximize className="size-4" />
+            </ControlButton>
+          </ControlGroup>
+        )}
+      </div>
+      {userLocation && (
+        <MapMarker
+          longitude={userLocation.longitude}
+          latitude={userLocation.latitude}
+        >
+          <MarkerContent>
+            <UserLocationMarker />
+          </MarkerContent>
+        </MapMarker>
       )}
-    >
-      {showZoom && (
-        <ControlGroup>
-          <ControlButton onClick={handleZoomIn} label="Zoom in">
-            <Plus className="size-4" />
-          </ControlButton>
-          <ControlButton onClick={handleZoomOut} label="Zoom out">
-            <Minus className="size-4" />
-          </ControlButton>
-        </ControlGroup>
-      )}
-      {showCompass && (
-        <ControlGroup>
-          <CompassButton onClick={handleResetBearing} />
-        </ControlGroup>
-      )}
-      {showLocate && (
-        <ControlGroup>
-          <ControlButton
-            onClick={handleLocate}
-            label="Find my location"
-            disabled={waitingForLocation}
-          >
-            {waitingForLocation ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Locate className="size-4" />
-            )}
-          </ControlButton>
-        </ControlGroup>
-      )}
-      {showFullscreen && (
-        <ControlGroup>
-          <ControlButton onClick={handleFullscreen} label="Toggle fullscreen">
-            <Maximize className="size-4" />
-          </ControlButton>
-        </ControlGroup>
-      )}
-    </div>
+    </>
   );
 }
 
