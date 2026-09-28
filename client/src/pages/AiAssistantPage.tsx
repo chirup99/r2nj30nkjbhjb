@@ -945,53 +945,206 @@ function PropertyComparison({ matches }: { matches: PropertyMatch[] }) {
   const comparedProperties = matches.slice(0, 2);
   if (comparedProperties.length < 2) return null;
 
+  const comparedDetails = comparedProperties.map((project) =>
+    getProjectListingDetails(project),
+  );
+  const prices = comparedProperties.map((project) => project.estimatedEntryPrice);
+  const rates = comparedProperties.map((project) => project.pricePerSqYd);
+  const maxPrice = Math.max(...prices, 1);
+  const maxRate = Math.max(...rates, 1);
+  const maxAcres = Math.max(...comparedProperties.map((project) => project.acres), 1);
+  const lowestPriceIndex = prices[0] <= prices[1] ? 0 : 1;
+  const lowestRateIndex = rates[0] <= rates[1] ? 0 : 1;
+  const largestProjectIndex =
+    comparedProperties[0].acres >= comparedProperties[1].acres ? 0 : 1;
+  const amenitySets = comparedDetails.map(
+    (details) => new Set(details.amenities ?? []),
+  );
+  const sharedAmenities = (comparedDetails[0].amenities ?? []).filter((amenity) =>
+    amenitySets[1].has(amenity),
+  );
+  const priceDifference = Math.abs(prices[0] - prices[1]);
+
   return (
-    <div className="mt-3 rounded-2xl border border-blue-300/15 bg-blue-500/[0.06] p-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-200">
-          Side-by-side comparison
+    <div className="mt-3 overflow-hidden rounded-2xl border border-blue-300/20 bg-gradient-to-br from-blue-500/[0.1] via-white/[0.03] to-purple-500/[0.08]">
+      <div className="border-b border-white/10 px-4 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-200">
+              Property analysis
+            </p>
+            <h3 className="mt-1 text-base font-semibold text-white">
+              Side-by-side decision view
+            </h3>
+            <p className="mt-1 text-[11px] text-white/45">
+              Compare the signals that matter before you shortlist a site.
+            </p>
+          </div>
+          <div className="rounded-full border border-blue-200/20 bg-blue-200/10 px-2.5 py-1 text-[10px] font-semibold text-blue-100">
+            2 properties
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {[
+            {
+              label: "Lower entry",
+              value: comparedProperties[lowestPriceIndex].name,
+              detail: formatCurrency(prices[lowestPriceIndex]),
+            },
+            {
+              label: "Lower rate",
+              value: comparedProperties[lowestRateIndex].name,
+              detail: formatProjectPrice(comparedProperties[lowestRateIndex]),
+            },
+            {
+              label: "Larger footprint",
+              value: comparedProperties[largestProjectIndex].name,
+              detail: `${comparedProperties[largestProjectIndex].acres} acres`,
+            },
+          ].map((insight) => (
+            <div
+              key={insight.label}
+              className="min-w-0 rounded-xl border border-white/10 bg-black/20 p-2.5"
+            >
+              <p className="text-[9px] font-bold uppercase tracking-wider text-white/35">
+                {insight.label}
+              </p>
+              <p className="mt-1 truncate text-[11px] font-semibold text-white">
+                {insight.value}
+              </p>
+              <p className="mt-0.5 truncate text-[10px] text-blue-200">
+                {insight.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-3 flex items-center gap-1.5 text-[10px] text-white/45">
+          <Info className="h-3 w-3 text-blue-200" />
+          Entry price difference:{" "}
+          <span className="font-semibold text-white/75">
+            {formatCurrency(priceDifference)}
+          </span>
         </p>
-        <span className="text-[10px] text-white/40">2 properties</span>
       </div>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        {comparedProperties.map((project) => {
-          const details = getProjectListingDetails(project);
+      <div className="grid gap-3 p-3 sm:grid-cols-2">
+        {comparedProperties.map((project, index) => {
+          const details = comparedDetails[index];
           const amenities = details.amenities ?? [];
-
+          const isPriceWinner = index === lowestPriceIndex;
+          const isRateWinner = index === lowestRateIndex;
+          const isSizeWinner = index === largestProjectIndex;
           return (
             <article
               key={project.id}
-              className="rounded-xl border border-white/10 bg-white/[0.06] p-3"
+              className={`rounded-2xl border bg-white/[0.06] p-4 ${
+                index === 0
+                  ? "border-purple-300/25"
+                  : "border-blue-300/25"
+              }`}
             >
-              <h3 className="text-sm font-semibold text-white">{project.name}</h3>
-              <div className="mt-3 space-y-2.5">
-                {[
-                  ["Price", `${formatCurrency(project.estimatedEntryPrice)}+`],
-                  ["Rate", formatProjectPrice(project)],
-                  [
-                    "Location",
-                    details.locationDetail ?? `${project.locality}, Telangana`,
-                  ],
-                  ["Property type", project.type],
-                  ["Approval", project.approvalType],
-                  ["Plot range", project.bedrooms],
-                  ["Project size", `${project.acres} acres`],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="border-b border-white/10 pb-2 last:border-0 last:pb-0"
-                  >
-                    <p className="text-[10px] uppercase tracking-wider text-white/35">
-                      {label}
-                    </p>
-                    <p className="mt-0.5 text-[11px] font-semibold leading-relaxed text-white/80">
-                      {value}
-                    </p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/35">
+                    Option {index + 1}
+                  </p>
+                  <h4 className="mt-1 truncate text-sm font-semibold text-white">
+                    {project.name}
+                  </h4>
+                </div>
+                {isPriceWinner && (
+                  <span className="shrink-0 rounded-full bg-emerald-300/15 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-200">
+                    Lower entry
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <div>
+                  <div className="flex items-end justify-between gap-2">
+                    <span className="text-[10px] uppercase tracking-wider text-white/35">
+                      Estimated entry
+                    </span>
+                    <span className="text-base font-bold text-white">
+                      {formatCurrency(project.estimatedEntryPrice)}+
+                    </span>
                   </div>
-                ))}
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className={`h-full rounded-full ${
+                        index === 0 ? "bg-purple-300" : "bg-blue-300"
+                      }`}
+                      style={{
+                        width: `${Math.max(
+                          10,
+                          Math.round((project.estimatedEntryPrice / maxPrice) * 100),
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
 
                 <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] uppercase tracking-wider text-white/35">
+                      Rate
+                    </span>
+                    <span className="text-[11px] font-semibold text-white/80">
+                      {formatProjectPrice(project)}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className={`h-full rounded-full ${
+                        isRateWinner ? "bg-emerald-300" : "bg-white/35"
+                      }`}
+                      style={{
+                        width: `${Math.max(
+                          10,
+                          Math.round((project.pricePerSqYd / maxRate) * 100),
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    ["Location", details.locationDetail ?? project.locality],
+                    ["Approval", project.approvalType],
+                    ["Plot range", project.bedrooms],
+                    ["Size", `${project.acres} acres`],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-lg bg-black/20 p-2">
+                      <p className="text-[9px] uppercase tracking-wider text-white/35">
+                        {label}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-[10px] font-semibold leading-relaxed text-white/80">
+                        {value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {isSizeWinner && (
+                    <span className="rounded-full bg-purple-300/15 px-2 py-1 text-[9px] font-semibold text-purple-200">
+                      Largest project
+                    </span>
+                  )}
+                  {isRateWinner && (
+                    <span className="rounded-full bg-emerald-300/15 px-2 py-1 text-[9px] font-semibold text-emerald-200">
+                      Better rate
+                    </span>
+                  )}
+                  <span className="rounded-full bg-white/[0.08] px-2 py-1 text-[9px] text-white/55">
+                    {amenities.length} listed amenities
+                  </span>
+                </div>
+
+                <div className="border-t border-white/10 pt-3">
                   <div className="flex items-center gap-1.5">
                     <Trees className="h-3.5 w-3.5 text-emerald-200" />
                     <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200">
@@ -1003,7 +1156,11 @@ function PropertyComparison({ matches }: { matches: PropertyMatch[] }) {
                       {amenities.map((amenity) => (
                         <span
                           key={amenity}
-                          className="inline-flex items-center gap-1 rounded-full bg-white/[0.08] px-2 py-1 text-[10px] text-white/65"
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] ${
+                            sharedAmenities.includes(amenity)
+                              ? "bg-emerald-300/15 text-emerald-100"
+                              : "bg-white/[0.08] text-white/65"
+                          }`}
                         >
                           <Check className="h-3 w-3 text-emerald-300" />
                           {amenity}
@@ -1021,6 +1178,17 @@ function PropertyComparison({ matches }: { matches: PropertyMatch[] }) {
           );
         })}
       </div>
+
+      {sharedAmenities.length > 0 && (
+        <div className="mx-3 mb-3 rounded-xl border border-emerald-300/15 bg-emerald-300/[0.06] p-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200">
+            Shared amenities
+          </p>
+          <p className="mt-1 text-[10px] text-white/50">
+            Highlighted in green above and available at both properties.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
