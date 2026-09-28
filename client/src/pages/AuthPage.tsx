@@ -4032,7 +4032,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                     className="absolute inset-x-0 top-0 h-[226px] w-full object-contain object-right"
                   />
                   <div className="absolute inset-x-0 top-0 h-[226px] bg-gradient-to-r from-[#08080b]/95 via-[#08080b]/65 to-[#08080b]/10" />
-                  <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-white/20 bg-black/65 px-2.5 py-1.5 shadow-lg backdrop-blur-sm">
+                  <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2 rounded-full border border-white/20 bg-black/65 px-2.5 py-1.5 shadow-lg backdrop-blur-sm">
                     <span className="text-[10px] font-bold tabular-nums tracking-wider text-white">
                       {activePropertyAd + 1} / {PROPERTY_ADS.length}
                     </span>
