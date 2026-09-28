@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
+import AiAssistantPage from "@/pages/AiAssistantPage";
 
 function Router() {
   return (
@@ -13,6 +14,7 @@ function Router() {
       <Route path="/">
         {(params) => <AuthPage {...params} />}
       </Route>
+      <Route path="/ai" component={AiAssistantPage} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/:slug">
         {(params) => <AuthPage slug={params.slug} />}
