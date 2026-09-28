@@ -2201,7 +2201,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
   const [isTradersExpanded, setIsTradersExpanded] = useState(false);
   const [isTradersPanelCollapsed, setIsTradersPanelCollapsed] =
     useState(false);
-  const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
   const [showTradersModal, setShowTradersModal] = useState(false);
   const [selectedPropertyEvent, setSelectedPropertyEvent] =
     useState<PropertyEvent | null>(null);
@@ -2303,7 +2302,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
       const isScrollingDown = currentScrollY > lastScrollY;
 
       setShowMobileNav(isAtBottom && showNavToggle);
-      setIsScrolledToBottom(isAtBottom);
       setLastScrollY(currentScrollY);
     };
 
@@ -3435,7 +3433,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
         </AnimatePresence>
 
         <AnimatePresence>
-          {(!isMobile || isScrolledToBottom) && !showTradersModal && (
+          {!showTradersModal && (
             <motion.div
               ref={tradersRef}
               initial={{ opacity: 0, scale: 0.5, x: -20 }}
