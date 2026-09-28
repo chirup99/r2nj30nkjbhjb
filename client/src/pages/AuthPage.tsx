@@ -1361,46 +1361,66 @@ const SwipeCard = ({
   const nextNextCard = displayCards[(currentIndex + 2) % displayCards.length];
 
   return (
-    <div className="relative w-full max-w-[240px] aspect-[3/4] mx-auto perspective-1000">
-      {/* Background stacked cards - only show if there's more than 1 card */}
-      {displayCards.length > 1 && (
-        <>
-          {/* Second card - furthest back */}
-          <div
-            className={clsx(
-              "absolute inset-0 rounded-[24px] pointer-events-none z-0 shadow-2xl bg-gradient-to-b",
-              nextNextCard?.color || "from-gray-700 to-gray-800",
-            )}
-            style={{
-              transform: "translateY(24px) translateX(12px) scale(0.98)",
-            }}
-          >
-            <div className="absolute inset-0 bg-black/40 rounded-[24px]" />
-          </div>
-          {/* First card - middle layer */}
-          <div
-            className={clsx(
-              "absolute inset-0 rounded-[24px] pointer-events-none z-10 shadow-xl bg-gradient-to-b",
-              nextCard?.color || "from-gray-700 to-gray-800",
-            )}
-            style={{
-              transform: "translateY(12px) translateX(6px) scale(0.99)",
-            }}
-          >
-            <div className="absolute inset-0 bg-black/25 rounded-[24px]" />
-          </div>
-        </>
-      )}
+    <div className="mx-auto w-full max-w-[240px]">
+      <div className="relative aspect-[3/4] w-full perspective-1000">
+        {/* Background stacked cards - only show if there's more than 1 card */}
+        {displayCards.length > 1 && (
+          <>
+            {/* Second card - furthest back */}
+            <div
+              className={clsx(
+                "absolute inset-0 rounded-[24px] pointer-events-none z-0 shadow-2xl bg-gradient-to-b",
+                nextNextCard?.color || "from-gray-700 to-gray-800",
+              )}
+              style={{
+                transform: "translateY(24px) translateX(12px) scale(0.98)",
+              }}
+            >
+              <div className="absolute inset-0 bg-black/40 rounded-[24px]" />
+            </div>
+            {/* First card - middle layer */}
+            <div
+              className={clsx(
+                "absolute inset-0 rounded-[24px] pointer-events-none z-10 shadow-xl bg-gradient-to-b",
+                nextCard?.color || "from-gray-700 to-gray-800",
+              )}
+              style={{
+                transform: "translateY(12px) translateX(6px) scale(0.99)",
+              }}
+            >
+              <div className="absolute inset-0 bg-black/25 rounded-[24px]" />
+            </div>
+          </>
+        )}
 
-      {/* Main card - front */}
-      <SwipeCardContent
-        key={currentIndex}
-        card={currentCard}
-        currentIndex={currentIndex}
-        totalCards={displayCards.length}
-        onSwipeLeft={handleSwipeLeft}
-        onSwipeRight={handleSwipeRight}
-      />
+        {/* Main card - front */}
+        <SwipeCardContent
+          key={currentIndex}
+          card={currentCard}
+          currentIndex={currentIndex}
+          totalCards={displayCards.length}
+          onSwipeLeft={handleSwipeLeft}
+          onSwipeRight={handleSwipeRight}
+        />
+      </div>
+
+      <div className="mt-4 space-y-2 px-1" aria-label="Saved card progress">
+        <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <span>Property cards</span>
+          <span className="tabular-nums text-white/75">
+            {currentIndex + 1} / {displayCards.length}
+          </span>
+        </div>
+        <div className="h-1 overflow-hidden rounded-full bg-white/10">
+          <motion.div
+            className="h-full rounded-full bg-gradient-to-r from-purple-400 to-emerald-300"
+            animate={{
+              width: `${((currentIndex + 1) / displayCards.length) * 100}%`,
+            }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          />
+        </div>
+      </div>
     </div>
   );
 };
