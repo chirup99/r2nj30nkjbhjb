@@ -65,6 +65,7 @@ type Message = {
   matches?: PropertyMatch[];
   showLoanPlanner?: boolean;
   showPropertyPlanner?: boolean;
+  showComparisonPlanner?: boolean;
   showComparison?: boolean;
 };
 
@@ -247,7 +248,7 @@ function formatProjectPrice(project: PropertyMatch) {
     : project.price;
 }
 
-function getPropertyMatches(query: AssistantQuery): PropertyMatch[] {
+function getAllPropertyMatches(): PropertyMatch[] {
   return PROPERTY_CATALOG.map((project) => {
     const pricePerSqYd = getPricePerSqYd(project);
     return {
@@ -257,7 +258,11 @@ function getPropertyMatches(query: AssistantQuery): PropertyMatch[] {
         project.estimatedEntryPriceOverride ??
         pricePerSqYd * getMinimumPlotSize(project),
     };
-  })
+  });
+}
+
+function getPropertyMatches(query: AssistantQuery): PropertyMatch[] {
+  return getAllPropertyMatches()
     .filter((project) => {
       const locationTerms = query.location
         ? LOCATION_GROUPS[query.location] || [normalizeLocationText(query.location)]
@@ -288,6 +293,44 @@ function getPropertyMatches(query: AssistantQuery): PropertyMatch[] {
     })
     .sort((a, b) => a.estimatedEntryPrice - b.estimatedEntryPrice)
     .slice(0, 4);
+}
+
+function getComparisonCandidates(search: string): PropertyMatch[] {
+  const normalizedSearch = normalizeLocationText(search);
+  const budget = parseBudget(normalizedSearch);
+  const matchedLocationGroup = Object.entries(LOCATION_GROUPS).find(
+    ([group]) => normalizedSearch.includes(group),
+  );
+  const searchTerms = normalizedSearch
+    .replace(/\b(?:under|below|upto|up to|budget|max|maximum)\b/g, "")
+    .replace(/\b\d+(?:\.\d+)?\s*(?:crore|cr|lakhs?|lacs?|l)\b/g, "")
+    .replace(matchedLocationGroup?.[0] ?? "", "")
+    .trim();
+
+  return getAllPropertyMatches()
+    .filter((project) => {
+      const searchableText = normalizeLocationText(
+        `${project.name} ${project.locality} ${project.developer} ${project.type}`,
+      );
+      const matchesText =
+        !searchTerms ||
+        searchTerms
+          .split(" ")
+          .filter(Boolean)
+          .every((term) => searchableText.includes(term));
+      const matchesLocationGroup =
+        !matchedLocationGroup ||
+        matchedLocationGroup[1].some((term) =>
+          normalizeLocationText(project.locality).includes(
+            normalizeLocationText(term),
+          ),
+        );
+      const matchesBudget =
+        !budget || project.estimatedEntryPrice <= budget;
+      return matchesText && matchesLocationGroup && matchesBudget;
+    })
+    .sort((a, b) => a.estimatedEntryPrice - b.estimatedEntryPrice)
+    .slice(0, 6);
 }
 
 type InsightMetric = {
@@ -758,43 +801,225 @@ function PropertySearchPlanner({
   );
 }
 
-function PropertyComparison({ matches }: { matches: PropertyMatch[] }) {
-  if (matches.length === 0) return null;
+function PropertyComparisonPlanner({
+  onCompare,
+}: {
+  onCompare: (matches: [PropertyMatch, PropertyMatch]) => void;
+}) {
+  const [queries, setQueries] = useState(["", ""]);
+  const [selected, setSelected] = useState<(PropertyMatch | null)[]>([
+    null,
+    null,
+  ]);
 
-  const sortedMatches = [...matches].sort(
-    (a, b) => a.estimatedEntryPrice - b.estimatedEntryPrice,
+  const updateQuery = (index: number, value: string) => {
+    setQueries((current) =>
+      current.map((query, queryIndex) => (queryIndex === index ? value : query)),
+    );
+    setSelected((current) =>
+      current.map((property, propertyIndex) =>
+        propertyIndex === index ? null : property,
+      ),
+    );
+  };
+
+  const selectProperty = (index: number, property: PropertyMatch) => {
+    setQueries((current) =>
+      current.map((query, queryIndex) =>
+        queryIndex === index ? property.name : query,
+      ),
+    );
+    setSelected((current) =>
+      current.map((item, propertyIndex) =>
+        propertyIndex === index ? property : item,
+      ),
+    );
+  };
+
+  const canCompare =
+    selected[0] !== null &&
+    selected[1] !== null &&
+    selected[0].id !== selected[1].id;
+
+  return (
+    <div className="mt-5 rounded-2xl border border-blue-300/20 bg-blue-500/[0.08] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-200">
+            Compare two properties
+          </p>
+          <h2 className="mt-1 text-sm font-semibold text-white">
+            Enter a name, location, or budget for each property
+          </h2>
+          <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+            Choose two listings to compare their price, location, size, approval,
+            and amenities side by side.
+          </p>
+        </div>
+        <ArrowRightLeft className="h-4 w-4 shrink-0 text-blue-200" />
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {[0, 1].map((index) => {
+          const candidates =
+            queries[index].trim().length >= 2
+              ? getComparisonCandidates(queries[index])
+              : [];
+
+          return (
+            <div
+              key={index}
+              className="rounded-xl border border-white/10 bg-white/[0.05] p-3"
+            >
+              <label className="block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-white/45">
+                  Property {index + 1}
+                </span>
+                <input
+                  type="text"
+                  value={queries[index]}
+                  onChange={(event) => updateQuery(index, event.target.value)}
+                  placeholder="Name, location, or ₹ budget"
+                  className="mt-1.5 w-full rounded-lg border border-white/10 bg-[#17151d] px-3 py-2.5 text-xs text-white outline-none placeholder:text-white/30 focus:border-blue-300/50"
+                  aria-label={`Property ${index + 1} to compare`}
+                />
+              </label>
+
+              {selected[index] ? (
+                <div className="mt-2 rounded-lg border border-emerald-300/20 bg-emerald-400/[0.08] p-2">
+                  <p className="truncate text-xs font-semibold text-white">
+                    {selected[index].name}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-white/45">
+                    {selected[index].locality} ·{" "}
+                    {formatCurrency(selected[index].estimatedEntryPrice)}+
+                  </p>
+                </div>
+              ) : candidates.length > 0 ? (
+                <div className="mt-2 space-y-1.5">
+                  {candidates.map((property) => (
+                    <button
+                      key={property.id}
+                      type="button"
+                      onClick={() => selectProperty(index, property)}
+                      className="block w-full rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-2 text-left transition-colors hover:border-blue-300/40 hover:bg-white/10"
+                    >
+                      <span className="block truncate text-[11px] font-semibold text-white">
+                        {property.name}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[10px] text-white/45">
+                        {property.locality} ·{" "}
+                        {formatCurrency(property.estimatedEntryPrice)}+
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : queries[index].trim().length >= 2 ? (
+                <p className="mt-2 text-[10px] text-white/45">
+                  No matching property. Try another name, area, or budget.
+                </p>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        disabled={!canCompare}
+        onClick={() => {
+          if (canCompare && selected[0] && selected[1]) {
+            onCompare([selected[0], selected[1]]);
+          }
+        }}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-xs font-bold text-[#141419] transition-colors hover:bg-white/85 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+      >
+        Compare these two properties
+        <ArrowRight className="h-3.5 w-3.5 text-[#7c2cff]" />
+      </button>
+    </div>
   );
+}
+
+function PropertyComparison({ matches }: { matches: PropertyMatch[] }) {
+  const comparedProperties = matches.slice(0, 2);
+  if (comparedProperties.length < 2) return null;
 
   return (
     <div className="mt-3 rounded-2xl border border-blue-300/15 bg-blue-500/[0.06] p-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-200">
-          Price comparison
+          Side-by-side comparison
         </p>
-        <span className="text-[10px] text-white/40">
-          {sortedMatches.length} options
-        </span>
+        <span className="text-[10px] text-white/40">2 properties</span>
       </div>
-      <div className="mt-2 space-y-2">
-        {sortedMatches.map((project, index) => (
-          <div
-            key={project.id}
-            className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.06] px-3 py-2"
-          >
-            <div className="min-w-0">
-              <p className="truncate text-xs font-semibold text-white">
-                <span className="mr-1.5 text-white/35">{index + 1}.</span>
-                {project.name}
-              </p>
-              <p className="mt-0.5 text-[10px] text-white/45">
-                {project.locality} · {formatProjectPrice(project)}
-              </p>
-            </div>
-            <span className="shrink-0 text-xs font-bold text-white">
-              {formatCurrency(project.estimatedEntryPrice)}+
-            </span>
-          </div>
-        ))}
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {comparedProperties.map((project) => {
+          const details = getProjectListingDetails(project);
+          const amenities = details.amenities ?? [];
+
+          return (
+            <article
+              key={project.id}
+              className="rounded-xl border border-white/10 bg-white/[0.06] p-3"
+            >
+              <h3 className="text-sm font-semibold text-white">{project.name}</h3>
+              <div className="mt-3 space-y-2.5">
+                {[
+                  ["Price", `${formatCurrency(project.estimatedEntryPrice)}+`],
+                  ["Rate", formatProjectPrice(project)],
+                  [
+                    "Location",
+                    details.locationDetail ?? `${project.locality}, Telangana`,
+                  ],
+                  ["Property type", project.type],
+                  ["Approval", project.approvalType],
+                  ["Plot range", project.bedrooms],
+                  ["Project size", `${project.acres} acres`],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="border-b border-white/10 pb-2 last:border-0 last:pb-0"
+                  >
+                    <p className="text-[10px] uppercase tracking-wider text-white/35">
+                      {label}
+                    </p>
+                    <p className="mt-0.5 text-[11px] font-semibold leading-relaxed text-white/80">
+                      {value}
+                    </p>
+                  </div>
+                ))}
+
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <Trees className="h-3.5 w-3.5 text-emerald-200" />
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+                      Amenities
+                    </p>
+                  </div>
+                  {amenities.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {amenities.map((amenity) => (
+                        <span
+                          key={amenity}
+                          className="inline-flex items-center gap-1 rounded-full bg-white/[0.08] px-2 py-1 text-[10px] text-white/65"
+                        >
+                          <Check className="h-3 w-3 text-emerald-300" />
+                          {amenity}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-[10px] text-white/45">
+                      Amenities are not listed in the imported catalog.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </div>
   );
@@ -888,18 +1113,10 @@ export default function AiAssistantPage() {
     ].filter(Boolean);
     const filterText = filters.join(" ");
     const textResponse = matches.length
-      ? propertySearchQuery?.compare
-        ? `Here is a price comparison of ${matches.length} options ${filterText}. Lower prices are listed first.`
-        : `I found ${matches.length} map listings ${filterText}. These are ranked by the lowest estimated entry price from the published plot size and rate.`
+      ? `I found ${matches.length} map listings ${filterText}. These are ranked by the lowest estimated entry price from the published plot size and rate.`
       : "I couldn’t find a matching listing in the imported Hyderabad catalog for those filters. Try a higher budget, another location, or Any property type.";
 
-    addAssistantMessage(
-      textResponse,
-      matches,
-      false,
-      false,
-      Boolean(propertySearchQuery?.compare),
-    );
+    addAssistantMessage(textResponse, matches);
   };
 
   const showAllPropertiesInArea = () => {
@@ -916,6 +1133,7 @@ export default function AiAssistantPage() {
     matches?: PropertyMatch[],
     showLoan = false,
     showProperty = false,
+    showComparisonPlanner = false,
     showComparison = false,
   ) => {
     setMessages((current) => [
@@ -927,6 +1145,7 @@ export default function AiAssistantPage() {
         matches,
         showLoanPlanner: showLoan,
         showPropertyPlanner: showProperty,
+        showComparisonPlanner,
         showComparison,
       },
     ]);
@@ -950,15 +1169,10 @@ export default function AiAssistantPage() {
 
     setPropertySearchQuery(query);
 
-    if (query.compare && query.maxBudget) {
-      const matches = getPropertyMatches(query);
+    if (query.compare) {
       addAssistantMessage(
-        matches.length
-          ? `Here is a price comparison of ${matches.length} options up to ${formatCurrency(
-              query.maxBudget,
-            )}. Lower prices are listed first.`
-          : "I couldn’t find properties to compare for those filters. Try a higher budget or another area.",
-        matches,
+        "Let’s compare two properties side by side. Tell me the name, location, or budget for each property, then I’ll compare price, location, size, approval, and amenities.",
+        undefined,
         false,
         false,
         true,
@@ -1053,7 +1267,30 @@ export default function AiAssistantPage() {
       );
       return;
     }
+    if (label === "Compare") {
+      addAssistantMessage(
+        "Enter a name, location, or budget for each of the two properties you want to compare.",
+        undefined,
+        false,
+        false,
+        true,
+      );
+      return;
+    }
     submitQuestion(prompt);
+  };
+
+  const compareSelectedProperties = (
+    matches: [PropertyMatch, PropertyMatch],
+  ) => {
+    addAssistantMessage(
+      `Here is a side-by-side comparison of ${matches[0].name} and ${matches[1].name}.`,
+      matches,
+      false,
+      false,
+      false,
+      true,
+    );
   };
 
   const toggleInsights = (projectId: string) => {
@@ -1121,7 +1358,9 @@ export default function AiAssistantPage() {
                     </div>
                   </div>
 
-                  {message.matches && message.matches.length > 0 && (
+                  {message.matches &&
+                    message.matches.length > 0 &&
+                    !message.showComparison && (
                     <div className="mt-3 grid gap-2">
                       {message.matches.map((project) => (
                         <article
@@ -1202,6 +1441,12 @@ export default function AiAssistantPage() {
 
                   {message.showComparison && message.matches && (
                     <PropertyComparison matches={message.matches} />
+                  )}
+
+                  {message.showComparisonPlanner && (
+                    <PropertyComparisonPlanner
+                      onCompare={compareSelectedProperties}
+                    />
                   )}
 
                   {message.showLoanPlanner && (
