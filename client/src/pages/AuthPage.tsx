@@ -172,73 +172,58 @@ function PropertyMeetupMark({ className = "" }: { className?: string }) {
       <defs>
         <linearGradient
           id="property-meetup-gradient"
-          x1="5"
-          y1="5"
-          x2="31"
-          y2="29"
+          x1="3"
+          y1="27"
+          x2="34"
+          y2="7"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#ef5b5b" />
-          <stop offset="0.45" stopColor="#f29b45" />
-          <stop offset="0.72" stopColor="#8d5bd6" />
-          <stop offset="1" stopColor="#4f6edb" />
+          <stop stopColor="#7c2cff" />
+          <stop offset="0.42" stopColor="#d946ef" />
+          <stop offset="0.75" stopColor="#f472b6" />
+          <stop offset="1" stopColor="#ffc56b" />
         </linearGradient>
         <linearGradient
           id="property-meetup-fill"
-          x1="8"
-          y1="8"
-          x2="32"
-          y2="28"
+          x1="5"
+          y1="26"
+          x2="30"
+          y2="6"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#ef5b5b" stopOpacity=".22" />
-          <stop offset="1" stopColor="#586fe1" stopOpacity=".08" />
+          <stop stopColor="#a855f7" stopOpacity=".24" />
+          <stop offset="1" stopColor="#fb7185" stopOpacity=".08" />
         </linearGradient>
       </defs>
       <path
-        d="M5 16.5 12.5 9 20 16.5v11.8H5V16.5Z"
+        d="M15 28V10.5L25.5 4 35 10.5V28H15Z"
         stroke="url(#property-meetup-gradient)"
-        strokeWidth="2.4"
+        strokeWidth="3.2"
         strokeLinejoin="round"
         fill="url(#property-meetup-fill)"
       />
       <circle
-        cx="12.5"
-        cy="9"
-        r="1.8"
-        fill="#ef6a62"
+        cx="25.5"
+        cy="4"
+        r="1.7"
+        fill="#f472b6"
         stroke="url(#property-meetup-gradient)"
-        strokeWidth="1.1"
-      />
-      <circle
-        cx="27.5"
-        cy="9"
-        r="1.8"
-        fill="#6377df"
-        stroke="url(#property-meetup-gradient)"
-        strokeWidth="1.1"
+        strokeWidth="1"
       />
       <path
-        d="M20 16.5 27.5 9l7.5 7.5v11.8H20V16.5Z"
+        d="M4 17h12.5c2.2 0 4 1.8 4 4v7H4V17Z"
         stroke="url(#property-meetup-gradient)"
-        strokeWidth="2.4"
+        strokeWidth="3.2"
         strokeLinejoin="round"
-        fill="url(#property-meetup-fill)"
-      />
-      <path
-        d="M10 28v-5.1h5V28M25 28v-5.1h5V28"
-        stroke="url(#property-meetup-gradient)"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M17.2 19.5h5.6"
-        stroke="#fff"
-        strokeWidth="1.7"
         strokeLinecap="round"
+        fill="url(#property-meetup-fill)"
       />
-      <circle cx="17.2" cy="19.5" r="1.8" fill="#fff" />
-      <circle cx="22.8" cy="19.5" r="1.8" fill="#fff" />
+      <path
+        d="M8 28v-5.5h6v5.5M20 28v-5h6v5"
+        stroke="url(#property-meetup-gradient)"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
