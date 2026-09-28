@@ -307,9 +307,6 @@ function PropertyProjectFeed({
         ))}
       </div>
 
-      <div className="border-t border-white/10 pt-3 text-center text-[9px] font-bold uppercase tracking-[0.14em] text-white/30">
-        Scroll to view all mapped sites
-      </div>
     </section>
   );
 }
@@ -4274,43 +4271,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
                       })()}
                     </div>
                   </div>
-                  {(() => {
-                    const websiteUrl = form.watch("website");
-                    const hasWebsite =
-                      !!websiteUrl &&
-                      websiteUrl.trim() !== "" &&
-                      websiteUrl !== "#";
-                    return (
-                      <a
-                        href={hasWebsite ? websiteUrl : undefined}
-                        target={hasWebsite ? "_blank" : undefined}
-                        rel={hasWebsite ? "noreferrer" : undefined}
-                        onClick={(e) => {
-                          if (!hasWebsite) {
-                            e.preventDefault();
-                            return;
-                          }
-                          trackClick("website");
-                        }}
-                        className={clsx(
-                          "w-full rounded-lg py-3 font-semibold text-sm flex items-center justify-center gap-2 group no-underline transition-all",
-                          hasWebsite
-                            ? "bg-primary text-white hover:opacity-90 shadow-lg cursor-pointer"
-                            : "bg-white/5 text-white/20 cursor-not-allowed border border-white/5",
-                        )}
-                      >
-                        {hasWebsite ? "View Website" : "No Website Available"}
-                        <ArrowRight
-                          className={clsx(
-                            "w-3.5 h-3.5 transition-transform",
-                            hasWebsite
-                              ? "group-hover:translate-x-1"
-                              : "opacity-0",
-                          )}
-                        />
-                      </a>
-                    );
-                  })()}
                   {loggedInUser && user && loggedInUser.id === user.id && mode === "login" && (
                     <button
                       type="button"
