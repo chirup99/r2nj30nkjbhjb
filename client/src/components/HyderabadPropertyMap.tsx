@@ -549,10 +549,12 @@ function RadiusArcControl({
   radiusInKilometers,
   onRadiusChange,
   visibleProjectCount,
+  isDarkMap,
 }: {
   radiusInKilometers: number;
   onRadiusChange: (radius: number) => void;
   visibleProjectCount: number;
+  isDarkMap: boolean;
 }) {
   const minimumRadius = 5;
   const maximumRadius = 100;
@@ -606,13 +608,21 @@ function RadiusArcControl({
       initial={{ opacity: 0, y: 20, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: "spring", damping: 24, stiffness: 300 }}
-      className="pointer-events-auto relative h-[166px] w-[310px] rounded-[28px] border border-white/20 bg-slate-950/92 px-3 pt-2 text-white shadow-2xl backdrop-blur-xl"
+      className={`pointer-events-auto relative h-[166px] w-[310px] rounded-[28px] border px-3 pt-2 shadow-2xl backdrop-blur-xl ${
+        isDarkMap
+          ? "border-white/20 bg-slate-950/92 text-white"
+          : "border-slate-200/90 bg-white/95 text-slate-950 shadow-slate-950/20"
+      }`}
       aria-label="Adjust search radius"
     >
       <button
         type="button"
         onClick={() => onRadiusChange(minimumRadius)}
-        className="absolute right-3 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full text-white/65 transition-colors hover:bg-white/10 hover:text-white"
+        className={`absolute right-3 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
+          isDarkMap
+            ? "text-white/65 hover:bg-white/10 hover:text-white"
+            : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+        }`}
         aria-label="Reset search radius to 5 kilometres"
       >
         <X className="h-3.5 w-3.5" />
@@ -646,7 +656,7 @@ function RadiusArcControl({
         <path
           d={arcPath}
           fill="none"
-          stroke="rgba(255,255,255,0.15)"
+          stroke={isDarkMap ? "rgba(255,255,255,0.15)" : "rgba(15,23,42,0.16)"}
           strokeLinecap="round"
           strokeWidth="25"
         />
@@ -654,7 +664,7 @@ function RadiusArcControl({
           d={arcPath}
           pathLength={1}
           fill="none"
-          stroke="#d7d8dc"
+          stroke={isDarkMap ? "#d7d8dc" : "#0891b2"}
           strokeLinecap="round"
           strokeWidth="25"
           animate={{ strokeDasharray: `${progress} 1` }}
@@ -663,7 +673,7 @@ function RadiusArcControl({
         <path
           d={arcPath}
           fill="none"
-          stroke="rgba(255,255,255,0.4)"
+          stroke={isDarkMap ? "rgba(255,255,255,0.4)" : "rgba(15,23,42,0.38)"}
           strokeLinecap="round"
           strokeWidth="2"
         />
@@ -671,8 +681,8 @@ function RadiusArcControl({
           cx={handleX}
           cy={handleY}
           r="12"
-          fill="#d7d8dc"
-          stroke="#ffffff"
+          fill={isDarkMap ? "#d7d8dc" : "#0891b2"}
+          stroke={isDarkMap ? "#ffffff" : "#ffffff"}
           strokeWidth="2"
           animate={{ cx: handleX, cy: handleY }}
           transition={{ type: "spring", damping: 24, stiffness: 180 }}
@@ -682,14 +692,16 @@ function RadiusArcControl({
           cx={centerX}
           cy={centerY}
           r="36"
-          fill="#050505"
-          stroke="rgba(255,255,255,0.16)"
+          fill={isDarkMap ? "#050505" : "#f8fafc"}
+          stroke={
+            isDarkMap ? "rgba(255,255,255,0.16)" : "rgba(15,23,42,0.16)"
+          }
           strokeWidth="1"
         />
         <text
           x={centerX}
           y="112"
-          fill="white"
+          fill={isDarkMap ? "white" : "#0f172a"}
           textAnchor="middle"
           className="text-[22px] font-bold"
         >
@@ -698,14 +710,18 @@ function RadiusArcControl({
         <text
           x={centerX}
           y="130"
-          fill="rgba(255,255,255,0.5)"
+          fill={isDarkMap ? "rgba(255,255,255,0.5)" : "rgba(15,23,42,0.58)"}
           textAnchor="middle"
           className="text-[8px] font-bold uppercase tracking-[0.14em]"
         >
           {visibleProjectCount} projects nearby
         </text>
       </svg>
-      <p className="absolute bottom-1 left-0 right-0 text-center text-[8px] font-semibold uppercase tracking-[0.14em] text-white/35">
+      <p
+        className={`absolute bottom-1 left-0 right-0 text-center text-[8px] font-semibold uppercase tracking-[0.14em] ${
+          isDarkMap ? "text-white/35" : "text-slate-500"
+        }`}
+      >
         Drag the arc to expand or compress
       </p>
     </motion.div>
@@ -1354,6 +1370,7 @@ export function HyderabadPropertyMapOverlay({
             radiusInKilometers={radiusInKilometers}
             onRadiusChange={setRadiusInKilometers}
             visibleProjectCount={visibleProjects.length}
+            isDarkMap={isDarkMap}
           />
         </div>
       )}
