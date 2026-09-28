@@ -1,7 +1,6 @@
 import { QRCodeSVG } from "qrcode.react";
 import * as htmlToImage from "html-to-image";
 import { BrowserMultiFormatReader } from "@zxing/library";
-import logoImg from "@assets/logo.png";
 
 // ... existing imports
 import { useState, useMemo, useEffect, useRef, forwardRef } from "react";
@@ -160,6 +159,89 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
     icon: Building2,
   },
 ];
+
+function PropertyMeetupMark({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 40 34"
+      fill="none"
+      className={className}
+      role="img"
+      aria-label="Property meetup"
+    >
+      <defs>
+        <linearGradient
+          id="property-meetup-gradient"
+          x1="5"
+          y1="5"
+          x2="31"
+          y2="29"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#ef5b5b" />
+          <stop offset="0.45" stopColor="#f29b45" />
+          <stop offset="0.72" stopColor="#8d5bd6" />
+          <stop offset="1" stopColor="#4f6edb" />
+        </linearGradient>
+        <linearGradient
+          id="property-meetup-fill"
+          x1="8"
+          y1="8"
+          x2="32"
+          y2="28"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#ef5b5b" stopOpacity=".22" />
+          <stop offset="1" stopColor="#586fe1" stopOpacity=".08" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M5 16.5 12.5 9 20 16.5v11.8H5V16.5Z"
+        stroke="url(#property-meetup-gradient)"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+        fill="url(#property-meetup-fill)"
+      />
+      <circle
+        cx="12.5"
+        cy="9"
+        r="1.8"
+        fill="#ef6a62"
+        stroke="url(#property-meetup-gradient)"
+        strokeWidth="1.1"
+      />
+      <circle
+        cx="27.5"
+        cy="9"
+        r="1.8"
+        fill="#6377df"
+        stroke="url(#property-meetup-gradient)"
+        strokeWidth="1.1"
+      />
+      <path
+        d="M20 16.5 27.5 9l7.5 7.5v11.8H20V16.5Z"
+        stroke="url(#property-meetup-gradient)"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+        fill="url(#property-meetup-fill)"
+      />
+      <path
+        d="M10 28v-5.1h5V28M25 28v-5.1h5V28"
+        stroke="url(#property-meetup-gradient)"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M17.2 19.5h5.6"
+        stroke="#fff"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <circle cx="17.2" cy="19.5" r="1.8" fill="#fff" />
+      <circle cx="22.8" cy="19.5" r="1.8" fill="#fff" />
+    </svg>
+  );
+}
 
 const COUNTRY_CODES = [
   { code: "+91", country: "India", flag: "🇮🇳" },
@@ -3407,11 +3489,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                     </span>
                   </div>
                 </motion.div>
-                <img
-                  src="/perala.png"
-                  alt="Traders Community"
-                  className="w-5 h-5 group-hover:scale-110 transition-transform"
-                />
+                <PropertyMeetupMark className="h-7 w-7 transition-transform group-hover:scale-110" />
               </motion.button>
             </motion.div>
           )}
