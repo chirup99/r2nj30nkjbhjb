@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "E_O_7ekt1APCuEcgkBw8h"
+uri = "file://persona-hub-eb-new-updated.zip"
+type = "unspecified"
+title = "Updated AWS Elastic Beanstalk deployment ZIP"
+description = "Built from the current project using the working persona-hub-eb-new.zip layout. Includes the current compiled dist, server/shared runtime files, package manifests, Procfile, and working EB port configuration. ZIP integrity and production smoke test passed on port 8081. The embedded .env was intentionally excluded so secrets stay out of the deployment artifact."
+logical_id = "e95a0abb-ca6d-4d34-95a1-abd3fc21960b"
+content_hash = "sha256:779eac4e65a0f2f1a739363ba06714cd6a24f40d72bcb61a5c68461ba2fc0eae"
+size = 14078827
+mtime_ms = 1790603582805
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:bc39eee7-77fa-4474-b8a0-5ea0e136857f/e95a0abb-ca6d-4d34-95a1-abd3fc21960b/316c0a8e-77b0-46b3-8483-d200099e685b"
+storage_version_token = "1790603605830587"
+content_type = "application/octet-stream"
