@@ -41,36 +41,171 @@ const MAGIC_ANCHOR: [number, number] = [78.386, 17.455];
 // Snapshot of every venture currently returned by PlotsView's public catalog.
 const PROJECTS: PropertyProject[] = PLOTSVIEW_PROJECTS;
 
+function getPricePerSquareYard(project: PropertyProject) {
+  const price = project.price.replace(/[^\d]/g, "");
+  return Number(price) || 0;
+}
+
+function getMinimumPlotSize(project: PropertyProject) {
+  const size = project.bedrooms.match(/[\d,]+/);
+  return size ? Number(size[0].replace(/,/g, "")) : 0;
+}
+
+function getEstimatedMinimumPlotValue(project: PropertyProject) {
+  return getPricePerSquareYard(project) * getMinimumPlotSize(project);
+}
+
+type MagicSubcategory = {
+  id: string;
+  label: string;
+  detail: string;
+  filter: (project: PropertyProject) => boolean;
+};
+
+type MagicIntent = {
+  id: string;
+  label: string;
+  detail: string;
+  accent: string;
+  filter: (project: PropertyProject) => boolean;
+  subcategories: readonly MagicSubcategory[];
+};
+
 const MAGIC_INTENTS = [
   {
     id: "uber-class",
     label: "Premium plots",
     detail: "Higher-value shortlist",
-    projectId: "56",
     accent: "#8b5cf6",
+    filter: (project) => getPricePerSquareYard(project) >= 40000,
+    subcategories: [
+      {
+        id: "all-premium",
+        label: "All premium",
+        detail: "All higher-value projects",
+        filter: () => true,
+      },
+      {
+        id: "two-crore-plus",
+        label: "₹2Cr+",
+        detail: "Estimated minimum plot value",
+        filter: (project) => getEstimatedMinimumPlotValue(project) >= 20000000,
+      },
+      {
+        id: "forty-thousand-plus",
+        label: "₹40k+ / sq yd",
+        detail: "Higher rate per square yard",
+        filter: (project) => getPricePerSquareYard(project) >= 40000,
+      },
+      {
+        id: "large-premium-plots",
+        label: "200+ sq yd",
+        detail: "Larger villa plot sizes",
+        filter: (project) => getMinimumPlotSize(project) >= 200,
+      },
+    ],
   },
   {
     id: "ultra-luxury",
     label: "Large layouts",
     detail: "Big development",
-    projectId: "49",
     accent: "#ec4899",
+    filter: (project) => project.acres >= 20,
+    subcategories: [
+      {
+        id: "all-large",
+        label: "All large layouts",
+        detail: "Every 20+ acre project",
+        filter: () => true,
+      },
+      {
+        id: "fifty-acres-plus",
+        label: "50+ acres",
+        detail: "The biggest developments",
+        filter: (project) => project.acres >= 50,
+      },
+      {
+        id: "twenty-to-fifty-acres",
+        label: "20–50 acres",
+        detail: "Large mid-size layouts",
+        filter: (project) => project.acres >= 20 && project.acres < 50,
+      },
+      {
+        id: "large-plot-sizes",
+        label: "500+ sq yd",
+        detail: "Large individual plots",
+        filter: (project) => getMinimumPlotSize(project) >= 500,
+      },
+    ],
   },
   {
     id: "ready-now",
-    label: "Serengeti",
-    detail: "Thummaloor venture",
-    projectId: "58",
+    label: "Ready now",
+    detail: "Active listings",
     accent: "#10b981",
+    filter: (project) => project.status.toLowerCase().includes("active"),
+    subcategories: [
+      {
+        id: "all-ready",
+        label: "All active listings",
+        detail: "Every active listing",
+        filter: () => true,
+      },
+      {
+        id: "ready-hmda",
+        label: "HMDA plots",
+        detail: "Active HMDA listings",
+        filter: (project) => project.approvalType === "HMDA",
+      },
+      {
+        id: "ready-dtcp",
+        label: "DTCP plots",
+        detail: "Active DTCP listings",
+        filter: (project) => project.approvalType === "DTCP",
+      },
+      {
+        id: "ready-large-plots",
+        label: "200+ sq yd",
+        detail: "Active larger plots",
+        filter: (project) => getMinimumPlotSize(project) >= 200,
+      },
+    ],
   },
   {
     id: "growth-pick",
     label: "Growth pick",
-    detail: "New corridor",
-    projectId: "37",
+    detail: "Value-led corridors",
     accent: "#f59e0b",
+    filter: (project) =>
+      getPricePerSquareYard(project) <= 30000 && project.acres >= 5,
+    subcategories: [
+      {
+        id: "all-growth",
+        label: "All growth picks",
+        detail: "Every value-led project",
+        filter: () => true,
+      },
+      {
+        id: "under-two-crore",
+        label: "Under ₹2Cr",
+        detail: "Estimated minimum plot value",
+        filter: (project) => getEstimatedMinimumPlotValue(project) < 20000000,
+      },
+      {
+        id: "entry-price",
+        label: "Under ₹30k / sq yd",
+        detail: "Lower entry rate",
+        filter: (project) => getPricePerSquareYard(project) < 30000,
+      },
+      {
+        id: "growth-large-plots",
+        label: "200+ sq yd",
+        detail: "Bigger growth-corridor plots",
+        filter: (project) => getMinimumPlotSize(project) >= 200,
+      },
+    ],
   },
-] as const;
+] satisfies readonly MagicIntent[];
 
 function createCurvedRoute(
   start: [number, number],
@@ -100,12 +235,12 @@ function createCurvedRoute(
 }
 
 function MagicProjectRoute({
-  project,
+  projects,
   intent,
   progress,
 }: {
-  project: PropertyProject;
-  intent: (typeof MAGIC_INTENTS)[number];
+  projects: PropertyProject[];
+  intent: MagicIntent;
   progress: number;
 }) {
   const { map, isLoaded } = useMap();
@@ -146,33 +281,36 @@ function MagicProjectRoute({
     };
   }, [intent.id, isLoaded, map]);
 
-  const route = createCurvedRoute(routeStart, [
-    project.longitude,
-    project.latitude,
-  ]);
-
   return (
-    <MapRoute
-      id="magic-project-route"
-      coordinates={route}
-      color="#f9a8d4"
-      width={2}
-      opacity={0.45}
-      dashArray={[2, 2]}
-      active
-      activeColor={intent.accent}
-      activeWidth={4}
-      activeOpacity={0.95}
-      activeDashArray={[1.5, 1.5]}
-      progress={progress}
-    >
-      <RouteProgress
-        color="#fff7ed"
-        width={5}
-        opacity={0.9}
-        dashArray={[1, 1]}
-      />
-    </MapRoute>
+    <>
+      {projects.map((project) => (
+        <MapRoute
+          key={`${intent.id}-${project.id}`}
+          id={`magic-project-route-${intent.id}-${project.id}`}
+          coordinates={createCurvedRoute(routeStart, [
+            project.longitude,
+            project.latitude,
+          ])}
+          color="#f9a8d4"
+          width={2}
+          opacity={0.45}
+          dashArray={[2, 2]}
+          active
+          activeColor={intent.accent}
+          activeWidth={4}
+          activeOpacity={0.95}
+          activeDashArray={[1.5, 1.5]}
+          progress={progress}
+        >
+          <RouteProgress
+            color="#fff7ed"
+            width={5}
+            opacity={0.9}
+            dashArray={[1, 1]}
+          />
+        </MapRoute>
+      ))}
+    </>
   );
 }
 
@@ -565,35 +703,44 @@ export function HyderabadPropertyMapOverlay({
   const [query, setQuery] = useState("");
   const [showMapInfo, setShowMapInfo] = useState(false);
   const [selectedIntentId, setSelectedIntentId] = useState<string | null>(null);
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<
+    string | null
+  >(null);
   const [selectedPinProjectId, setSelectedPinProjectId] = useState<string | null>(
     null,
   );
   const [routeProgress, setRouteProgress] = useState(0);
 
+  const selectedIntent = MAGIC_INTENTS.find(
+    (intent) => intent.id === selectedIntentId,
+  );
+  const selectedSubcategory = selectedIntent?.subcategories.find(
+    (subcategory) => subcategory.id === selectedSubcategoryId,
+  );
+
   const visibleProjects = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return PROJECTS.filter((project) => {
+      const matchesMagicFilter =
+        !selectedIntent ||
+        (selectedIntent.filter(project) &&
+          (!selectedSubcategory || selectedSubcategory.filter(project)));
       const matchesQuery =
         !normalizedQuery ||
         `${project.name} ${project.locality} ${project.developer}`
           .toLowerCase()
           .includes(normalizedQuery);
-      return matchesQuery;
+      return matchesMagicFilter && matchesQuery;
     });
-  }, [query]);
+  }, [query, selectedIntent, selectedSubcategory]);
 
-  const selectedIntent = MAGIC_INTENTS.find(
-    (intent) => intent.id === selectedIntentId,
-  );
-  const magicProject = PROJECTS.find(
-    (project) => project.id === selectedIntent?.projectId,
-  );
+  const routeProjectIds = visibleProjects.map((project) => project.id).join(",");
   const selectedPinProject = PROJECTS.find(
     (project) => project.id === selectedPinProjectId,
   );
 
   useEffect(() => {
-    if (!magicProject) {
+    if (!selectedIntent || !selectedSubcategory || visibleProjects.length === 0) {
       setRouteProgress(0);
       return;
     }
@@ -608,16 +755,36 @@ export function HyderabadPropertyMapOverlay({
     };
     frame = requestAnimationFrame(animateRoute);
     return () => cancelAnimationFrame(frame);
-  }, [magicProject?.id]);
+  }, [
+    routeProjectIds,
+    selectedIntent,
+    selectedSubcategory,
+    visibleProjects.length,
+  ]);
 
   const chooseMagicIntent = (intentId: string) => {
+    const intent = MAGIC_INTENTS.find((item) => item.id === intentId);
+    if (!intent) return;
+
     if (selectedIntentId === intentId) {
       setSelectedIntentId(null);
+      setSelectedSubcategoryId(null);
       return;
     }
 
     setSelectedIntentId(intentId);
+    setSelectedSubcategoryId(intent.subcategories[0]?.id ?? null);
     setQuery("");
+  };
+
+  const chooseMagicSubcategory = (subcategoryId: string) => {
+    setSelectedSubcategoryId(subcategoryId);
+    setQuery("");
+  };
+
+  const resetMagicFilters = () => {
+    setSelectedIntentId(null);
+    setSelectedSubcategoryId(null);
   };
 
   return (
@@ -644,9 +811,9 @@ export function HyderabadPropertyMapOverlay({
           className="!bottom-28"
         />
         <FitProjectPins projects={visibleProjects} />
-        {magicProject && selectedIntent && (
+        {selectedIntent && selectedSubcategory && visibleProjects.length > 0 && (
           <MagicProjectRoute
-            project={magicProject}
+            projects={visibleProjects}
             intent={selectedIntent}
             progress={routeProgress}
           />
@@ -660,10 +827,7 @@ export function HyderabadPropertyMapOverlay({
             <MarkerContent>
               <PropertyPin
                 accent={project.accent}
-                selected={
-                  project.id === magicProject?.id ||
-                  project.id === selectedPinProject?.id
-                }
+                selected={project.id === selectedPinProject?.id}
                 onSelect={() => setSelectedPinProjectId(project.id)}
               />
             </MarkerContent>
@@ -686,7 +850,9 @@ export function HyderabadPropertyMapOverlay({
               />
             </label>
             <p className="mt-2 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-              {visibleProjects.length} of {PROJECTS.length} projects pinned
+              {selectedIntent
+                ? `${visibleProjects.length} ${selectedIntent.label.toLowerCase()} shown`
+                : `${visibleProjects.length} of ${PROJECTS.length} projects pinned`}
             </p>
           </div>
 
@@ -706,26 +872,64 @@ export function HyderabadPropertyMapOverlay({
           <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
             <Sparkles className="ml-1.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
             <div className="flex min-w-max gap-1.5">
-              {MAGIC_INTENTS.map((intent) => {
-                const isSelected = selectedIntentId === intent.id;
-                return (
+              {selectedIntent ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={resetMagicFilters}
+                    className="shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-left text-white/70 transition-all hover:border-white/40 hover:bg-white/10 hover:text-white"
+                    aria-label="Show all projects"
+                  >
+                    <span className="block text-[10px] font-bold">All</span>
+                  </button>
+                  <button
+                    type="button"
+                    data-magic-intent={selectedIntent.id}
+                    onClick={() => chooseMagicIntent(selectedIntent.id)}
+                    className="shrink-0 rounded-full border border-white/80 bg-white px-3 py-2 text-left text-slate-950 shadow-lg"
+                  >
+                    <span className="block text-[10px] font-bold">
+                      {selectedIntent.label}
+                    </span>
+                  </button>
+                  {selectedIntent.subcategories.map((subcategory) => {
+                    const isSelected =
+                      selectedSubcategoryId === subcategory.id;
+                    return (
+                      <button
+                        key={subcategory.id}
+                        type="button"
+                        onClick={() => chooseMagicSubcategory(subcategory.id)}
+                        className={`shrink-0 rounded-full border px-3 py-2 text-left transition-all ${
+                          isSelected
+                            ? "border-cyan-300/70 bg-cyan-300/15 text-cyan-100 shadow-lg"
+                            : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
+                        }`}
+                        title={subcategory.detail}
+                      >
+                        <span className="block text-[10px] font-bold">
+                          {subcategory.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </>
+              ) : (
+                MAGIC_INTENTS.map((intent) => (
                   <button
                     key={intent.id}
                     type="button"
                     data-magic-intent={intent.id}
                     onClick={() => chooseMagicIntent(intent.id)}
-                    className={`shrink-0 rounded-full border px-3 py-2 text-left transition-all ${
-                      isSelected
-                        ? "border-white/80 bg-white text-slate-950 shadow-lg"
-                        : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
-                    }`}
+                    className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-left text-white/75 transition-all hover:border-cyan-300/50 hover:bg-white/10"
+                    title={intent.detail}
                   >
                     <span className="block truncate text-[10px] font-bold">
                       {intent.label}
                     </span>
                   </button>
-                );
-              })}
+                ))
+              )}
             </div>
           </div>
 
