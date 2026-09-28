@@ -938,28 +938,6 @@ export default function AiAssistantPage() {
       return;
     }
 
-    if (!query.maxBudget) {
-      const nextSettings: PropertySearchSettings = {
-        maxBudget: 5_000_000,
-        location: query.location ?? "",
-        propertyType:
-          query.propertyType === "flat" ||
-          query.propertyType === "plot" ||
-          query.propertyType === "villa" ||
-          query.propertyType === "commercial"
-            ? query.propertyType
-            : "",
-      };
-      setPropertySearchSettings(nextSettings);
-      addAssistantMessage(
-        "I can help narrow that down. Please choose your maximum budget, location, and property type.",
-        undefined,
-        false,
-        true,
-      );
-      return;
-    }
-
     const matches = getPropertyMatches(query);
     const filters = [
       query.location ? `near ${query.location}` : "",
