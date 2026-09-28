@@ -1404,7 +1404,10 @@ const SwipeCard = ({
         />
       </div>
 
-      <div className="mt-4 space-y-2 px-1" aria-label="Saved card progress">
+      <div
+        className="relative z-10 mt-8 space-y-2 px-2 pt-1"
+        aria-label="Saved card progress"
+      >
         <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[0.16em] text-white/45">
           <span>Property cards</span>
           <span className="tabular-nums text-white/75">
