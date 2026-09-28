@@ -4066,7 +4066,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
             </div>
           )}
 
-          <div className="space-y-4 overflow-y-auto flex-1">
+          <div className="scrollbar-hide flex-1 space-y-4 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -4095,22 +4095,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
                         Ask AI
                       </span>
                     </button>
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-600 to-blue-400 mx-auto flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                      {form.watch("name")?.[0] || "P"}
-                    </div>
-                    <h3 className="text-xl font-bold text-white tracking-tight">
-                      {form.watch("name") || "Property Profile"}
-                    </h3>
-                    <p className="text-white/40 text-xs">
-                      {ROLES.find((r) => r.value === form.watch("role"))
-                        ?.label || "Founder"}
-                    </p>
-                    <p className="text-white/40 text-[10px]">
-                      {form.watch("industry") || ""}
-                    </p>
-                    <p className="text-white/40 text-[10px] italic">
-                      {form.watch("bio") || ""}
-                    </p>
                     <PropertyProjectFeed />
                     <div className="hidden">
                     <div className="flex items-center justify-center gap-3 w-full pt-1">
