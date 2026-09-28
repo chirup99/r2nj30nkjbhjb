@@ -239,9 +239,9 @@ function PropertyProjectFeed({
             key={project.id}
             type="button"
             onClick={() => onProjectSelect(project.id)}
-            className="group block rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-left transition-all hover:border-purple-300/40 hover:bg-white/[0.07] hover:shadow-[0_8px_24px_rgba(124,58,237,0.14)]"
+            className="group grid grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-2.5 text-left transition-all hover:border-purple-300/40 hover:bg-white/[0.07] hover:shadow-[0_8px_24px_rgba(124,58,237,0.14)]"
           >
-            <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black/20">
+            <div className="relative min-h-[168px] overflow-hidden rounded-xl border border-white/10 bg-black/20">
               <img
                 src={getPropertyProjectImage(project, index)}
                 alt={`${project.name} property`}
@@ -253,53 +253,55 @@ function PropertyProjectFeed({
                 View on map
               </span>
             </div>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex min-w-0 items-start gap-2.5">
+            <div className="flex min-w-0 flex-col justify-between gap-3 py-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-start gap-2">
                 <span
-                  className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/15"
+                  className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/15"
                   style={{
                     backgroundColor: `${project.accent}22`,
                     color: project.accent,
                   }}
                 >
-                  <MapPin className="h-3.5 w-3.5" />
+                  <MapPin className="h-3 w-3" />
                 </span>
                 <div className="min-w-0">
-                   <h5 className="text-sm font-bold leading-tight text-white group-hover:text-purple-200">
+                    <h5 className="text-xs font-bold leading-tight text-white group-hover:text-purple-200">
                     {project.name}
-                  </h5>
-                   <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.08em] text-white/40">
+                    </h5>
+                    <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.08em] text-white/40">
                     {project.locality} · {project.approvalType}
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-white/25 transition-transform group-hover:translate-x-0.5 group-hover:text-white/70" />
+              </div>
+
+              <div className="grid gap-1.5">
+                <div className="rounded-lg bg-black/20 px-2.5 py-2">
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-white/30">
+                  Price
+                  </p>
+                  <p className="mt-1 text-[11px] font-bold text-emerald-300">
+                  {project.price}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-black/20 px-2.5 py-2">
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-white/30">
+                  Plot range
+                  </p>
+                  <p className="mt-1 text-[11px] font-bold text-white/75">
+                  {project.bedrooms}
                   </p>
                 </div>
               </div>
-              <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-white/25 transition-transform group-hover:translate-x-0.5 group-hover:text-white/70" />
-            </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2.5">
-              <div className="rounded-xl bg-black/20 px-3 py-2.5">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-white/30">
-                  Price
-                </p>
-                <p className="mt-1 text-xs font-bold text-emerald-300">
-                  {project.price}
+              <div className="space-y-1 text-[9px] leading-tight text-white/40">
+                <p>{project.type}</p>
+                <p>
+                  {project.acres} acres · {project.totalPlots} plots
                 </p>
               </div>
-              <div className="rounded-xl bg-black/20 px-3 py-2.5">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-white/30">
-                  Plot range
-                </p>
-                <p className="mt-1 text-xs font-bold text-white/75">
-                  {project.bedrooms}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-3 flex items-center justify-between gap-3 text-[10px] text-white/40">
-              <span>{project.type}</span>
-              <span className="shrink-0">
-                {project.acres} acres · {project.totalPlots} plots
-              </span>
             </div>
           </motion.button>
         ))}
