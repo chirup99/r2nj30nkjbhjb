@@ -26,6 +26,7 @@ import {
   PLOTSVIEW_PROJECTS,
   type PlotsViewProject,
 } from "@/data/plotsviewProjects";
+import { CURATED_RESIDENTIAL_PROPERTIES } from "@/data/curatedProperties";
 
 type AssistantQuery = {
   intent: "property" | "loan";
@@ -35,10 +36,21 @@ type AssistantQuery = {
   compare?: boolean;
 };
 
-type PropertyMatch = PlotsViewProject & {
+type AssistantProject = PlotsViewProject & {
+  estimatedEntryPriceOverride?: number;
+  pricePerSqYdOverride?: number;
+  mapAvailable?: boolean;
+};
+
+type PropertyMatch = AssistantProject & {
   estimatedEntryPrice: number;
   pricePerSqYd: number;
 };
+
+const PROPERTY_CATALOG: AssistantProject[] = [
+  ...PLOTSVIEW_PROJECTS,
+  ...CURATED_RESIDENTIAL_PROPERTIES,
+];
 
 type PropertySearchSettings = {
   maxBudget: number;
@@ -115,11 +127,11 @@ function findLocationInText(text: string) {
   );
   if (group) return group;
 
-  const localities = PLOTSVIEW_PROJECTS.map((project) => project.locality)
+  const localities = PROPERTY_CATALOG.map((project) => project.locality)
     .filter((locality, index, all) => all.indexOf(locality) === index)
     .sort((a, b) => b.length - a.length);
 
-  return localities.find((locality) => {
+  const knownLocation = localities.find((locality) => {
     const candidate = normalizeLocationText(locality);
     if (normalized.includes(candidate)) return true;
 
@@ -128,6 +140,22 @@ function findLocationInText(text: string) {
       .filter((part) => part.length >= 5)
       .some((part) => normalized.includes(part));
   });
+
+  if (knownLocation) return normalizeLocationText(knownLocation);
+
+  // Preserve an explicitly named area even when the current catalog has no
+  // listing there. Returning undefined here used to turn an unknown location
+  // into an unfiltered search, which made "properties in Kokapet" show every
+  // area instead of an empty Kokapet-only result.
+  const locationBeforeFilter = normalized.match(
+    /\b(?:in|near|at|around|from)\s+([a-z0-9]+(?:\s+[a-z0-9]+){0,2}?)(?=\s+(?:properties?|plots?|villas?|flats?|apartments?|under|below|within|for|with|and)\b|$)/,
+  )?.[1];
+  if (locationBeforeFilter) return locationBeforeFilter.trim();
+
+  const locationBeforePropertyWord = normalized.match(
+    /\b([a-z0-9]+(?:\s+[a-z0-9]+){0,2})\s+(?:properties?|plots?|villas?|flats?|apartments?)\b/,
+  )?.[1];
+  return locationBeforePropertyWord?.trim();
 }
 
 function parseAmount(value: string, unit?: string) {
@@ -187,11 +215,14 @@ function parseQuery(text: string): AssistantQuery {
   };
 }
 
-function getPricePerSqYd(project: PlotsViewProject) {
+function getPricePerSqYd(project: AssistantProject) {
+  if (project.pricePerSqYdOverride !== undefined) {
+    return project.pricePerSqYdOverride;
+  }
   return Number(project.price.replace(/[^\d]/g, "")) || 0;
 }
 
-function getMinimumPlotSize(project: PlotsViewProject) {
+function getMinimumPlotSize(project: AssistantProject) {
   return Number(project.bedrooms.match(/\d+/)?.[0] || 0);
 }
 
@@ -210,23 +241,33 @@ function formatRate(value: number) {
   return `₹${value.toLocaleString("en-IN")} / sq yd`;
 }
 
+function formatProjectPrice(project: PropertyMatch) {
+  return project.pricePerSqYd > 0
+    ? formatRate(project.pricePerSqYd)
+    : project.price;
+}
+
 function getPropertyMatches(query: AssistantQuery): PropertyMatch[] {
-  return PLOTSVIEW_PROJECTS.map((project) => {
+  return PROPERTY_CATALOG.map((project) => {
     const pricePerSqYd = getPricePerSqYd(project);
     return {
       ...project,
       pricePerSqYd,
-      estimatedEntryPrice: pricePerSqYd * getMinimumPlotSize(project),
+      estimatedEntryPrice:
+        project.estimatedEntryPriceOverride ??
+        pricePerSqYd * getMinimumPlotSize(project),
     };
   })
     .filter((project) => {
       const locationTerms = query.location
-        ? LOCATION_GROUPS[query.location] || [query.location.toLowerCase()]
+        ? LOCATION_GROUPS[query.location] || [normalizeLocationText(query.location)]
         : [];
       const matchesLocation =
         locationTerms.length === 0 ||
         locationTerms.some((term) =>
-          project.locality.toLowerCase().includes(term),
+          normalizeLocationText(project.locality).includes(
+            normalizeLocationText(term),
+          ),
         );
       const matchesBudget =
         !query.maxBudget || project.estimatedEntryPrice <= query.maxBudget;
@@ -304,7 +345,7 @@ function getProjectInsights(project: PropertyMatch) {
       {
         label: "Price signal",
         value: priceValue,
-        detail: formatRate(project.pricePerSqYd),
+        detail: formatProjectPrice(project),
       },
     ] satisfies InsightMetric[],
     connectivitySignals: [
@@ -576,7 +617,7 @@ const LOCATION_OPTIONS = [
     label: location.replace(/\b\w/g, (letter) => letter.toUpperCase()),
   })),
   ...Array.from(
-    new Set(PLOTSVIEW_PROJECTS.map((project) => project.locality)),
+    new Set(PROPERTY_CATALOG.map((project) => project.locality)),
   ).map((location) => ({
     value: normalizeLocationText(location),
     label: location,
@@ -746,7 +787,7 @@ function PropertyComparison({ matches }: { matches: PropertyMatch[] }) {
                 {project.name}
               </p>
               <p className="mt-0.5 text-[10px] text-white/45">
-                {project.locality} · {formatRate(project.pricePerSqYd)}
+                {project.locality} · {formatProjectPrice(project)}
               </p>
             </div>
             <span className="shrink-0 text-xs font-bold text-white">
@@ -1106,7 +1147,7 @@ export default function AiAssistantPage() {
                             <div>
                               <p className="text-white/35">Rate</p>
                               <p className="mt-0.5 font-semibold text-white/75">
-                                {formatRate(project.pricePerSqYd)}
+                                {formatProjectPrice(project)}
                               </p>
                             </div>
                             <div>
@@ -1141,13 +1182,15 @@ export default function AiAssistantPage() {
                                   }`}
                                 />
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedMapProjectId(project.id)}
-                                className="shrink-0 rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-[10px] font-semibold text-white/75 transition-colors hover:border-white/40 hover:bg-white/10 hover:text-white"
-                              >
-                                Map
-                              </button>
+                              {project.mapAvailable !== false && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedMapProjectId(project.id)}
+                                  className="shrink-0 rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-[10px] font-semibold text-white/75 transition-colors hover:border-white/40 hover:bg-white/10 hover:text-white"
+                                >
+                                  Map
+                                </button>
+                              )}
                             </div>
                           </div>
                           {expandedInsightIds.includes(project.id) && (
