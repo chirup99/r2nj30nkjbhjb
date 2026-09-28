@@ -3747,9 +3747,9 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 animate={isMobile ? { y: 0 } : { x: 0 }}
                 exit={isMobile ? { y: "100%" } : { x: "100%" }}
                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                className="fixed bottom-0 left-0 right-0 z-50 max-h-[74vh] overflow-hidden rounded-t-[26px] border-t border-white/[.12] bg-[#0b0c0f] shadow-2xl md:bottom-0 md:left-auto md:top-0 md:right-0 md:h-full md:max-h-none md:w-[min(440px,100vw)] md:rounded-l-[26px] md:rounded-t-none md:border-l md:border-t-0"
+                 className="fixed bottom-0 left-0 right-0 z-50 flex h-[74vh] max-h-[74vh] flex-col overflow-hidden rounded-t-[26px] border-t border-white/[.12] bg-[#0b0c0f] shadow-2xl md:bottom-0 md:left-auto md:top-0 md:right-0 md:h-full md:max-h-none md:w-[min(440px,100vw)] md:rounded-l-[26px] md:rounded-t-none md:border-l md:border-t-0"
               >
-                <div className="sticky top-0 z-10 border-b border-white/[.08] bg-[#0b0c0f]/95 px-4 pb-3 pt-4 backdrop-blur-xl">
+                 <div className="sticky top-0 z-10 shrink-0 border-b border-white/[.08] bg-[#0b0c0f]/95 px-4 pb-3 pt-4 backdrop-blur-xl">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/35">
@@ -3812,7 +3812,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   </div>
                 </div>
 
-                 <div className="px-4 pb-6 pt-4">
+                  <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4">
                    <div className="mb-3 flex items-center justify-between gap-3">
                      <div>
                        <h4 className="text-sm font-bold tracking-tight text-white">
