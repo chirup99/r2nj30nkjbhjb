@@ -40,7 +40,6 @@ import {
   Users,
   CheckCircle2,
   ChevronRight,
-  Heart,
   Building2,
   Search,
 } from "lucide-react";
@@ -92,7 +91,6 @@ type PropertyEvent = {
   description: string;
   attendees: number;
   capacity: number;
-  accent: string;
   icon: typeof Building2;
 };
 
@@ -111,7 +109,6 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
       "Walk through the show villa, compare floor plans, and meet the project team on site.",
     attendees: 18,
     capacity: 30,
-    accent: "from-amber-500/35 via-orange-500/15 to-[#17100a]",
     icon: Building2,
   },
   {
@@ -128,7 +125,6 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
       "Meet developers, understand rental demand, and see the strongest investment-ready projects nearby.",
     attendees: 24,
     capacity: 40,
-    accent: "from-violet-500/35 via-purple-500/15 to-[#120d1f]",
     icon: Users,
   },
   {
@@ -145,7 +141,6 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
       "See the plotted development in person, review approvals, and ask the sales team anything before you visit again.",
     attendees: 11,
     capacity: 25,
-    accent: "from-emerald-500/35 via-teal-500/15 to-[#071713]",
     icon: MapPin,
   },
   {
@@ -162,7 +157,6 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
       "Tour the model flat, compare 2 and 3 BHK layouts, and speak with the project team about possession and pricing.",
     attendees: 15,
     capacity: 35,
-    accent: "from-sky-500/35 via-cyan-500/15 to-[#07151b]",
     icon: Building2,
   },
 ];
@@ -3371,7 +3365,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
         </AnimatePresence>
 
         <AnimatePresence>
-          {(!isMobile || isScrolledToBottom) && (
+          {(!isMobile || isScrolledToBottom) && !showTradersModal && (
             <motion.div
               ref={tradersRef}
               initial={{ opacity: 0, scale: 0.5, x: -20 }}
@@ -3431,7 +3425,11 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setShowTradersModal(false)}
+                onClick={() => {
+                  setShowTradersModal(false);
+                  setIsTradersExpanded(false);
+                  setSelectedPropertyEvent(null);
+                }}
                 className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
               />
               <motion.div
@@ -3439,71 +3437,70 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                 className="fixed bottom-0 left-0 right-0 z-50 max-h-[78vh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#090a0d]/[.98] shadow-2xl"
+                className="fixed bottom-0 left-0 right-0 z-50 max-h-[74vh] overflow-y-auto rounded-t-[26px] border-t border-white/[.12] bg-[#0b0c0f] shadow-2xl"
               >
-                 <div className="sticky top-0 z-10 border-b border-white/10 bg-[#090a0d]/95 px-4 pb-3 pt-4 backdrop-blur-xl">
-                   <div className="flex items-start justify-between gap-3">
-                   <div className="flex items-start gap-3">
-                     <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/10 ring-1 ring-emerald-300/20">
-                       <MapPin className="h-4 w-4 text-emerald-300" />
-                     </div>
-                     <div>
-                       <h3 className="text-base font-bold text-white">
-                         Meet the project in person
-                       </h3>
-                       <p className="mt-0.5 text-[10px] text-white/45">
-                         Visits, open houses & meetups
-                       </p>
-                     </div>
-                   </div>
-                   <button
-                     onClick={() => {
-                       setShowTradersModal(false);
-                       setSelectedPropertyEvent(null);
-                     }}
-                     className="rounded-full bg-white/10 p-2 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
-                     aria-label="Close property meetups"
-                   >
-                     <X className="h-4 w-4" />
-                   </button>
-                 </div>
-                   <div className="relative mt-3">
-                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
-                     <input
-                       value={eventSearch}
-                       onChange={(event) => setEventSearch(event.target.value)}
-                       placeholder="Search villa, flat, plot or location..."
-                       className="h-10 w-full rounded-xl border border-white/10 bg-white/[.06] pl-9 pr-9 text-xs text-white outline-none placeholder:text-white/30 focus:border-emerald-300/50 focus:bg-white/[.08]"
-                       aria-label="Search property meetups"
-                     />
-                     {eventSearch && (
-                       <button
-                         onClick={() => setEventSearch("")}
-                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/45 hover:bg-white/10 hover:text-white"
-                         aria-label="Clear property search"
-                       >
-                         <X className="h-3.5 w-3.5" />
-                       </button>
-                     )}
-                   </div>
-                   <div className="scrollbar-hide mt-2 flex gap-1.5 overflow-x-auto">
-                     {(["All", "Villa", "Plots", "Flat", "Meetup"] as const).map(
-                       (filter) => (
-                         <button
-                           key={filter}
-                           onClick={() => setEventFilter(filter)}
-                           className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-semibold transition-colors ${
-                             eventFilter === filter
-                               ? "bg-emerald-300 text-[#07130e]"
-                               : "border border-white/10 bg-white/[.04] text-white/55 hover:bg-white/[.08] hover:text-white"
-                           }`}
-                         >
-                           {filter === "All" ? "All projects" : filter}
-                         </button>
-                       ),
-                     )}
-                   </div>
-                 </div>
+                <div className="sticky top-0 z-10 border-b border-white/[.08] bg-[#0b0c0f]/95 px-4 pb-3 pt-4 backdrop-blur-xl">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/35">
+                        NEST AI · HYDERABAD
+                      </p>
+                      <h3 className="mt-1 text-base font-semibold tracking-tight text-white">
+                        Meet the project
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowTradersModal(false);
+                        setIsTradersExpanded(false);
+                        setSelectedPropertyEvent(null);
+                      }}
+                      className="rounded-full p-1.5 text-white/45 transition-colors hover:bg-white/[.08] hover:text-white"
+                      aria-label="Close property meetups"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="mt-1 text-[11px] text-white/45">
+                    Visit, compare and decide in person.
+                  </p>
+                  <div className="relative mt-3">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                    <input
+                      value={eventSearch}
+                      onChange={(event) => setEventSearch(event.target.value)}
+                      placeholder="Search villa, flat, plot or location"
+                      className="h-10 w-full rounded-xl border border-white/[.10] bg-white/[.04] pl-9 pr-9 text-xs text-white outline-none placeholder:text-white/25 focus:border-white/25 focus:bg-white/[.06]"
+                      aria-label="Search property meetups"
+                    />
+                    {eventSearch && (
+                      <button
+                        onClick={() => setEventSearch("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/35 hover:bg-white/10 hover:text-white"
+                        aria-label="Clear property search"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="scrollbar-hide mt-2 flex gap-1 overflow-x-auto">
+                    {(["All", "Villa", "Plots", "Flat", "Meetup"] as const).map(
+                      (filter) => (
+                        <button
+                          key={filter}
+                          onClick={() => setEventFilter(filter)}
+                          className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
+                            eventFilter === filter
+                              ? "bg-white text-[#0b0c0f]"
+                              : "text-white/45 hover:bg-white/[.06] hover:text-white/80"
+                          }`}
+                        >
+                          {filter === "All" ? "All" : filter}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </div>
 
                  <div className="px-4 pb-6 pt-4">
                    <div className="mb-3 flex items-center justify-between gap-3">
@@ -3540,34 +3537,31 @@ export default function AuthPage({ slug }: { slug?: string }) {
                            animate={{ opacity: 1, y: 0 }}
                            transition={{ duration: 0.25 }}
                            onClick={() => setSelectedPropertyEvent(event)}
-                            className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[.045] p-3 text-left transition-all hover:border-emerald-300/30 hover:bg-white/[.07]"
+                            className="group relative w-full overflow-hidden rounded-xl border border-white/[.09] bg-white/[.025] p-3 text-left transition-colors hover:border-white/20 hover:bg-white/[.05]"
                          >
-                           <div
-                             className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${event.accent}`}
-                           />
                            <div className="flex items-start gap-3">
                              <div
-                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${event.accent} ring-1 ring-white/10`}
+                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[.06] text-white/60"
                              >
-                              <EventIcon className="h-4 w-4 text-white/90" />
+                                <EventIcon className="h-4 w-4" />
                              </div>
                              <div className="min-w-0 flex-1">
                                <div className="flex items-start justify-between gap-3">
                                  <div>
-                                   <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">
-                                     {event.type}
+                                    <p className="text-[10px] font-medium uppercase tracking-wider text-white/35">
+                                      {event.propertyType}
                                    </p>
-                                   <h5 className="mt-1 text-sm font-bold leading-tight text-white">
+                                    <h5 className="mt-1 text-[13px] font-semibold leading-tight text-white">
                                      {event.title}
                                    </h5>
                                  </div>
                                  {isRegistered ? (
-                                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-300" />
+                                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
                                  ) : (
-                                   <ChevronRight className="h-5 w-5 shrink-0 text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-white/70" />
+                                    <ChevronRight className="h-4 w-4 shrink-0 text-white/25 transition-transform group-hover:translate-x-0.5 group-hover:text-white/60" />
                                  )}
                                </div>
-                               <div className="mt-2 grid grid-cols-1 gap-1 text-[10px] text-white/55 sm:grid-cols-2">
+                                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-white/45">
                                  <span className="flex items-center gap-1.5">
                                    <CalendarDays className="h-3 w-3 text-white/35" />
                                    {event.dateLabel}
@@ -3576,18 +3570,19 @@ export default function AuthPage({ slug }: { slug?: string }) {
                                    <Clock3 className="h-3 w-3 text-white/35" />
                                    {event.timeLabel}
                                  </span>
-                                 <span className="flex items-center gap-1.5 sm:col-span-2">
+                                  <span className="flex min-w-0 items-center gap-1.5">
                                    <MapPin className="h-3 w-3 text-white/35" />
-                                   {event.location}
+                                    <span className="truncate">{event.location}</span>
                                  </span>
                                </div>
                                <div className="mt-2 flex items-center justify-between gap-3">
-                                 <span className="text-[10px] text-white/35">
-                                   {spotsLeft} spots left · hosted by {event.host}
+                                  <span className="truncate text-[10px] text-white/30">
+                                    {event.host}
                                  </span>
-                                 <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-300">
-                                   {isRegistered ? "Registered" : "View & RSVP"}
-                                   <ArrowRight className="h-3 w-3" />
+                                  <span className="flex shrink-0 items-center gap-1 text-[10px] text-white/35">
+                                    {spotsLeft} spots
+                                    <span className="text-white/20">·</span>
+                                    {isRegistered ? "Registered" : "RSVP"}
                                  </span>
                                </div>
                              </div>
@@ -3608,12 +3603,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
                      )}
                    </div>
 
-                   <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-emerald-300/15 bg-emerald-300/[.06] px-3 py-2.5">
-                     <Heart className="h-4 w-4 shrink-0 text-emerald-300" />
-                     <p className="text-[10px] leading-relaxed text-white/55">
-                       Register to meet the project team at the actual location.
-                     </p>
-                   </div>
                  </div>
 
                  <AnimatePresence>
