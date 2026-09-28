@@ -130,17 +130,6 @@ function createRadiusPolygon(
   };
 }
 
-function getRadiusHandleCoordinate(
-  center: MapCoordinate,
-  radiusInKilometers: number,
-): MapCoordinate {
-  const latitudeRadians = (center[1] * Math.PI) / 180;
-  const longitudeDelta =
-    radiusInKilometers / (111.32 * Math.max(0.2, Math.cos(latitudeRadians)));
-
-  return [center[0] + longitudeDelta, center[1]];
-}
-
 function getPricePerSquareYard(project: PropertyProject) {
   const price = project.price.replace(/[^\d]/g, "");
   return Number(price) || 0;
@@ -480,19 +469,13 @@ function FitProjectPins({ projects }: { projects: PropertyProject[] }) {
 function RadiusFilterLayer({
   center,
   radiusInKilometers,
-  onRadiusChange,
 }: {
   center: MapCoordinate;
   radiusInKilometers: number;
-  onRadiusChange: (radius: number) => void;
 }) {
   const { map, isLoaded } = useMap();
   const radiusPolygon = useMemo(
     () => createRadiusPolygon(center, radiusInKilometers),
-    [center, radiusInKilometers],
-  );
-  const radiusHandle = useMemo(
-    () => getRadiusHandleCoordinate(center, radiusInKilometers),
     [center, radiusInKilometers],
   );
 
@@ -547,15 +530,6 @@ function RadiusFilterLayer({
             >
               <span className="absolute inset-0 rounded-full border border-cyan-200/55" />
             </motion.div>
-            <motion.div
-              className="absolute inset-0"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
-            >
-              <span className="absolute left-1/2 top-0 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-cyan-500 shadow-[0_0_0_5px_rgba(34,211,238,0.28),0_0_24px_rgba(34,211,238,0.95)]">
-                <span className="h-2.5 w-2.5 rounded-full bg-white" />
-              </span>
-            </motion.div>
             <div className="relative flex h-16 w-16 flex-col items-center justify-center rounded-full border border-white/20 bg-slate-950/95 text-white shadow-2xl">
               <span className="text-xl font-bold leading-none">
                 {estimatedMinutes}
@@ -567,31 +541,174 @@ function RadiusFilterLayer({
           </div>
         </MarkerContent>
       </MapMarker>
-      <MapMarker
-        longitude={radiusHandle[0]}
-        latitude={radiusHandle[1]}
-        draggable
-        onDragEnd={({ lng, lat }) => {
-          const draggedRadius = distanceInKilometers(center, [lng, lat]);
-          const snappedRadius = Math.round(draggedRadius / 5) * 5;
-          onRadiusChange(Math.min(100, Math.max(5, snappedRadius)));
+    </>
+  );
+}
+
+function RadiusArcControl({
+  radiusInKilometers,
+  onRadiusChange,
+  visibleProjectCount,
+}: {
+  radiusInKilometers: number;
+  onRadiusChange: (radius: number) => void;
+  visibleProjectCount: number;
+}) {
+  const minimumRadius = 5;
+  const maximumRadius = 100;
+  const progress =
+    (radiusInKilometers - minimumRadius) / (maximumRadius - minimumRadius);
+  const centerX = 140;
+  const centerY = 122;
+  const arcRadius = 101;
+  const angle = Math.PI + progress * Math.PI;
+  const handleX = centerX + arcRadius * Math.cos(angle);
+  const handleY = centerY + arcRadius * Math.sin(angle);
+  const arcPath = "M 39 122 A 101 101 0 0 1 241 122";
+  const [isDragging, setIsDragging] = useState(false);
+
+  const updateRadiusFromPointer = (event: React.PointerEvent<SVGSVGElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width) * 280;
+    const y = ((event.clientY - bounds.top) / bounds.height) * 150;
+    let pointerAngle = Math.atan2(y - centerY, x - centerX);
+
+    if (pointerAngle < Math.PI) pointerAngle += Math.PI * 2;
+    const nextProgress = Math.min(
+      1,
+      Math.max(0, (pointerAngle - Math.PI) / Math.PI),
+    );
+    const nextRadius =
+      Math.round(
+        (minimumRadius + nextProgress * (maximumRadius - minimumRadius)) / 5,
+      ) * 5;
+
+    onRadiusChange(Math.min(maximumRadius, Math.max(minimumRadius, nextRadius)));
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setIsDragging(true);
+    updateRadiusFromPointer(event);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (isDragging) updateRadiusFromPointer(event);
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    setIsDragging(false);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", damping: 24, stiffness: 300 }}
+      className="pointer-events-auto relative h-[166px] w-[310px] rounded-[28px] border border-white/20 bg-slate-950/92 px-3 pt-2 text-white shadow-2xl backdrop-blur-xl"
+      aria-label="Adjust search radius"
+    >
+      <button
+        type="button"
+        onClick={() => onRadiusChange(minimumRadius)}
+        className="absolute right-3 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full text-white/65 transition-colors hover:bg-white/10 hover:text-white"
+        aria-label="Reset search radius to 5 kilometres"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+      <svg
+        viewBox="0 0 280 150"
+        className={`h-[132px] w-full touch-none select-none ${
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        }`}
+        role="slider"
+        aria-label="Drag to adjust search radius"
+        aria-valuemin={minimumRadius}
+        aria-valuemax={maximumRadius}
+        aria-valuenow={radiusInKilometers}
+        tabIndex={0}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+            event.preventDefault();
+            onRadiusChange(Math.max(minimumRadius, radiusInKilometers - 5));
+          }
+          if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+            event.preventDefault();
+            onRadiusChange(Math.min(maximumRadius, radiusInKilometers + 5));
+          }
         }}
       >
-        <MarkerContent>
-          <motion.div
-            className="relative flex h-11 w-11 cursor-grab items-center justify-center rounded-full active:cursor-grabbing"
-            animate={{ scale: [1, 1.12, 1] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-            title="Drag to change radius"
-          >
-            <span className="absolute inset-0 rounded-full bg-cyan-300/25 blur-[2px]" />
-            <span className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-cyan-500 shadow-[0_0_0_5px_rgba(34,211,238,0.28),0_0_24px_rgba(34,211,238,0.95)]">
-              <span className="h-2.5 w-2.5 rounded-full bg-white" />
-            </span>
-          </motion.div>
-        </MarkerContent>
-      </MapMarker>
-    </>
+        <path
+          d={arcPath}
+          fill="none"
+          stroke="rgba(255,255,255,0.15)"
+          strokeLinecap="round"
+          strokeWidth="25"
+        />
+        <motion.path
+          d={arcPath}
+          pathLength={1}
+          fill="none"
+          stroke="#d7d8dc"
+          strokeLinecap="round"
+          strokeWidth="25"
+          animate={{ strokeDasharray: `${progress} 1` }}
+          transition={{ type: "spring", damping: 24, stiffness: 180 }}
+        />
+        <path
+          d={arcPath}
+          fill="none"
+          stroke="rgba(255,255,255,0.4)"
+          strokeLinecap="round"
+          strokeWidth="2"
+        />
+        <motion.circle
+          cx={handleX}
+          cy={handleY}
+          r="12"
+          fill="#d7d8dc"
+          stroke="#ffffff"
+          strokeWidth="2"
+          animate={{ cx: handleX, cy: handleY }}
+          transition={{ type: "spring", damping: 24, stiffness: 180 }}
+          style={{ filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.35))" }}
+        />
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r="36"
+          fill="#050505"
+          stroke="rgba(255,255,255,0.16)"
+          strokeWidth="1"
+        />
+        <text
+          x={centerX}
+          y="112"
+          fill="white"
+          textAnchor="middle"
+          className="text-[22px] font-bold"
+        >
+          {radiusInKilometers} km
+        </text>
+        <text
+          x={centerX}
+          y="130"
+          fill="rgba(255,255,255,0.5)"
+          textAnchor="middle"
+          className="text-[8px] font-bold uppercase tracking-[0.14em]"
+        >
+          {visibleProjectCount} projects nearby
+        </text>
+      </svg>
+      <p className="absolute bottom-1 left-0 right-0 text-center text-[8px] font-semibold uppercase tracking-[0.14em] text-white/35">
+        Drag the arc to expand or compress
+      </p>
+    </motion.div>
   );
 }
 
@@ -1129,7 +1246,6 @@ export function HyderabadPropertyMapOverlay({
           <RadiusFilterLayer
             center={userLocation}
             radiusInKilometers={radiusInKilometers}
-            onRadiusChange={setRadiusInKilometers}
           />
         )}
         {visibleProjects.map((project) => (
@@ -1231,6 +1347,16 @@ export function HyderabadPropertyMapOverlay({
           </div>
         </div>
       </div>
+
+      {isRadiusFilterOpen && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-[82px] z-30 flex justify-center px-3 sm:bottom-[76px] sm:px-5">
+          <RadiusArcControl
+            radiusInKilometers={radiusInKilometers}
+            onRadiusChange={setRadiusInKilometers}
+            visibleProjectCount={visibleProjects.length}
+          />
+        </div>
+      )}
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-10 pt-3 sm:px-5 sm:pb-8 sm:pt-5">
         <div className="relative mx-auto w-full max-w-[680px]">
