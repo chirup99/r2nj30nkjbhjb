@@ -1,1 +1,2 @@
 - [Node dependency setup](node-dependency-setup.md) — package installation can upgrade semver ranges in the manifest; restore imported manifests when setup does not require dependency changes.
+- [AWS deployment permissions](aws-deployment-permissions.md) — the current AWS deployment identity needs explicit infrastructure-creation access; fail before touching existing Perala resources when denied.
