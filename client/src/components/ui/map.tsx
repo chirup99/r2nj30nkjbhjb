@@ -465,7 +465,7 @@ function MapMarker({
   draggable = false,
   ...markerOptions
 }: MapMarkerProps) {
-  const { map } = useMap();
+  const { map, isLoaded } = useMap();
 
   const callbacksRef = useRef({
     onClick,
@@ -528,7 +528,7 @@ function MapMarker({
   }, []);
 
   useEffect(() => {
-    if (!map) return;
+    if (!map || !isLoaded) return;
 
     marker.addTo(map);
 
@@ -537,7 +537,7 @@ function MapMarker({
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map]);
+  }, [map, isLoaded]);
 
   const { offset, rotation, rotationAlignment, pitchAlignment } = markerOptions;
 

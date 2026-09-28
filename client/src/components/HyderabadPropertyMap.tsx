@@ -14,10 +14,13 @@ import {
   Landmark,
   MapPin,
   Maximize2,
+  Moon,
   Navigation,
   Ruler,
   Search,
+  Satellite,
   Sparkles,
+  Sun,
   Trees,
   X,
 } from "lucide-react";
@@ -37,6 +40,28 @@ type PropertyProject = (typeof PLOTSVIEW_PROJECTS)[number];
 
 const HYDERABAD_CENTER: [number, number] = [78.385, 17.42];
 const MAGIC_ANCHOR: [number, number] = [78.386, 17.455];
+const SATELLITE_MAP_STYLE = {
+  version: 8 as const,
+  sources: {
+    "esri-world-imagery": {
+      type: "raster" as const,
+      tiles: [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      ],
+      tileSize: 256,
+      attribution: "Tiles © Esri",
+    },
+  },
+  layers: [
+    {
+      id: "esri-world-imagery",
+      type: "raster" as const,
+      source: "esri-world-imagery",
+      minzoom: 0,
+      maxzoom: 19,
+    },
+  ],
+};
 
 // Snapshot of every venture currently returned by PlotsView's public catalog.
 const PROJECTS: PropertyProject[] = PLOTSVIEW_PROJECTS;
@@ -738,6 +763,8 @@ export function HyderabadPropertyMapOverlay({
     null,
   );
   const [routeProgress, setRouteProgress] = useState(0);
+  const [isDarkMap, setIsDarkMap] = useState(false);
+  const [isSatelliteMap, setIsSatelliteMap] = useState(false);
 
   const selectedIntent = MAGIC_INTENTS.find(
     (intent) => intent.id === selectedIntentId,
@@ -828,7 +855,12 @@ export function HyderabadPropertyMapOverlay({
       <PropertyMap
         center={HYDERABAD_CENTER}
         zoom={9}
-        theme="light"
+        theme={isDarkMap ? "dark" : "light"}
+        styles={
+          isSatelliteMap
+            ? { light: SATELLITE_MAP_STYLE, dark: SATELLITE_MAP_STYLE }
+            : undefined
+        }
         attributionControl={false}
         className="h-full w-full"
       >
@@ -885,14 +917,44 @@ export function HyderabadPropertyMapOverlay({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="pointer-events-auto rounded-full border border-white/30 bg-slate-950/80 p-3 text-white shadow-xl backdrop-blur-md transition-colors hover:bg-slate-900"
-            aria-label="Close PlotsView projects map"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="pointer-events-auto flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full border border-white/30 bg-slate-950/80 p-3 text-white shadow-xl backdrop-blur-md transition-colors hover:bg-slate-900"
+              aria-label="Close PlotsView projects map"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsDarkMap((dark) => !dark)}
+              className="rounded-full border border-white/30 bg-slate-950/80 p-2.5 text-white shadow-xl backdrop-blur-md transition-colors hover:bg-slate-900"
+              aria-label={isDarkMap ? "Use light map" : "Use dark map"}
+              title={isDarkMap ? "Use light map" : "Use dark map"}
+            >
+              {isDarkMap ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSatelliteMap((satellite) => !satellite)}
+              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
+                isSatelliteMap
+                  ? "border-cyan-300/80 bg-cyan-950/90"
+                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+              }`}
+              aria-label={
+                isSatelliteMap ? "Use street map" : "Use satellite map"
+              }
+              title={isSatelliteMap ? "Use street map" : "Use satellite map"}
+            >
+              <Satellite className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
