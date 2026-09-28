@@ -2471,6 +2471,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY, showNavToggle]);
   const personaCardRef = useRef<HTMLDivElement>(null);
+  const lastFeedScrollTopRef = useRef(0);
   const tradersRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<"notes" | "events" | "connect">(
     "notes",
@@ -2512,6 +2513,10 @@ export default function AuthPage({ slug }: { slug?: string }) {
         const { scrollTop, scrollHeight, clientHeight } =
           personaCardRef.current;
         const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+        const isScrollingDown =
+          scrollTop > lastFeedScrollTopRef.current;
+        setShowMapThumbnail(!isScrollingDown || scrollTop < 24);
+        lastFeedScrollTopRef.current = scrollTop;
         setShowNavToggle(isAtBottom);
       }
     };
@@ -3570,7 +3575,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
         transition={{ type: "spring", damping: 20, stiffness: 100 }}
         onClick={() => isMenuOpen && setIsMenuOpen(false)}
         className={clsx(
-          "min-h-screen bg-mesh flex flex-col items-center justify-start p-4 shadow-2xl relative z-20",
+          "h-[100dvh] overflow-hidden bg-mesh flex flex-col items-center justify-start p-4 shadow-2xl relative z-20",
           isMenuOpen ? "cursor-pointer select-none" : "",
         )}
       >
@@ -4064,10 +4069,9 @@ export default function AuthPage({ slug }: { slug?: string }) {
         </motion.div>
 
         <motion.div
-          ref={personaCardRef}
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md bg-card border border-white/10 rounded-[20px] shadow-2xl p-5 sm:p-6 z-10 relative flex flex-col"
+           className="w-full max-w-md max-h-[calc(100dvh-300px)] min-h-0 bg-card border border-white/10 rounded-[20px] shadow-2xl p-5 sm:p-6 z-10 relative overflow-hidden flex flex-col"
         >
           {(mode === "login" || mode === "swipe") && (
             <div className="sticky top-0 z-30 -mx-5 bg-card px-5 pb-2 pt-1 sm:-mx-6 sm:px-6">
@@ -4101,7 +4105,10 @@ export default function AuthPage({ slug }: { slug?: string }) {
             </div>
           )}
 
-          <div className="scrollbar-hide space-y-4">
+          <div
+            ref={personaCardRef}
+            className="scrollbar-hide min-h-0 flex-1 space-y-4 overflow-y-auto"
+          >
             <motion.div
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
