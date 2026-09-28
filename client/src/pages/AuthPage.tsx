@@ -4034,7 +4034,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
         </AnimatePresence>
 
         <AnimatePresence initial={false}>
-          {showPropertyAd && (
+          {showPropertyAd && mode !== "swipe" && (
         <motion.div
           initial={{ opacity: 0, y: -10, height: 0, marginBottom: 0 }}
           animate={{ opacity: 1, y: 0, height: "auto", marginBottom: 24 }}
