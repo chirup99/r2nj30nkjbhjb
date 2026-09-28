@@ -77,6 +77,7 @@ import {
   HyderabadPropertyMapOverlay,
   HyderabadPropertyMapThumbnail,
 } from "@/components/HyderabadPropertyMap";
+import { PLOTSVIEW_PROJECTS } from "@/data/plotsviewProjects";
 
 type AuthMode = "login" | "register" | "customize" | "swipe";
 
@@ -186,6 +187,101 @@ const PROPERTY_ADS = [
     image: apartmentResidence,
   },
 ] as const;
+
+function PropertyProjectFeed() {
+  return (
+    <section
+      aria-labelledby="mapped-projects-heading"
+      className="mt-2 w-full space-y-3 text-left"
+    >
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-purple-300">
+            Map collection
+          </p>
+          <h4
+            id="mapped-projects-heading"
+            className="mt-1 text-base font-bold tracking-tight text-white"
+          >
+            Projects on your map
+          </h4>
+        </div>
+        <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-white/45">
+          {PLOTSVIEW_PROJECTS.length} sites
+        </span>
+      </div>
+      <p className="text-[10px] leading-relaxed text-white/40">
+        Explore every mapped project with local details and current plot pricing.
+        Tap a card to open its full listing.
+      </p>
+
+      <div className="space-y-2.5 pr-1">
+        {PLOTSVIEW_PROJECTS.map((project) => (
+          <motion.a
+            key={project.id}
+            href={project.sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="group block rounded-2xl border border-white/10 bg-white/[0.035] p-3 transition-all hover:border-purple-300/40 hover:bg-white/[0.07] hover:shadow-[0_8px_24px_rgba(124,58,237,0.14)]"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-2.5">
+                <span
+                  className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/15"
+                  style={{
+                    backgroundColor: `${project.accent}22`,
+                    color: project.accent,
+                  }}
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0">
+                  <h5 className="truncate text-xs font-bold text-white group-hover:text-purple-200">
+                    {project.name}
+                  </h5>
+                  <p className="mt-1 truncate text-[9px] font-medium uppercase tracking-[0.08em] text-white/40">
+                    {project.locality} · {project.approvalType}
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-white/25 transition-transform group-hover:translate-x-0.5 group-hover:text-white/70" />
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-black/20 px-2.5 py-2">
+                <p className="text-[8px] font-bold uppercase tracking-wider text-white/30">
+                  Price
+                </p>
+                <p className="mt-1 truncate text-[11px] font-bold text-emerald-300">
+                  {project.price}
+                </p>
+              </div>
+              <div className="rounded-xl bg-black/20 px-2.5 py-2">
+                <p className="text-[8px] font-bold uppercase tracking-wider text-white/30">
+                  Plot range
+                </p>
+                <p className="mt-1 truncate text-[11px] font-bold text-white/75">
+                  {project.bedrooms}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-2 flex items-center justify-between gap-2 text-[9px] text-white/40">
+              <span className="truncate">{project.type}</span>
+              <span className="shrink-0">
+                {project.acres} acres · {project.totalPlots} plots
+              </span>
+            </div>
+          </motion.a>
+        ))}
+      </div>
+
+      <div className="border-t border-white/10 pt-3 text-center text-[9px] font-bold uppercase tracking-[0.14em] text-white/30">
+        Scroll to view all mapped sites
+      </div>
+    </section>
+  );
+}
 
 function PropertyMeetupMark({ className = "" }: { className?: string }) {
   return (
@@ -4015,6 +4111,8 @@ export default function AuthPage({ slug }: { slug?: string }) {
                     <p className="text-white/40 text-[10px] italic">
                       {form.watch("bio") || ""}
                     </p>
+                    <PropertyProjectFeed />
+                    <div className="hidden">
                     <div className="flex items-center justify-center gap-3 w-full pt-1">
                       {(() => {
                         const linkedin = form.watch("linkedin");
@@ -4413,6 +4511,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                       </AnimatePresence>
                     </div>
                   )}
+                   </div>
                 </form>
               ) : mode === "register" ? (
                 <form
@@ -4864,7 +4963,12 @@ export default function AuthPage({ slug }: { slug?: string }) {
               )}
             </motion.div>
 
-            <div className="relative py-2">
+            <div
+              className={clsx(
+                "relative py-2",
+                mode === "login" && "hidden",
+              )}
+            >
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-white/10"></span>
               </div>
