@@ -237,10 +237,12 @@ function createCurvedRoute(
 function MagicProjectRoute({
   projects,
   intent,
+  subcategoryId,
   progress,
 }: {
   projects: PropertyProject[];
   intent: MagicIntent;
+  subcategoryId: string;
   progress: number;
 }) {
   const { map, isLoaded } = useMap();
@@ -252,7 +254,7 @@ function MagicProjectRoute({
 
     const updateRouteStart = () => {
       const button = document.querySelector<HTMLElement>(
-        `[data-magic-intent="${intent.id}"]`,
+        `[data-magic-subcategory="${subcategoryId}"]`,
       );
       const container = map.getContainer();
       if (!button || !container) return;
@@ -279,7 +281,7 @@ function MagicProjectRoute({
       map.off("move", updateRouteStart);
       map.off("resize", updateRouteStart);
     };
-  }, [intent.id, isLoaded, map]);
+  }, [intent.id, isLoaded, map, subcategoryId]);
 
   return (
     <>
@@ -773,7 +775,7 @@ export function HyderabadPropertyMapOverlay({
     }
 
     setSelectedIntentId(intentId);
-    setSelectedSubcategoryId(intent.subcategories[0]?.id ?? null);
+    setSelectedSubcategoryId(null);
     setQuery("");
   };
 
@@ -815,6 +817,7 @@ export function HyderabadPropertyMapOverlay({
           <MagicProjectRoute
             projects={visibleProjects}
             intent={selectedIntent}
+            subcategoryId={selectedSubcategory.id}
             progress={routeProgress}
           />
         )}
@@ -899,6 +902,7 @@ export function HyderabadPropertyMapOverlay({
                       <button
                         key={subcategory.id}
                         type="button"
+                        data-magic-subcategory={subcategory.id}
                         onClick={() => chooseMagicSubcategory(subcategory.id)}
                         className={`shrink-0 rounded-full border px-3 py-2 text-left transition-all ${
                           isSelected
