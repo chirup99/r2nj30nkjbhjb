@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowRightLeft,
   Check,
   ChevronDown,
   House,
@@ -31,6 +32,7 @@ type AssistantQuery = {
   location?: string;
   maxBudget?: number;
   propertyType?: "plot" | "farm" | "villa" | "flat" | "commercial";
+  compare?: boolean;
 };
 
 type PropertyMatch = PlotsViewProject & {
@@ -51,6 +53,7 @@ type Message = {
   matches?: PropertyMatch[];
   showLoanPlanner?: boolean;
   showPropertyPlanner?: boolean;
+  showComparison?: boolean;
 };
 
 type LoanSettings = {
@@ -81,6 +84,11 @@ const QUICK_ACTIONS = [
     label: "Loan",
     prompt: "Explain my home loan options",
     icon: Landmark,
+  },
+  {
+    label: "Compare",
+    prompt: "Compare property prices by location, budget, and type",
+    icon: ArrowRightLeft,
   },
   {
     label: "All questions",
@@ -175,6 +183,7 @@ function parseQuery(text: string): AssistantQuery {
     location,
     maxBudget: parseBudget(normalized),
     propertyType,
+    compare: /compare|versus|\bvs\b/.test(normalized),
   };
 }
 
@@ -576,12 +585,18 @@ const LOCATION_OPTIONS = [
 
 function PropertySearchPlanner({
   settings,
+  locationLocked,
+  locationLabel,
   onChange,
   onSearch,
+  onShowAll,
 }: {
   settings: PropertySearchSettings;
+  locationLocked: boolean;
+  locationLabel?: string;
   onChange: (settings: PropertySearchSettings) => void;
   onSearch: () => void;
+  onShowAll: () => void;
 }) {
   return (
     <div className="mt-5 rounded-2xl border border-purple-300/20 bg-purple-500/[0.08] p-4">
@@ -626,25 +641,36 @@ function PropertySearchPlanner({
       </label>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="block">
-          <span className="mb-1.5 block text-[11px] text-white/65">
-            Location
-          </span>
-          <select
-            value={settings.location}
-            onChange={(event) =>
-              onChange({ ...settings, location: event.target.value })
-            }
-            className="w-full rounded-xl border border-white/10 bg-[#17151d] px-3 py-2.5 text-xs text-white outline-none focus:border-purple-300/50"
-            aria-label="Property location"
-          >
-            {LOCATION_OPTIONS.map((option) => (
-              <option key={option.value || "any-location"} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {locationLocked ? (
+          <div className="rounded-xl border border-purple-300/20 bg-purple-300/[0.08] px-3 py-2.5">
+            <p className="text-[10px] uppercase tracking-wider text-purple-200/70">
+              Location from your question
+            </p>
+            <p className="mt-1 text-xs font-semibold text-white">
+              {locationLabel ?? "Selected area"}
+            </p>
+          </div>
+        ) : (
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] text-white/65">
+              Location
+            </span>
+            <select
+              value={settings.location}
+              onChange={(event) =>
+                onChange({ ...settings, location: event.target.value })
+              }
+              className="w-full rounded-xl border border-white/10 bg-[#17151d] px-3 py-2.5 text-xs text-white outline-none focus:border-purple-300/50"
+              aria-label="Property location"
+            >
+              {LOCATION_OPTIONS.map((option) => (
+                <option key={option.value || "any-location"} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="block">
           <span className="mb-1.5 block text-[11px] text-white/65">
             Property type
@@ -678,6 +704,57 @@ function PropertySearchPlanner({
         Find matching properties
         <ArrowRight className="h-3.5 w-3.5 text-[#7c2cff]" />
       </button>
+      {locationLocked && (
+        <button
+          type="button"
+          onClick={onShowAll}
+          className="mt-2 w-full rounded-xl border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/75 transition-colors hover:border-white/35 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        >
+          Show all properties in {locationLabel ?? "this area"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function PropertyComparison({ matches }: { matches: PropertyMatch[] }) {
+  if (matches.length === 0) return null;
+
+  const sortedMatches = [...matches].sort(
+    (a, b) => a.estimatedEntryPrice - b.estimatedEntryPrice,
+  );
+
+  return (
+    <div className="mt-3 rounded-2xl border border-blue-300/15 bg-blue-500/[0.06] p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-200">
+          Price comparison
+        </p>
+        <span className="text-[10px] text-white/40">
+          {sortedMatches.length} options
+        </span>
+      </div>
+      <div className="mt-2 space-y-2">
+        {sortedMatches.map((project, index) => (
+          <div
+            key={project.id}
+            className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.06] px-3 py-2"
+          >
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-white">
+                <span className="mr-1.5 text-white/35">{index + 1}.</span>
+                {project.name}
+              </p>
+              <p className="mt-0.5 text-[10px] text-white/45">
+                {project.locality} · {formatRate(project.pricePerSqYd)}
+              </p>
+            </div>
+            <span className="shrink-0 text-xs font-bold text-white">
+              {formatCurrency(project.estimatedEntryPrice)}+
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -745,33 +822,52 @@ export default function AiAssistantPage() {
     );
   };
 
-  const searchWithPropertyPreferences = () => {
+  const searchWithPropertyPreferences = (
+    settings = propertySearchSettings,
+  ) => {
     const query: AssistantQuery = {
       ...(propertySearchQuery ?? { intent: "property" }),
-      maxBudget: propertySearchSettings.maxBudget,
-      location: propertySearchSettings.location || undefined,
-      propertyType: propertySearchSettings.propertyType || undefined,
+      maxBudget: settings.maxBudget,
+      location: settings.location || undefined,
+      propertyType: settings.propertyType || undefined,
     };
     const matches = getPropertyMatches(query);
     const typeLabel =
       PROPERTY_TYPE_OPTIONS.find(
-        (option) => option.value === propertySearchSettings.propertyType,
+        (option) => option.value === settings.propertyType,
       )?.label ?? "properties";
     const locationLabel =
       LOCATION_OPTIONS.find(
-        (option) => option.value === propertySearchSettings.location,
+        (option) => option.value === settings.location,
       )?.label ?? "Hyderabad";
     const filters = [
-      `up to ${formatCurrency(propertySearchSettings.maxBudget)}`,
-      propertySearchSettings.location ? `in ${locationLabel}` : "",
-      propertySearchSettings.propertyType ? `for ${typeLabel.toLowerCase()}` : "",
+      `up to ${formatCurrency(settings.maxBudget)}`,
+      settings.location ? `in ${locationLabel}` : "",
+      settings.propertyType ? `for ${typeLabel.toLowerCase()}` : "",
     ].filter(Boolean);
     const filterText = filters.join(" ");
     const textResponse = matches.length
-      ? `I found ${matches.length} map listings ${filterText}. These are ranked by the lowest estimated entry price from the published plot size and rate.`
+      ? propertySearchQuery?.compare
+        ? `Here is a price comparison of ${matches.length} options ${filterText}. Lower prices are listed first.`
+        : `I found ${matches.length} map listings ${filterText}. These are ranked by the lowest estimated entry price from the published plot size and rate.`
       : "I couldn’t find a matching listing in the imported Hyderabad catalog for those filters. Try a higher budget, another location, or Any property type.";
 
-    addAssistantMessage(textResponse, matches);
+    addAssistantMessage(
+      textResponse,
+      matches,
+      false,
+      false,
+      Boolean(propertySearchQuery?.compare),
+    );
+  };
+
+  const showAllPropertiesInArea = () => {
+    const nextSettings = {
+      ...propertySearchSettings,
+      propertyType: "" as const,
+    };
+    setPropertySearchSettings(nextSettings);
+    searchWithPropertyPreferences(nextSettings);
   };
 
   const addAssistantMessage = (
@@ -779,6 +875,7 @@ export default function AiAssistantPage() {
     matches?: PropertyMatch[],
     showLoan = false,
     showProperty = false,
+    showComparison = false,
   ) => {
     setMessages((current) => [
       ...current,
@@ -789,6 +886,7 @@ export default function AiAssistantPage() {
         matches,
         showLoanPlanner: showLoan,
         showPropertyPlanner: showProperty,
+        showComparison,
       },
     ]);
   };
@@ -804,6 +902,22 @@ export default function AiAssistantPage() {
           loanSettings.propertyValue,
         )} property. Adjust the sliders to compare EMI, down payment, interest, and tenure.`,
         undefined,
+        true,
+      );
+      return;
+    }
+
+    if (query.compare && query.maxBudget) {
+      const matches = getPropertyMatches(query);
+      addAssistantMessage(
+        matches.length
+          ? `Here is a price comparison of ${matches.length} options up to ${formatCurrency(
+              query.maxBudget,
+            )}. Lower prices are listed first.`
+          : "I couldn’t find properties to compare for those filters. Try a higher budget or another area.",
+        matches,
+        false,
+        false,
         true,
       );
       return;
@@ -1027,6 +1141,10 @@ export default function AiAssistantPage() {
                     </div>
                   )}
 
+                  {message.showComparison && message.matches && (
+                    <PropertyComparison matches={message.matches} />
+                  )}
+
                   {message.showLoanPlanner && (
                     <LoanPlanner
                       settings={loanSettings}
@@ -1037,8 +1155,16 @@ export default function AiAssistantPage() {
                   {message.showPropertyPlanner && (
                     <PropertySearchPlanner
                       settings={propertySearchSettings}
+                      locationLocked={Boolean(propertySearchQuery?.location)}
+                      locationLabel={
+                        LOCATION_OPTIONS.find(
+                          (option) =>
+                            option.value === propertySearchQuery?.location,
+                        )?.label
+                      }
                       onChange={setPropertySearchSettings}
                       onSearch={searchWithPropertyPreferences}
+                      onShowAll={showAllPropertiesInArea}
                     />
                   )}
                 </div>
