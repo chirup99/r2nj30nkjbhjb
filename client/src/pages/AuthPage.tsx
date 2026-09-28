@@ -3481,29 +3481,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
           {!showScannerDialog && !showMapDialog && (
              <>
                <motion.button
-                 initial={{ opacity: 0, y: 8, scale: 0.92 }}
-                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                 whileHover={{ scale: 1.03 }}
-                 whileTap={{ scale: 0.96 }}
-                 exit={{ opacity: 0, y: 8, scale: 0.92 }}
-                 type="button"
-                 onClick={() =>
-                   toast({
-                     title: "Ask AI",
-                     description: "AI assistance is coming soon.",
-                   })
-                 }
-                 className="fixed bottom-[92px] left-0 z-50 flex h-6 w-[76px] items-center justify-center gap-0.5 rounded-r-md border border-l-0 border-purple-300/40 bg-gradient-to-r from-[#27134a] to-[#171222] text-white shadow-[0_5px_14px_rgba(124,58,237,0.22)] transition-shadow hover:shadow-[0_8px_18px_rgba(124,58,237,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                 aria-label="Ask AI"
-                 title="Ask AI"
-               >
-                  <MessageCircle className="h-2.5 w-2.5 text-purple-200" />
-                  <span className="text-[7px] font-bold uppercase tracking-[0.08em]">
-                   Ask AI
-                 </span>
-               </motion.button>
-
-               <motion.button
                  initial={{ opacity: 0, scale: 0.5 }}
                  animate={{ opacity: 1, scale: 1 }}
                  whileHover={{ scale: 1.05 }}
@@ -4007,11 +3984,17 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   <div className="flex flex-col items-center text-center space-y-4 py-2 relative">
                     <button
                       type="button"
-                      onClick={() => setShowQRDialog(true)}
+                      onClick={() =>
+                        toast({
+                          title: "Ask AI",
+                          description: "AI assistance is coming soon.",
+                        })
+                      }
                       className="absolute top-0 right-0 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-all z-10"
-                      title="View QR Code"
+                      aria-label="Ask AI"
+                      title="Ask AI"
                     >
-                      <QrCode className="w-4 h-4" />
+                      <MessageCircle className="w-4 h-4" />
                     </button>
                     <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-600 to-blue-400 mx-auto flex items-center justify-center text-white text-2xl font-bold shadow-lg">
                       {form.watch("name")?.[0] || "P"}
