@@ -4032,7 +4032,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                     className="absolute inset-0 h-full w-full object-contain object-right"
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-[#08080b]/95 via-[#08080b]/65 to-[#08080b]/10" />
-                  <div className="relative flex h-full flex-col items-start justify-between p-5 text-left">
+                  <div className="relative flex h-full flex-col items-start justify-between p-5 pb-12 text-left">
                     <div className="max-w-[78%]">
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-300/90">
                         {ad.eyebrow}
@@ -4056,7 +4056,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 </article>
               ))}
             </motion.div>
-            <div className="absolute bottom-4 right-5 flex items-center gap-1.5">
+            <div className="absolute bottom-4 right-5 z-20 flex items-center gap-1.5 rounded-full bg-black/30 px-2 py-1 backdrop-blur-sm">
               {PROPERTY_ADS.map((ad, index) => (
                 <button
                   key={ad.eyebrow}
