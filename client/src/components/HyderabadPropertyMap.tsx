@@ -12,6 +12,7 @@ import {
   House,
   Info,
   Landmark,
+  List,
   MapPin,
   Maximize2,
   Moon,
@@ -1075,6 +1076,7 @@ export function HyderabadPropertyMapOverlay({
   const [routeProgress, setRouteProgress] = useState(0);
   const [isDarkMap, setIsDarkMap] = useState(false);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
+  const [showProjectList, setShowProjectList] = useState(false);
   const [isRadiusFilterOpen, setIsRadiusFilterOpen] = useState(false);
   const [radiusInKilometers, setRadiusInKilometers] = useState(25);
   const [userLocation, setUserLocation] = useState<MapCoordinate | null>(null);
@@ -1357,9 +1359,84 @@ export function HyderabadPropertyMapOverlay({
             >
               <Ruler className="h-4 w-4" />
             </button>
+            <button
+              type="button"
+              onClick={() => setShowProjectList((visible) => !visible)}
+              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-xl transition-colors ${
+                showProjectList
+                  ? "border-cyan-300/80 bg-cyan-950/90"
+                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+              }`}
+              aria-label={
+                showProjectList ? "Hide property list" : "Show property list"
+              }
+              title={showProjectList ? "Hide property list" : "Show property list"}
+            >
+              <List className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
+
+      {showProjectList && (
+        <div className="pointer-events-auto absolute right-4 top-28 z-30 max-h-[58vh] w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/20 bg-slate-950/90 text-white shadow-2xl backdrop-blur-xl sm:right-6">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <div>
+              <p className="text-xs font-bold">Visible properties</p>
+              <p className="mt-0.5 text-[10px] text-white/45">
+                {visibleProjects.length} result
+                {visibleProjects.length === 1 ? "" : "s"} on the map
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowProjectList(false)}
+              className="rounded-full p-1.5 text-white/55 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Close property list"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="max-h-[calc(58vh-64px)] overflow-y-auto p-2">
+            {visibleProjects.length > 0 ? (
+              visibleProjects.map((project) => (
+                <button
+                  key={project.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedPinProjectId(project.id);
+                    setShowProjectList(false);
+                  }}
+                  className="w-full rounded-xl px-3 py-3 text-left transition-colors hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold">
+                        {project.name}
+                      </p>
+                      <p className="mt-1 flex items-center gap-1 text-[10px] text-white/45">
+                        <MapPin className="h-3 w-3 text-cyan-300" />
+                        {project.locality} · {project.approvalType}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[10px] font-bold text-cyan-200">
+                      {project.price}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[10px] text-white/45">
+                    {project.bedrooms} · {project.acres} acres ·{" "}
+                    {project.type}
+                  </p>
+                </button>
+              ))
+            ) : (
+              <p className="px-3 py-6 text-center text-xs text-white/50">
+                No properties match the current filters.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {isRadiusFilterOpen && (
         <div className="pointer-events-none absolute inset-x-0 bottom-[82px] z-30 flex justify-center px-3 sm:bottom-[76px] sm:px-5">
