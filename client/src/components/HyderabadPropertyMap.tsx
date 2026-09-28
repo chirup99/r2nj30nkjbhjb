@@ -33,6 +33,7 @@ import {
   MarkerTooltip,
   RouteProgress,
   useMap,
+  MapGeoJSON,
 } from "@/components/ui/map";
 import { PLOTSVIEW_PROJECTS } from "@/data/plotsviewProjects";
 
@@ -65,6 +66,70 @@ const SATELLITE_MAP_STYLE = {
 
 // Snapshot of every venture currently returned by PlotsView's public catalog.
 const PROJECTS: PropertyProject[] = PLOTSVIEW_PROJECTS;
+const RADIUS_OPTIONS = [5, 10, 25, 50, 100] as const;
+
+type MapCoordinate = [number, number];
+
+function distanceInKilometers(
+  from: MapCoordinate,
+  to: MapCoordinate,
+) {
+  const earthRadius = 6371;
+  const latitudeDelta = ((to[1] - from[1]) * Math.PI) / 180;
+  const longitudeDelta = ((to[0] - from[0]) * Math.PI) / 180;
+  const fromLatitude = (from[1] * Math.PI) / 180;
+  const toLatitude = (to[1] * Math.PI) / 180;
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.sin(longitudeDelta / 2) ** 2 *
+      Math.cos(fromLatitude) *
+      Math.cos(toLatitude);
+
+  return earthRadius * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+function createRadiusPolygon(
+  center: MapCoordinate,
+  radiusInKilometers: number,
+): GeoJSON.Feature<GeoJSON.Polygon> {
+  const points = 96;
+  const earthRadius = 6371;
+  const latitude = (center[1] * Math.PI) / 180;
+  const angularDistance = radiusInKilometers / earthRadius;
+  const coordinates = Array.from({ length: points + 1 }, (_, index) => {
+    const bearing = (index / points) * Math.PI * 2;
+    const pointLatitude =
+      Math.asin(
+        Math.sin(latitude) * Math.cos(angularDistance) +
+          Math.cos(latitude) *
+            Math.sin(angularDistance) *
+            Math.cos(bearing),
+      ) *
+      (180 / Math.PI);
+    const pointLongitude =
+      (center[0] +
+        Math.atan2(
+          Math.sin(bearing) *
+            Math.sin(angularDistance) *
+            Math.cos(latitude),
+          Math.cos(angularDistance) -
+            Math.sin(latitude) * Math.sin((pointLatitude * Math.PI) / 180),
+        ) *
+          (180 / Math.PI)) %
+      360;
+
+    return [pointLongitude, pointLatitude] as [number, number];
+  });
+
+  return {
+    type: "Feature",
+    properties: {},
+    geometry: {
+      type: "Polygon",
+      coordinates: [coordinates],
+    },
+  };
+}
 
 function getPricePerSquareYard(project: PropertyProject) {
   const price = project.price.replace(/[^\d]/g, "");
@@ -400,6 +465,59 @@ function FitProjectPins({ projects }: { projects: PropertyProject[] }) {
   }, [isLoaded, map, projects]);
 
   return null;
+}
+
+function RadiusFilterLayer({
+  center,
+  radiusInKilometers,
+}: {
+  center: MapCoordinate;
+  radiusInKilometers: number;
+}) {
+  const { map, isLoaded } = useMap();
+  const radiusPolygon = useMemo(
+    () => createRadiusPolygon(center, radiusInKilometers),
+    [center, radiusInKilometers],
+  );
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    map.flyTo({
+      center,
+      zoom: Math.max(map.getZoom(), 9.75),
+      duration: 900,
+      essential: true,
+    });
+  }, [center, isLoaded, map]);
+
+  return (
+    <>
+      <MapGeoJSON
+        id="active-radius-filter"
+        data={radiusPolygon}
+        fillPaint={{
+          "fill-color": "#22d3ee",
+          "fill-opacity": 0.1,
+        }}
+        linePaint={{
+          "line-color": "#67e8f9",
+          "line-width": 2,
+          "line-opacity": 0.95,
+          "line-dasharray": [2, 2],
+        }}
+      />
+      <MapMarker longitude={center[0]} latitude={center[1]}>
+        <MarkerContent>
+          <div className="relative flex h-12 w-12 items-center justify-center">
+            <span className="absolute inset-0 animate-ping rounded-full bg-cyan-300/25" />
+            <span className="absolute h-5 w-5 rounded-full border-2 border-white bg-cyan-400 shadow-[0_0_0_4px_rgba(34,211,238,0.35),0_0_22px_rgba(34,211,238,0.9)]" />
+            <MapPin className="relative h-4 w-4 -translate-y-0.5 text-slate-950" strokeWidth={3} />
+          </div>
+        </MarkerContent>
+      </MapMarker>
+    </>
+  );
 }
 
 export function HyderabadPropertyMapThumbnail() {
@@ -748,6 +866,149 @@ function ProjectDetailSheet({
   );
 }
 
+function RadiusFilterPanel({
+  radiusInKilometers,
+  onRadiusChange,
+  locationStatus,
+  visibleProjectCount,
+}: {
+  radiusInKilometers: number;
+  onRadiusChange: (radius: number) => void;
+  locationStatus: "idle" | "loading" | "ready" | "fallback";
+  visibleProjectCount: number;
+}) {
+  const dialCircumference = 2 * Math.PI * 42;
+  const dialProgress = radiusInKilometers / 100;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8, scale: 0.94 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.94 }}
+      transition={{ type: "spring", damping: 22, stiffness: 320 }}
+      className="w-[232px] rounded-[22px] border border-cyan-200/30 bg-slate-950/95 p-3 text-white shadow-2xl backdrop-blur-xl"
+      role="dialog"
+      aria-label="Search radius filter"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200">
+            Search radius
+          </p>
+          <p className="mt-1 text-[11px] text-white/55">
+            Filter projects around you
+          </p>
+        </div>
+        <div className="relative h-[88px] w-[88px] shrink-0">
+          <svg
+            viewBox="0 0 100 100"
+            className="h-full w-full -rotate-90"
+            aria-hidden="true"
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="42"
+              fill="none"
+              stroke="rgba(255,255,255,0.12)"
+              strokeWidth="5"
+            />
+            <motion.circle
+              cx="50"
+              cy="50"
+              r="42"
+              fill="none"
+              stroke="#67e8f9"
+              strokeLinecap="round"
+              strokeWidth="5"
+              strokeDasharray={dialCircumference}
+              animate={{
+                strokeDashoffset:
+                  dialCircumference * (1 - dialProgress),
+              }}
+              transition={{ type: "spring", damping: 24, stiffness: 180 }}
+              style={{ filter: "drop-shadow(0 0 5px rgba(103,232,249,0.8))" }}
+            />
+            <motion.circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              stroke="rgba(103,232,249,0.45)"
+              strokeDasharray="1 8"
+              strokeLinecap="round"
+              strokeWidth="1.5"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, ease: "linear", repeat: Infinity }}
+              style={{ transformOrigin: "50px 50px" }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-lg font-bold tracking-tight">
+              {radiusInKilometers}
+            </span>
+            <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white/50">
+              km
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <input
+        type="range"
+        min={5}
+        max={100}
+        step={5}
+        value={radiusInKilometers}
+        onChange={(event) => onRadiusChange(Number(event.target.value))}
+        className="mt-1 h-1.5 w-full cursor-pointer accent-cyan-300"
+        aria-label="Search radius in kilometres"
+      />
+      <div className="mt-2 flex justify-between text-[9px] font-semibold uppercase tracking-[0.12em] text-white/35">
+        <span>5 km</span>
+        <span>100 km</span>
+      </div>
+
+      <div className="mt-3 flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+        {RADIUS_OPTIONS.map((radius) => (
+          <button
+            key={radius}
+            type="button"
+            onClick={() => onRadiusChange(radius)}
+            className={`shrink-0 rounded-full border px-2.5 py-1.5 text-[10px] font-bold transition-colors ${
+              radius === radiusInKilometers
+                ? "border-cyan-200 bg-cyan-300 text-slate-950"
+                : "border-white/15 bg-white/5 text-white/65 hover:border-cyan-200/60 hover:text-white"
+            }`}
+          >
+            {radius} km
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2.5">
+        <div className="min-w-0">
+          <p className="truncate text-[10px] font-bold text-white/85">
+            {visibleProjectCount} project{visibleProjectCount === 1 ? "" : "s"} nearby
+          </p>
+          <p className="mt-0.5 truncate text-[9px] text-white/45">
+            {locationStatus === "loading"
+              ? "Finding your location…"
+              : locationStatus === "ready"
+                ? "Using your current location"
+                : "Using Hyderabad map center"}
+          </p>
+        </div>
+        <span className="relative ml-2 h-2 w-2 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.9)]">
+          {locationStatus === "loading" && (
+            <span className="absolute inset-0 animate-ping rounded-full bg-cyan-300" />
+          )}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
 export function HyderabadPropertyMapOverlay({
   onClose,
 }: {
@@ -765,6 +1026,12 @@ export function HyderabadPropertyMapOverlay({
   const [routeProgress, setRouteProgress] = useState(0);
   const [isDarkMap, setIsDarkMap] = useState(false);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
+  const [isRadiusFilterOpen, setIsRadiusFilterOpen] = useState(false);
+  const [radiusInKilometers, setRadiusInKilometers] = useState(25);
+  const [userLocation, setUserLocation] = useState<MapCoordinate | null>(null);
+  const [locationStatus, setLocationStatus] = useState<
+    "idle" | "loading" | "ready" | "fallback"
+  >("idle");
 
   const selectedIntent = MAGIC_INTENTS.find(
     (intent) => intent.id === selectedIntentId,
@@ -785,9 +1052,23 @@ export function HyderabadPropertyMapOverlay({
         `${project.name} ${project.locality} ${project.developer}`
           .toLowerCase()
           .includes(normalizedQuery);
-      return matchesMagicFilter && matchesQuery;
+      const matchesRadius =
+        !isRadiusFilterOpen ||
+        !userLocation ||
+        distanceInKilometers(userLocation, [
+          project.longitude,
+          project.latitude,
+        ]) <= radiusInKilometers;
+      return matchesMagicFilter && matchesQuery && matchesRadius;
     });
-  }, [query, selectedIntent, selectedSubcategory]);
+  }, [
+    isRadiusFilterOpen,
+    query,
+    radiusInKilometers,
+    selectedIntent,
+    selectedSubcategory,
+    userLocation,
+  ]);
 
   const routeProjectIds = visibleProjects.map((project) => project.id).join(",");
   const selectedPinProject = PROJECTS.find(
@@ -842,6 +1123,39 @@ export function HyderabadPropertyMapOverlay({
     setSelectedSubcategoryId(null);
   };
 
+  useEffect(() => {
+    if (!isRadiusFilterOpen || locationStatus !== "idle") return;
+
+    if (!("geolocation" in navigator)) {
+      setUserLocation(HYDERABAD_CENTER);
+      setLocationStatus("fallback");
+      return;
+    }
+
+    setLocationStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation([
+          position.coords.longitude,
+          position.coords.latitude,
+        ]);
+        setLocationStatus("ready");
+      },
+      () => {
+        setUserLocation(HYDERABAD_CENTER);
+        setLocationStatus("fallback");
+      },
+      { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 },
+    );
+  }, [isRadiusFilterOpen, locationStatus]);
+
+  const toggleRadiusFilter = () => {
+    setIsRadiusFilterOpen((open) => {
+      if (open) setLocationStatus("idle");
+      return !open;
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -877,6 +1191,12 @@ export function HyderabadPropertyMapOverlay({
             intent={selectedIntent}
             subcategoryId={selectedSubcategory.id}
             progress={routeProgress}
+          />
+        )}
+        {isRadiusFilterOpen && userLocation && (
+          <RadiusFilterLayer
+            center={userLocation}
+            radiusInKilometers={radiusInKilometers}
           />
         )}
         {visibleProjects.map((project) => (
@@ -954,6 +1274,35 @@ export function HyderabadPropertyMapOverlay({
             >
               <Satellite className="h-4 w-4" />
             </button>
+            <button
+              type="button"
+              onClick={toggleRadiusFilter}
+              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
+                isRadiusFilterOpen
+                  ? "border-cyan-300/80 bg-cyan-950/90"
+                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+              }`}
+              aria-label={
+                isRadiusFilterOpen
+                  ? "Close search radius filter"
+                  : "Open search radius filter"
+              }
+              title={
+                isRadiusFilterOpen
+                  ? "Close search radius filter"
+                  : "Search by radius"
+              }
+            >
+              <Ruler className="h-4 w-4" />
+            </button>
+            {isRadiusFilterOpen && (
+              <RadiusFilterPanel
+                radiusInKilometers={radiusInKilometers}
+                onRadiusChange={setRadiusInKilometers}
+                locationStatus={locationStatus}
+                visibleProjectCount={visibleProjects.length}
+              />
+            )}
           </div>
         </div>
       </div>
