@@ -1,6 +1,6 @@
 # Project Overview
 
-A React + Express (TypeScript) property discovery concept branded as NEST AI. The current experience keeps the imported profile/auth foundation while presenting Hyderabad real-estate discovery, AI-guided search language, and a full-screen project map with curated demo pins.
+A React + Express (TypeScript) property discovery concept branded as RCiQ-AI. The current experience keeps the imported profile/auth foundation while presenting Hyderabad real-estate discovery, AI-guided search language, and a full-screen project map with curated demo pins.
 
 ## Architecture
 
@@ -44,7 +44,7 @@ A React + Express (TypeScript) property discovery concept branded as NEST AI. Th
 
 ## Current Product Direction
 
-- The main entry point is branded **NEST AI** and positioned as Hyderabad Property Discovery.
+- The main entry point is branded **RCiQ-AI** and positioned as Hyderabad Property Discovery.
 - The floating property map opens a MapLibre view with all 81 ventures from the public PlotsView catalog, using each venture's published latitude and longitude.
 - The map fits its initial viewport to every visible project pin, supports searching the full catalog, and links each popup back to its PlotsView venture page. The imported catalog is a snapshot and should be refreshed when listings change.
 

@@ -120,7 +120,7 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
     timeLabel: "4:00 PM – 6:00 PM",
     location: "The Grand Courtyard, Nanakramguda",
     area: "Financial District",
-    host: "NEST AI Curated",
+    host: "RCiQ-AI Curated",
     description:
       "Meet developers, understand rental demand, and see the strongest investment-ready projects nearby.",
     attendees: 24,
@@ -3516,7 +3516,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                     {!isTradersPanelCollapsed && (
                       <div>
                       <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/35">
-                        NEST AI · HYDERABAD
+                        RCiQ-AI · HYDERABAD
                       </p>
                       <h3 className="mt-1 text-base font-semibold tracking-tight text-white">
                         Meet the project
@@ -3838,7 +3838,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
           className="w-full max-w-md text-center mb-6 z-10"
         >
           <h1 className="text-2xl font-display font-bold tracking-widest uppercase text-white">
-            NEST AI
+            RCiQ-AI
           </h1>
           <p className="text-[10px] tracking-[0.3em] text-white/50 font-medium mb-6 flex items-center justify-center gap-2">
             DISCOVER . COMPARE . MOVE{" "}
