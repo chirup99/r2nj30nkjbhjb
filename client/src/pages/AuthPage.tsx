@@ -4023,16 +4023,36 @@ export default function AuthPage({ slug }: { slug?: string }) {
               {PROPERTY_ADS.map((ad) => (
                 <article
                   key={ad.eyebrow}
-                  className="relative h-[238px] shrink-0 overflow-hidden"
+                  className="relative h-[258px] shrink-0 overflow-hidden bg-[#101016]"
                   style={{ width: `${100 / PROPERTY_ADS.length}%` }}
                 >
                   <img
                     src={ad.image}
                     alt={ad.title}
-                    className="absolute inset-0 h-full w-full object-contain object-right"
+                    className="absolute inset-x-0 top-0 h-[226px] w-full object-contain object-right"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#08080b]/95 via-[#08080b]/65 to-[#08080b]/10" />
-                  <div className="relative flex h-full flex-col items-start justify-between p-5 pb-12 text-left">
+                  <div className="absolute inset-x-0 top-0 h-[226px] bg-gradient-to-r from-[#08080b]/95 via-[#08080b]/65 to-[#08080b]/10" />
+                  <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-white/20 bg-black/65 px-2.5 py-1.5 shadow-lg backdrop-blur-sm">
+                    <span className="text-[10px] font-bold tabular-nums tracking-wider text-white">
+                      {activePropertyAd + 1} / {PROPERTY_ADS.length}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {PROPERTY_ADS.map((slide, index) => (
+                        <button
+                          key={slide.eyebrow}
+                          type="button"
+                          onClick={() => setActivePropertyAd(index)}
+                          aria-label={`Show property ad ${index + 1}`}
+                          className={`h-1.5 rounded-full transition-all ${
+                            activePropertyAd === index
+                              ? "w-5 bg-white"
+                              : "w-1.5 bg-white/45 hover:bg-white/75"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="relative flex h-[226px] items-start p-5 pb-12 text-left flex-col justify-start">
                     <div className="max-w-[78%]">
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-300/90">
                         {ad.eyebrow}
@@ -4056,21 +4076,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 </article>
               ))}
             </motion.div>
-            <div className="absolute bottom-4 right-5 z-20 flex items-center gap-1.5 rounded-full bg-black/30 px-2 py-1 backdrop-blur-sm">
-              {PROPERTY_ADS.map((ad, index) => (
-                <button
-                  key={ad.eyebrow}
-                  type="button"
-                  onClick={() => setActivePropertyAd(index)}
-                  aria-label={`Show property ad ${index + 1}`}
-                  className={`h-1.5 rounded-full transition-all ${
-                    activePropertyAd === index
-                      ? "w-5 bg-white"
-                      : "w-1.5 bg-white/45 hover:bg-white/75"
-                  }`}
-                />
-              ))}
-            </div>
           </div>
         </motion.div>
           )}
