@@ -388,18 +388,6 @@ export function HyderabadPropertyMapThumbnail() {
         <div className="absolute right-0 top-1/2 h-px w-48 -rotate-12 bg-white/15" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_48%,rgba(34,211,238,0.3),transparent_26%),linear-gradient(135deg,rgba(16,185,129,0.14),transparent_55%)]" />
       </div>
-      {PROJECTS.map((project, index) => (
-        <span
-          key={project.id}
-          className="absolute h-2.5 w-2.5 rounded-full border border-white shadow-[0_0_10px_currentColor]"
-          style={{
-            left: `${20 + ((index * 23) % 62)}%`,
-            top: `${20 + ((index * 17) % 54)}%`,
-            color: project.accent,
-            backgroundColor: project.accent,
-          }}
-        />
-      ))}
       <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#07111f]/90 to-transparent" />
       <div className="absolute bottom-2 left-3 flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.18em] text-white/80">
         <MapPin className="h-3 w-3 text-cyan-300" />

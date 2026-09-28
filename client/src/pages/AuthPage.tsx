@@ -3184,7 +3184,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
               whileTap={{ scale: 0.9 }}
               exit={{ opacity: 0, scale: 0.5 }}
               onClick={() => setShowMapDialog(true)}
-              className="fixed bottom-8 right-8 z-50 h-[76px] w-[76px] overflow-hidden rounded-2xl border border-purple-300/50 bg-[#171222] text-white shadow-[0_12px_30px_rgba(124,58,237,0.4)] transition-shadow hover:shadow-[0_16px_36px_rgba(124,58,237,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="fixed bottom-8 right-8 z-50 h-[76px] w-[132px] overflow-hidden rounded-2xl border border-purple-300/50 bg-[#171222] text-white shadow-[0_12px_30px_rgba(124,58,237,0.4)] transition-shadow hover:shadow-[0_16px_36px_rgba(124,58,237,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               aria-label="Open Hyderabad property map"
               title="Open Hyderabad property map"
             >
