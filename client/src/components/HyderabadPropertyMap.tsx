@@ -490,58 +490,21 @@ function RadiusFilterLayer({
     });
   }, [center, isLoaded, map]);
 
-  const dialSize = Math.min(
-    292,
-    Math.max(164, radiusInKilometers * 3.2),
-  );
-  const estimatedMinutes = Math.max(
-    1,
-    Math.round(radiusInKilometers * 0.32),
-  );
-
   return (
-    <>
-      <MapGeoJSON
-        id="active-radius-filter"
-        data={radiusPolygon}
-        fillPaint={{
-          "fill-color": "#22d3ee",
-          "fill-opacity": 0.1,
-        }}
-        linePaint={{
-          "line-color": "#67e8f9",
-          "line-width": 2,
-          "line-opacity": 0.95,
-          "line-dasharray": [2, 2],
-        }}
-      />
-      <MapMarker longitude={center[0]} latitude={center[1]}>
-        <MarkerContent>
-          <div
-            className="pointer-events-none relative flex items-center justify-center rounded-full border border-white/55 bg-slate-100/35 shadow-[0_0_30px_rgba(34,211,238,0.22)] backdrop-blur-[1px]"
-            style={{ height: dialSize, width: dialSize }}
-          >
-            <span className="absolute inset-2 rounded-full border border-white/35" />
-            <span className="absolute inset-5 rounded-full border border-white/20 border-dashed" />
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              animate={{ scale: [1, 1.035, 1], opacity: [0.6, 0.95, 0.6] }}
-              transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <span className="absolute inset-0 rounded-full border border-cyan-200/55" />
-            </motion.div>
-            <div className="relative flex h-16 w-16 flex-col items-center justify-center rounded-full border border-white/20 bg-slate-950/95 text-white shadow-2xl">
-              <span className="text-xl font-bold leading-none">
-                {estimatedMinutes}
-              </span>
-              <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em] text-white/55">
-                min
-              </span>
-            </div>
-          </div>
-        </MarkerContent>
-      </MapMarker>
-    </>
+    <MapGeoJSON
+      id="active-radius-filter"
+      data={radiusPolygon}
+      fillPaint={{
+        "fill-color": "#22d3ee",
+        "fill-opacity": 0.1,
+      }}
+      linePaint={{
+        "line-color": "#67e8f9",
+        "line-width": 2,
+        "line-opacity": 0.95,
+        "line-dasharray": [2, 2],
+      }}
+    />
   );
 }
 
