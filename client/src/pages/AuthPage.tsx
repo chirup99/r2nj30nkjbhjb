@@ -3493,12 +3493,12 @@ export default function AuthPage({ slug }: { slug?: string }) {
                      description: "AI assistance is coming soon.",
                    })
                  }
-                 className="fixed bottom-[88px] left-0 z-50 flex h-7 w-[88px] items-center justify-center gap-1 rounded-r-md border border-l-0 border-purple-300/40 bg-gradient-to-r from-[#27134a] to-[#171222] text-white shadow-[0_6px_16px_rgba(124,58,237,0.24)] transition-shadow hover:shadow-[0_10px_22px_rgba(124,58,237,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                 className="fixed bottom-[88px] left-0 z-50 flex h-6 w-[76px] items-center justify-center gap-0.5 rounded-r-md border border-l-0 border-purple-300/40 bg-gradient-to-r from-[#27134a] to-[#171222] text-white shadow-[0_5px_14px_rgba(124,58,237,0.22)] transition-shadow hover:shadow-[0_8px_18px_rgba(124,58,237,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                  aria-label="Ask AI"
                  title="Ask AI"
                >
-                 <MessageCircle className="h-3 w-3 text-purple-200" />
-                 <span className="text-[8px] font-bold uppercase tracking-[0.1em]">
+                  <MessageCircle className="h-2.5 w-2.5 text-purple-200" />
+                  <span className="text-[7px] font-bold uppercase tracking-[0.08em]">
                    Ask AI
                  </span>
                </motion.button>
