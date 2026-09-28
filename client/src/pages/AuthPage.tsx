@@ -3493,7 +3493,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                      description: "AI assistance is coming soon.",
                    })
                  }
-                 className="fixed bottom-[88px] left-0 z-50 flex h-6 w-[76px] items-center justify-center gap-0.5 rounded-r-md border border-l-0 border-purple-300/40 bg-gradient-to-r from-[#27134a] to-[#171222] text-white shadow-[0_5px_14px_rgba(124,58,237,0.22)] transition-shadow hover:shadow-[0_8px_18px_rgba(124,58,237,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                 className="fixed bottom-[92px] left-0 z-50 flex h-6 w-[76px] items-center justify-center gap-0.5 rounded-r-md border border-l-0 border-purple-300/40 bg-gradient-to-r from-[#27134a] to-[#171222] text-white shadow-[0_5px_14px_rgba(124,58,237,0.22)] transition-shadow hover:shadow-[0_8px_18px_rgba(124,58,237,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                  aria-label="Ask AI"
                  title="Ask AI"
                >
