@@ -34,6 +34,14 @@ import {
   Mail,
   Navigation,
   Info,
+  CalendarDays,
+  Clock3,
+  MapPin,
+  Users,
+  CheckCircle2,
+  ChevronRight,
+  Heart,
+  Building2,
 } from "lucide-react";
 import {
   motion,
@@ -69,6 +77,73 @@ import {
 } from "@/components/HyderabadPropertyMap";
 
 type AuthMode = "login" | "register" | "customize" | "swipe";
+
+type PropertyEvent = {
+  id: string;
+  title: string;
+  type: string;
+  dateLabel: string;
+  timeLabel: string;
+  location: string;
+  area: string;
+  host: string;
+  description: string;
+  attendees: number;
+  capacity: number;
+  accent: string;
+  icon: typeof Building2;
+};
+
+const PROPERTY_EVENTS: PropertyEvent[] = [
+  {
+    id: "uber-villa-luxury-walkthrough",
+    title: "Uber Villa Luxury Walkthrough",
+    type: "Villa visit",
+    dateLabel: "Sunday, 4 October",
+    timeLabel: "11:00 AM – 1:00 PM",
+    location: "Uber Villa Luxury, Kokapet",
+    area: "West Hyderabad",
+    host: "Uber Villa Luxury",
+    description:
+      "Walk through the show villa, compare floor plans, and meet the project team on site.",
+    attendees: 18,
+    capacity: 30,
+    accent: "from-amber-500/35 via-orange-500/15 to-[#17100a]",
+    icon: Building2,
+  },
+  {
+    id: "financial-district-investor-open-house",
+    title: "Financial District Investor Open House",
+    type: "Investor meetup",
+    dateLabel: "Sunday, 11 October",
+    timeLabel: "4:00 PM – 6:00 PM",
+    location: "The Grand Courtyard, Nanakramguda",
+    area: "Financial District",
+    host: "NEST AI Curated",
+    description:
+      "Meet developers, understand rental demand, and see the strongest investment-ready projects nearby.",
+    attendees: 24,
+    capacity: 40,
+    accent: "from-violet-500/35 via-purple-500/15 to-[#120d1f]",
+    icon: Users,
+  },
+  {
+    id: "lakefront-plots-site-meet",
+    title: "Lakefront Plots Site Meet",
+    type: "Site visit",
+    dateLabel: "Saturday, 17 October",
+    timeLabel: "9:30 AM – 12:00 PM",
+    location: "Lakefront Estates, Shamirpet",
+    area: "North Hyderabad",
+    host: "Lakefront Estates",
+    description:
+      "See the plotted development in person, review approvals, and ask the sales team anything before you visit again.",
+    attendees: 11,
+    capacity: 25,
+    accent: "from-emerald-500/35 via-teal-500/15 to-[#071713]",
+    icon: MapPin,
+  },
+];
 
 const COUNTRY_CODES = [
   { code: "+91", country: "India", flag: "🇮🇳" },
@@ -2042,7 +2117,63 @@ export default function AuthPage({ slug }: { slug?: string }) {
   const [isTradersExpanded, setIsTradersExpanded] = useState(false);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
   const [showTradersModal, setShowTradersModal] = useState(false);
+  const [selectedPropertyEvent, setSelectedPropertyEvent] =
+    useState<PropertyEvent | null>(null);
+  const [eventRegistration, setEventRegistration] = useState(() => {
+    try {
+      const saved = localStorage.getItem("nest_property_event_registrations");
+      return saved
+        ? (JSON.parse(saved) as Record<string, { name: string; phone: string }>)
+        : {};
+    } catch {
+      return {};
+    }
+  });
+  const [eventName, setEventName] = useState(
+    loggedInUser?.name || "",
+  );
+  const [eventPhone, setEventPhone] = useState(
+    loggedInUser?.whatsapp || "",
+  );
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 768 : false);
+
+  const registerForPropertyEvent = async (event: PropertyEvent) => {
+    if (!eventName.trim() || !eventPhone.trim()) {
+      toast({
+        title: "Add your contact details",
+        description: "Your name and mobile number help the host confirm your spot.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await apiRequest("POST", `/api/property-events/${event.id}/register`, {
+        name: eventName.trim(),
+        phone: eventPhone.trim(),
+        userId: loggedInUser?.id,
+      });
+      const updatedRegistrations = {
+        ...eventRegistration,
+        [event.id]: { name: eventName.trim(), phone: eventPhone.trim() },
+      };
+      setEventRegistration(updatedRegistrations);
+      localStorage.setItem(
+        "nest_property_event_registrations",
+        JSON.stringify(updatedRegistrations),
+      );
+      toast({
+        title: "Spot reserved",
+        description: `You're registered for ${event.title}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Registration failed",
+        description: error?.message || "Please try again in a moment.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -3231,8 +3362,8 @@ export default function AuthPage({ slug }: { slug?: string }) {
                     <span className="text-[10px] font-semibold text-white/60 uppercase tracking-wide">
                       Connect with
                     </span>
-                    <span className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
-                      Traders
+                      <span className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                       Property Meetups
                     </span>
                   </div>
                 </motion.div>
@@ -3246,7 +3377,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
           )}
         </AnimatePresence>
 
-        {/* Traders Bottom Sheet Modal */}
+                 {/* Property Meetup Bottom Sheet Modal */}
         <AnimatePresence>
           {showTradersModal && (
             <>
@@ -3262,156 +3393,242 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black/95 via-black/90 to-black/80 rounded-t-3xl max-h-[70vh] overflow-y-auto shadow-2xl"
+                 className="fixed bottom-0 left-0 right-0 z-50 max-h-[86vh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#090a0d]/[.98] shadow-2xl"
               >
-                <div className="flex items-center justify-between p-6 pb-4">
-                  <div className="flex flex-col gap-1">
-                    <h3 className="text-lg font-bold text-white">
-                      Exclusive Traders Circle
-                    </h3>
-                    <p className="text-[10px] text-white/40 uppercase tracking-wider">
-                      Advanced Trading Analytics
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowTradersModal(false)}
-                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white/60 hover:text-white"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+                 <div className="sticky top-0 z-10 flex items-start justify-between border-b border-white/10 bg-[#090a0d]/95 p-5 pb-4 backdrop-blur-xl">
+                   <div className="flex items-start gap-3">
+                     <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-400/10 ring-1 ring-emerald-300/20">
+                       <MapPin className="h-5 w-5 text-emerald-300" />
+                     </div>
+                     <div>
+                       <h3 className="text-lg font-bold text-white">
+                         Meet the project in person
+                       </h3>
+                       <p className="mt-1 text-[11px] text-white/45">
+                         Curated property visits, open houses and investor meetups
+                       </p>
+                     </div>
+                   </div>
+                   <button
+                     onClick={() => {
+                       setShowTradersModal(false);
+                       setSelectedPropertyEvent(null);
+                     }}
+                     className="rounded-full bg-white/10 p-2 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+                     aria-label="Close property meetups"
+                   >
+                     <X className="h-5 w-5" />
+                   </button>
+                 </div>
 
-                <div className="overflow-x-auto scrollbar-hide px-6 pb-6">
-                  <div className="flex gap-4">
-                    {[
-                      {
-                        title: "Visual Trade Tracking",
-                        subtitle: "Track FOMO Mistakes on Calendar",
-                        tag: "Advanced Line Point Tracking",
-                        image:
-                          "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)",
-                        video: "/1.mp4",
-                      },
-                      {
-                        title: "Your Advanced Trading Journal",
-                        subtitle: "Daily Trade Tracking",
-                        tag: "Performance Analysis",
-                        image:
-                          "linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)",
-                        video: "/2.mp4",
-                      },
-                      {
-                        title: "Multi-Broker Integration",
-                        subtitle: "Connect with 7+ brokers",
-                        tag: "Avoid Mistakes",
-                        image:
-                          "linear-gradient(135deg, #059669 0%, #10b981 100%)",
-                        video: "/3.mp4",
-                      },
-                      {
-                        title: "AI Performance Trend",
-                        subtitle: "Smart Trading Intelligence",
-                        tag: "Top Tag for Trading Success",
-                        image:
-                          "linear-gradient(135deg, #d97706 0%, #f59e0b 100%)",
-                        video: "/4.mp4",
-                      },
-                    ].map((card, idx) => (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="flex-shrink-0 w-48 h-56 rounded-2xl overflow-hidden cursor-pointer group relative"
-                      >
-                        {card.video ? (
-                          <video
-                            className="absolute inset-0 w-full h-full object-cover"
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            preload="auto"
-                            poster={card.image}
-                            style={{ background: card.image }}
-                          >
-                            <source src={card.video} type="video/mp4" />
-                          </video>
-                        ) : (
-                          <div
-                            className="absolute inset-0"
-                            style={{ background: card.image }}
-                          />
-                        )}
-                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
-                        <div className="absolute inset-0 flex flex-col justify-end p-4 text-white">
-                          <h4 className="font-bold text-sm leading-tight">
-                            {card.title}
-                          </h4>
-                          <p className="text-[10px] text-white/70">
-                            {card.subtitle}
-                          </p>
-                          <span className="inline-block bg-white/20 text-white/80 text-[9px] font-semibold px-2 py-1 rounded mt-2 w-fit border border-white/30">
-                            {card.tag}
-                          </span>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
+                 <div className="px-5 pb-8 pt-5">
+                   <div className="mb-5 flex items-end justify-between gap-4">
+                     <div>
+                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300/80">
+                         Hyderabad, this month
+                       </p>
+                       <h4 className="mt-1 text-2xl font-bold tracking-tight text-white">
+                         Find your next place
+                       </h4>
+                     </div>
+                     <span className="rounded-full border border-white/10 bg-white/[.06] px-3 py-1.5 text-[10px] font-medium text-white/60">
+                       {PROPERTY_EVENTS.length} meetups
+                     </span>
+                   </div>
 
-                {/* Preload container for videos - hidden from view */}
-                <div className="fixed opacity-0 pointer-events-none -z-50 overflow-hidden w-0 h-0">
-                  {[
-                    "/1.mp4",
-                    "/2.mp4",
-                    "/3.mp4",
-                    "/4.mp4"
-                  ].map((video) => (
-                    <video key={video} preload="auto" muted>
-                      <source src={video} type="video/mp4" />
-                    </video>
-                  ))}
-                </div>
+                   <div className="space-y-3">
+                     {PROPERTY_EVENTS.map((event) => {
+                       const EventIcon = event.icon;
+                       const isRegistered = Boolean(eventRegistration[event.id]);
+                       const spotsLeft =
+                         event.capacity -
+                         event.attendees -
+                         (isRegistered ? 1 : 0);
+                       return (
+                         <motion.button
+                           key={event.id}
+                           initial={{ opacity: 0, y: 12 }}
+                           animate={{ opacity: 1, y: 0 }}
+                           transition={{ duration: 0.25 }}
+                           onClick={() => setSelectedPropertyEvent(event)}
+                           className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[.045] p-4 text-left transition-all hover:border-emerald-300/30 hover:bg-white/[.07]"
+                         >
+                           <div
+                             className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${event.accent}`}
+                           />
+                           <div className="flex items-start gap-3">
+                             <div
+                               className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${event.accent} ring-1 ring-white/10`}
+                             >
+                               <EventIcon className="h-5 w-5 text-white/90" />
+                             </div>
+                             <div className="min-w-0 flex-1">
+                               <div className="flex items-start justify-between gap-3">
+                                 <div>
+                                   <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">
+                                     {event.type}
+                                   </p>
+                                   <h5 className="mt-1 text-sm font-bold leading-tight text-white">
+                                     {event.title}
+                                   </h5>
+                                 </div>
+                                 {isRegistered ? (
+                                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-300" />
+                                 ) : (
+                                   <ChevronRight className="h-5 w-5 shrink-0 text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-white/70" />
+                                 )}
+                               </div>
+                               <div className="mt-3 grid grid-cols-1 gap-1.5 text-[11px] text-white/55 sm:grid-cols-2">
+                                 <span className="flex items-center gap-1.5">
+                                   <CalendarDays className="h-3.5 w-3.5 text-white/35" />
+                                   {event.dateLabel}
+                                 </span>
+                                 <span className="flex items-center gap-1.5">
+                                   <Clock3 className="h-3.5 w-3.5 text-white/35" />
+                                   {event.timeLabel}
+                                 </span>
+                                 <span className="flex items-center gap-1.5 sm:col-span-2">
+                                   <MapPin className="h-3.5 w-3.5 text-white/35" />
+                                   {event.location}
+                                 </span>
+                               </div>
+                               <div className="mt-3 flex items-center justify-between gap-3">
+                                 <span className="text-[10px] text-white/35">
+                                   {spotsLeft} spots left · hosted by {event.host}
+                                 </span>
+                                 <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-300">
+                                   {isRegistered ? "Registered" : "View & RSVP"}
+                                   <ArrowRight className="h-3 w-3" />
+                                 </span>
+                               </div>
+                             </div>
+                           </div>
+                         </motion.button>
+                       );
+                     })}
+                   </div>
 
-                <div className="px-6 pb-8 border-t border-white/10">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="flex flex-col items-center gap-4 pt-6"
-                  >
-                    <a
-                      href="https://perala.in"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group cursor-pointer hover:bg-[#adb5bd] border border-white/5 rounded-2xl p-4 flex items-center justify-center transition-all duration-300 shadow-xl w-32 h-15 pt-[10px] pb-[10px] pl-[10px] pr-[10px] text-[#000000] bg-[#000000]"
-                    >
-                      <img
-                        src={logoImg}
-                        alt="Perala"
-                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
-                      />
-                    </a>
-                    <div className="text-center space-y-3">
-                      <h3 className="text-xl font-bold text-white tracking-tight">
-                        Get Early Access
-                      </h3>
-                      <p className="text-[12px] text-white/70 max-w-xs">
-                        Perala: Your Advanced Trading Journal & Performance
-                        Analysis Hub.
-                      </p>
-                      <div className="flex items-center justify-center gap-2 flex-wrap pt-2">
-                        <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-400/20">
-                          Daily Trade Tracking
-                        </span>
-                        <span className="text-[10px] text-blue-400 font-semibold bg-blue-400/10 px-3 py-1 rounded-full border border-blue-400/20">
-                          AI Performance Analysis
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
+                   <div className="mt-5 flex items-center gap-3 rounded-2xl border border-emerald-300/15 bg-emerald-300/[.06] p-4">
+                     <Heart className="h-5 w-5 shrink-0 text-emerald-300" />
+                     <p className="text-[11px] leading-relaxed text-white/55">
+                       Register your interest and meet the developer, sales team and other serious buyers at the actual project location.
+                     </p>
+                   </div>
+                 </div>
+
+                 <AnimatePresence>
+                   {selectedPropertyEvent && (
+                     <motion.div
+                       initial={{ opacity: 0 }}
+                       animate={{ opacity: 1 }}
+                       exit={{ opacity: 0 }}
+                       className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-5"
+                       onClick={() => setSelectedPropertyEvent(null)}
+                     >
+                       <motion.div
+                         initial={{ y: 40, opacity: 0 }}
+                         animate={{ y: 0, opacity: 1 }}
+                         exit={{ y: 40, opacity: 0 }}
+                         onClick={(event) => event.stopPropagation()}
+                         className="w-full max-w-md rounded-t-3xl border border-white/10 bg-[#111318] p-5 shadow-2xl sm:rounded-3xl"
+                       >
+                         <div className="flex items-start justify-between gap-4">
+                           <div>
+                             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300/80">
+                               {selectedPropertyEvent.type}
+                             </p>
+                             <h4 className="mt-2 text-xl font-bold leading-tight text-white">
+                               {selectedPropertyEvent.title}
+                             </h4>
+                           </div>
+                           <button
+                             onClick={() => setSelectedPropertyEvent(null)}
+                             className="rounded-full bg-white/10 p-2 text-white/60 hover:bg-white/20 hover:text-white"
+                             aria-label="Close event details"
+                           >
+                             <X className="h-4 w-4" />
+                           </button>
+                         </div>
+
+                         <p className="mt-3 text-sm leading-relaxed text-white/60">
+                           {selectedPropertyEvent.description}
+                         </p>
+
+                         <div className="mt-5 grid grid-cols-2 gap-2">
+                           <div className="rounded-xl border border-white/10 bg-white/[.04] p-3">
+                             <CalendarDays className="mb-2 h-4 w-4 text-emerald-300" />
+                             <p className="text-[10px] text-white/40">Date</p>
+                             <p className="mt-1 text-xs font-semibold text-white">
+                               {selectedPropertyEvent.dateLabel}
+                             </p>
+                           </div>
+                           <div className="rounded-xl border border-white/10 bg-white/[.04] p-3">
+                             <Clock3 className="mb-2 h-4 w-4 text-emerald-300" />
+                             <p className="text-[10px] text-white/40">Time</p>
+                             <p className="mt-1 text-xs font-semibold text-white">
+                               {selectedPropertyEvent.timeLabel}
+                             </p>
+                           </div>
+                           <div className="col-span-2 rounded-xl border border-white/10 bg-white/[.04] p-3">
+                             <MapPin className="mb-2 h-4 w-4 text-emerald-300" />
+                             <p className="text-[10px] text-white/40">Meeting point</p>
+                             <p className="mt-1 text-xs font-semibold text-white">
+                               {selectedPropertyEvent.location}
+                             </p>
+                           </div>
+                         </div>
+
+                         {eventRegistration[selectedPropertyEvent.id] ? (
+                           <div className="mt-5 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4">
+                             <div className="flex items-center gap-2 text-emerald-300">
+                               <CheckCircle2 className="h-5 w-5" />
+                               <p className="text-sm font-bold">You’re on the guest list</p>
+                             </div>
+                             <p className="mt-2 text-xs leading-relaxed text-white/60">
+                               We saved your interest for this meetup. Show up at the meeting point and the host will help you from there.
+                             </p>
+                           </div>
+                         ) : (
+                           <div className="mt-5 space-y-3">
+                             <div>
+                               <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/45">
+                                 Your name
+                               </label>
+                               <input
+                                 value={eventName}
+                                 onChange={(event) => setEventName(event.target.value)}
+                                 placeholder="Enter your full name"
+                                 className="w-full rounded-xl border border-white/10 bg-white/[.06] px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-emerald-300/50"
+                               />
+                             </div>
+                             <div>
+                               <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/45">
+                                 Mobile number
+                               </label>
+                               <input
+                                 value={eventPhone}
+                                 onChange={(event) => setEventPhone(event.target.value)}
+                                 placeholder="+91 98765 43210"
+                                 inputMode="tel"
+                                 className="w-full rounded-xl border border-white/10 bg-white/[.06] px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-emerald-300/50"
+                               />
+                             </div>
+                             <button
+                               onClick={() => registerForPropertyEvent(selectedPropertyEvent)}
+                               className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-300 px-4 py-3 text-sm font-bold text-[#07130e] transition-colors hover:bg-emerald-200"
+                             >
+                               Reserve my spot
+                               <ArrowRight className="h-4 w-4" />
+                             </button>
+                             <p className="text-center text-[10px] text-white/30">
+                               No payment now · just register your interest
+                             </p>
+                           </div>
+                         )}
+                       </motion.div>
+                     </motion.div>
+                   )}
+                 </AnimatePresence>
               </motion.div>
             </>
           )}

@@ -7,9 +7,13 @@ import { z } from "zod";
 import bcrypt from "bcrypt";
 import { Readable } from "stream";
 
-const SALT_ROUNDS = 12;
-
 import { AccessToken } from "livekit-server-sdk";
+
+const SALT_ROUNDS = 12;
+const propertyEventRegistrations = new Map<
+  string,
+  Map<string, { name: string; phone: string; userId?: string; registeredAt: string }>
+>();
 
 export async function registerRoutes(
   httpServer: Server,
@@ -67,6 +71,58 @@ export async function registerRoutes(
     at.addGrant({ roomJoin: true, room: roomName });
 
     res.json({ token: await at.toJwt() });
+  });
+
+  app.post("/api/property-events/:eventId/register", async (req, res) => {
+    try {
+      const { name, phone, userId } = z
+        .object({
+          name: z.string().trim().min(2),
+          phone: z.string().trim().min(7),
+          userId: z.string().optional(),
+        })
+        .parse(req.body);
+      const eventId = z.string().min(1).parse(req.params.eventId);
+      const attendeeKey = userId || phone;
+      const registrations =
+        propertyEventRegistrations.get(eventId) ||
+        new Map<
+          string,
+          { name: string; phone: string; userId?: string; registeredAt: string }
+        >();
+      const existing = registrations.get(attendeeKey);
+
+      if (existing) {
+        return res.status(200).json({
+          registered: true,
+          registration: existing,
+          attendeeCount: registrations.size,
+        });
+      }
+
+      const registration = {
+        name,
+        phone,
+        ...(userId ? { userId } : {}),
+        registeredAt: new Date().toISOString(),
+      };
+      registrations.set(attendeeKey, registration);
+      propertyEventRegistrations.set(eventId, registrations);
+
+      return res.status(201).json({
+        registered: true,
+        registration,
+        attendeeCount: registrations.size,
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join("."),
+        });
+      }
+      return res.status(500).json({ message: "Could not register for event" });
+    }
   });
 
   app.post(api.auth.login.path, async (req, res) => {
