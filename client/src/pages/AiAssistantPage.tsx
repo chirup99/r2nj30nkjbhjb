@@ -3,15 +3,22 @@ import { useLocation } from "wouter";
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
+  ChevronDown,
   House,
+  Info,
   Landmark,
   ListFilter,
   MapPin,
+  Navigation,
   Send,
+  Trees,
+  TrendingUp,
   Wallet,
 } from "lucide-react";
 import { PropertyMeetupMark } from "@/components/PropertyMeetupMark";
 import {
+  getProjectListingDetails,
   HyderabadPropertyMapOverlay,
 } from "@/components/HyderabadPropertyMap";
 import {
@@ -215,6 +222,164 @@ function getPropertyMatches(query: AssistantQuery): PropertyMatch[] {
     .slice(0, 4);
 }
 
+type InsightMetric = {
+  label: string;
+  value: number;
+  detail: string;
+};
+
+function distanceFromHyderabadMapCenter(project: PlotsViewProject) {
+  const center: [number, number] = [78.385, 17.42];
+  const earthRadius = 6371;
+  const latitudeDelta = ((project.latitude - center[1]) * Math.PI) / 180;
+  const longitudeDelta = ((project.longitude - center[0]) * Math.PI) / 180;
+  const centerLatitude = (center[1] * Math.PI) / 180;
+  const projectLatitude = (project.latitude * Math.PI) / 180;
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.sin(longitudeDelta / 2) ** 2 *
+      Math.cos(centerLatitude) *
+      Math.cos(projectLatitude);
+
+  return earthRadius * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+function getProjectInsights(project: PropertyMatch) {
+  const details = getProjectListingDetails(project);
+  const distance = distanceFromHyderabadMapCenter(project);
+  const approvalValue =
+    project.approvalType === "HMDA"
+      ? 92
+      : project.approvalType === "DTCP"
+        ? 78
+        : project.approvalType === "FCDA"
+          ? 70
+          : 64;
+  const priceValue = Math.max(
+    18,
+    Math.min(96, Math.round(100 - project.pricePerSqYd / 450)),
+  );
+
+  return {
+    details,
+    distance,
+    growthSignals: [
+      {
+        label: "Project scale",
+        value: Math.min(100, Math.round((project.acres / 50) * 100)),
+        detail: `${project.acres} acres`,
+      },
+      {
+        label: "Approval signal",
+        value: approvalValue,
+        detail: `${project.approvalType} listed`,
+      },
+      {
+        label: "Price signal",
+        value: priceValue,
+        detail: formatRate(project.pricePerSqYd),
+      },
+    ] satisfies InsightMetric[],
+    connectivitySignals: [
+      {
+        label: "Map proximity",
+        value: Math.max(12, Math.round(100 - Math.min(distance, 100))),
+        detail: `~${Math.round(distance)} km from map center`,
+      },
+    ] satisfies InsightMetric[],
+  };
+}
+
+function InsightBar({ metric }: { metric: InsightMetric }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 text-[10px]">
+        <span className="text-white/55">{metric.label}</span>
+        <span className="font-semibold text-white/75">{metric.detail}</span>
+      </div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-purple-400 to-fuchsia-300"
+          style={{ width: `${metric.value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PropertyInsightPanel({ project }: { project: PropertyMatch }) {
+  const { details, growthSignals, connectivitySignals, distance } =
+    getProjectInsights(project);
+  const amenities = details.amenities ?? [];
+
+  return (
+    <div className="mt-3 space-y-3 rounded-2xl border border-purple-300/15 bg-purple-500/[0.06] p-3">
+      <div className="flex items-center gap-1.5">
+        <TrendingUp className="h-3.5 w-3.5 text-purple-200" />
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-purple-200">
+          Indicative growth signals
+        </p>
+      </div>
+      <div className="space-y-2.5">
+        {growthSignals.map((metric) => (
+          <InsightBar key={metric.label} metric={metric} />
+        ))}
+      </div>
+
+      <div className="border-t border-white/10 pt-3">
+        <div className="flex items-center gap-1.5">
+          <Navigation className="h-3.5 w-3.5 text-blue-200" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-200">
+            Connectivity context
+          </p>
+        </div>
+        <div className="mt-2 space-y-2.5">
+          {connectivitySignals.map((metric) => (
+            <InsightBar key={metric.label} metric={metric} />
+          ))}
+        </div>
+        <p className="mt-2 text-[10px] text-white/45">
+          {details.locationDetail ?? `${project.locality}, Telangana`} · map
+          distance {Math.round(distance)} km
+        </p>
+      </div>
+
+      <div className="border-t border-white/10 pt-3">
+        <div className="flex items-center gap-1.5">
+          <Trees className="h-3.5 w-3.5 text-emerald-200" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200">
+            Amenities
+          </p>
+        </div>
+        {amenities.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {amenities.slice(0, 8).map((amenity) => (
+              <span
+                key={amenity}
+                className="inline-flex items-center gap-1 rounded-full bg-white/[0.08] px-2 py-1 text-[10px] text-white/65"
+              >
+                <Check className="h-3 w-3 text-emerald-300" />
+                {amenity}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-2 text-[10px] text-white/45">
+            Amenities are not listed for this project in the imported catalog.
+          </p>
+        )}
+      </div>
+
+      <p className="flex items-start gap-1.5 border-t border-white/10 pt-3 text-[9px] leading-relaxed text-white/35">
+        <Info className="mt-0.5 h-3 w-3 shrink-0" />
+        Growth bars are indicative signals from listed scale, approval, pricing,
+        and map position—not a guaranteed forecast. Verify details with the
+        project team.
+      </p>
+    </div>
+  );
+}
+
 function getLoanPayment(settings: LoanSettings) {
   const principal =
     settings.propertyValue * (1 - settings.downPayment / 100);
@@ -378,6 +543,7 @@ export default function AiAssistantPage() {
   const [selectedMapProjectId, setSelectedMapProjectId] = useState<string | null>(
     null,
   );
+  const [expandedInsightIds, setExpandedInsightIds] = useState<string[]>([]);
   const [loanSettings, setLoanSettings] = useState<LoanSettings>({
     propertyValue: 6_000_000,
     downPayment: 20,
@@ -505,6 +671,14 @@ export default function AiAssistantPage() {
     setDraft(prompt);
   };
 
+  const toggleInsights = (projectId: string) => {
+    setExpandedInsightIds((current) =>
+      current.includes(projectId)
+        ? current.filter((id) => id !== projectId)
+        : [...current, projectId],
+    );
+  };
+
   return (
     <main className="min-h-screen bg-[#050505] px-4 py-4 text-white sm:px-6">
       <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[#0d0d12] shadow-[0_24px_80px_rgba(0,0,0,0.4)]">
@@ -607,14 +781,33 @@ export default function AiAssistantPage() {
                             <p className="text-[10px] leading-relaxed text-white/40">
                               {project.totalPlots} plots · {project.type}
                             </p>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedMapProjectId(project.id)}
-                              className="shrink-0 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[10px] font-semibold text-white/75 transition-colors hover:border-white/40 hover:bg-white/10 hover:text-white"
-                            >
-                              View on map
-                            </button>
+                            <div className="flex shrink-0 items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => toggleInsights(project.id)}
+                                className="flex items-center gap-1 rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-[10px] font-semibold text-white/75 transition-colors hover:border-white/40 hover:bg-white/10 hover:text-white"
+                              >
+                                Insights
+                                <ChevronDown
+                                  className={`h-3 w-3 transition-transform ${
+                                    expandedInsightIds.includes(project.id)
+                                      ? "rotate-180"
+                                      : ""
+                                  }`}
+                                />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedMapProjectId(project.id)}
+                                className="shrink-0 rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-[10px] font-semibold text-white/75 transition-colors hover:border-white/40 hover:bg-white/10 hover:text-white"
+                              >
+                                Map
+                              </button>
+                            </div>
                           </div>
+                          {expandedInsightIds.includes(project.id) && (
+                            <PropertyInsightPanel project={project} />
+                          )}
                         </article>
                       ))}
                     </div>

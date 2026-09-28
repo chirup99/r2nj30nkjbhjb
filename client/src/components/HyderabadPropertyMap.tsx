@@ -768,7 +768,7 @@ export function HyderabadPropertyMapThumbnail() {
   );
 }
 
-type ProjectListingDetails = {
+export type ProjectListingDetails = {
   imageUrl?: string;
   startingPrice?: string;
   availablePlots?: number;
@@ -805,7 +805,7 @@ const PROJECT_LISTING_DETAILS: Record<string, ProjectListingDetails> = {
   "asta-meadows": ASTA_MEADOWS_DETAILS,
 };
 
-function getProjectListingDetails(project: PropertyProject) {
+export function getProjectListingDetails(project: PropertyProject) {
   return PROJECT_LISTING_DETAILS[project.slug] ?? {};
 }
 
