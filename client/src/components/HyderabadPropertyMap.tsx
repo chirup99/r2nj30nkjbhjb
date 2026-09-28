@@ -11,6 +11,7 @@ import {
   FileText,
   House,
   Info,
+  LandPlot,
   Landmark,
   MapPin,
   Maximize2,
@@ -407,13 +408,17 @@ function MagicProjectRoute({
 
 function PropertyPin({
   accent,
+  propertyType,
   selected = false,
   onSelect,
 }: {
   accent: string;
+  propertyType: string;
   selected?: boolean;
   onSelect: () => void;
 }) {
+  const PinIcon = getPropertyPinIcon(propertyType);
+
   return (
     <button
       type="button"
@@ -433,7 +438,7 @@ function PropertyPin({
         className="absolute left-1/2 top-1/2 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white shadow-lg"
         style={{ backgroundColor: accent }}
       >
-        <Building2 className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+        <PinIcon className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
       </span>
       <span
         className="absolute bottom-0 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-white"
@@ -441,6 +446,27 @@ function PropertyPin({
       />
     </button>
   );
+}
+
+function getPropertyPinIcon(propertyType: string) {
+  const normalizedType = propertyType.toLowerCase();
+
+  if (normalizedType.includes("villa")) return House;
+  if (
+    normalizedType.includes("flat") ||
+    normalizedType.includes("apartment")
+  ) {
+    return Building2;
+  }
+  if (
+    normalizedType.includes("plot") ||
+    normalizedType.includes("land") ||
+    normalizedType.includes("farm")
+  ) {
+    return LandPlot;
+  }
+
+  return Landmark;
 }
 
 function FitProjectPins({ projects }: { projects: PropertyProject[] }) {
@@ -1234,6 +1260,7 @@ export function HyderabadPropertyMapOverlay({
             <MarkerContent>
               <PropertyPin
                 accent={project.accent}
+                propertyType={project.type}
                 selected={project.id === selectedPinProject?.id}
                 onSelect={() => setSelectedPinProjectId(project.id)}
               />
