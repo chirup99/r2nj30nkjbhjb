@@ -3351,6 +3351,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
               </div>
             </div>
           ) : (
+            <>
             <button
               onClick={() => {
                 setShowPersonaDialog(true);
@@ -3363,6 +3364,35 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 My Persona
               </span>
             </button>
+             {mode === "login" && (
+               <button
+                 type="button"
+                 onClick={() => {
+                   setMode("register");
+                   setPublicUser(null);
+                   setLastLoadedSlug(null);
+                   form.reset({
+                     password: "",
+                     name: "",
+                     role: "founder",
+                     bio: "",
+                     instagram: "",
+                     linkedin: "",
+                     whatsapp: "",
+                     website: "",
+                     cards: [],
+                     email: "",
+                   });
+                   setSelectedCards([]);
+                   setLocation("/");
+                   setIsMenuOpen(false);
+                 }}
+                 className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-black shadow-lg transition-all hover:bg-white/90"
+               >
+                 create your property profile
+               </button>
+              )}
+            </>
           )}
         </motion.div>
       </div>
@@ -4775,37 +4805,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
               </button>
             ) : null}
 
-            {!loggedInUser && mode === "login" && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (mode === "login") {
-                    setMode("register");
-                    setPublicUser(null);
-                    setLastLoadedSlug(null);
-                    form.reset({
-                      password: "",
-                      name: "",
-                      role: "founder",
-                      bio: "",
-                      instagram: "",
-                      linkedin: "",
-                      whatsapp: "",
-                      website: "",
-                      cards: [],
-                      email: "",
-                    });
-                    setSelectedCards([]);
-                    setLocation("/");
-                  } else {
-                    setMode("login");
-                  }
-                }}
-                className="w-full bg-white text-black hover:bg-white/90 rounded-lg py-3 font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg mt-2"
-              >
-                create your property profile
-              </button>
-            )}
           </div>
         </motion.div>
 
