@@ -907,6 +907,8 @@ export default function AiAssistantPage() {
       return;
     }
 
+    setPropertySearchQuery(query);
+
     if (query.compare && query.maxBudget) {
       const matches = getPropertyMatches(query);
       addAssistantMessage(
@@ -923,6 +925,19 @@ export default function AiAssistantPage() {
       return;
     }
 
+    if (query.location && !query.maxBudget) {
+      const matches = getPropertyMatches(query);
+      const propertyText = query.propertyType
+        ? ` for ${query.propertyType} properties`
+        : "";
+      const textResponse = matches.length
+        ? `I found ${matches.length} properties${propertyText} near ${query.location}. Tap Budget whenever you want to narrow these results by price.`
+        : "I couldn’t find a matching property in that area yet. Tap Budget to add a budget filter or try another area.";
+
+      addAssistantMessage(textResponse, matches);
+      return;
+    }
+
     if (!query.maxBudget) {
       const nextSettings: PropertySearchSettings = {
         maxBudget: 5_000_000,
@@ -935,7 +950,6 @@ export default function AiAssistantPage() {
             ? query.propertyType
             : "",
       };
-      setPropertySearchQuery(query);
       setPropertySearchSettings(nextSettings);
       addAssistantMessage(
         "I can help narrow that down. Please choose your maximum budget, location, and property type.",
@@ -992,6 +1006,31 @@ export default function AiAssistantPage() {
           loanEmi,
         )} per month. Adjust the sliders below for a better fit.`,
         undefined,
+        true,
+      );
+      return;
+    }
+    if (label === "Budget") {
+      const baseQuery = propertySearchQuery ?? { intent: "property" as const };
+      const nextSettings: PropertySearchSettings = {
+        maxBudget: baseQuery.maxBudget ?? 5_000_000,
+        location: baseQuery.location ?? "",
+        propertyType:
+          baseQuery.propertyType === "flat" ||
+          baseQuery.propertyType === "plot" ||
+          baseQuery.propertyType === "villa" ||
+          baseQuery.propertyType === "commercial"
+            ? baseQuery.propertyType
+            : "",
+      };
+      setPropertySearchQuery(baseQuery);
+      setPropertySearchSettings(nextSettings);
+      addAssistantMessage(
+        baseQuery.location
+          ? `Set a maximum budget to filter properties near ${baseQuery.location}.`
+          : "Set a maximum budget, location, and property type to filter properties.",
+        undefined,
+        false,
         true,
       );
       return;
