@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import {
   ArrowLeft,
+  ArrowRight,
   House,
   Landmark,
   ListFilter,
@@ -43,6 +44,7 @@ type LoanSettings = {
   downPayment: number;
   interestRate: number;
   tenure: number;
+  monthlyIncome: number;
 };
 
 const QUICK_ACTIONS = [
@@ -80,6 +82,32 @@ const LOCATION_GROUPS: Record<string, string[]> = {
   "east hyderabad": ["bibinagar", "yadadri", "bhongir", "bhuvanagiri"],
 };
 
+function normalizeLocationText(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function findLocationInText(text: string) {
+  const normalized = normalizeLocationText(text);
+  const group = Object.keys(LOCATION_GROUPS).find((candidate) =>
+    normalized.includes(candidate),
+  );
+  if (group) return group;
+
+  const localities = PLOTSVIEW_PROJECTS.map((project) => project.locality)
+    .filter((locality, index, all) => all.indexOf(locality) === index)
+    .sort((a, b) => b.length - a.length);
+
+  return localities.find((locality) => {
+    const candidate = normalizeLocationText(locality);
+    if (normalized.includes(candidate)) return true;
+
+    return candidate
+      .split(" ")
+      .filter((part) => part.length >= 5)
+      .some((part) => normalized.includes(part));
+  });
+}
+
 function parseAmount(value: string, unit?: string) {
   const number = Number(value.replace(/,/g, ""));
   if (!Number.isFinite(number)) return undefined;
@@ -108,13 +136,7 @@ function parseBudget(text: string) {
 
 function parseQuery(text: string): AssistantQuery {
   const normalized = text.toLowerCase();
-  const location =
-    Object.keys(LOCATION_GROUPS).find((group) =>
-      normalized.includes(group),
-    ) ||
-    PLOTSVIEW_PROJECTS.map((project) => project.locality)
-      .sort((a, b) => b.length - a.length)
-      .find((locality) => normalized.includes(locality.toLowerCase()));
+  const location = findLocationInText(text);
 
   const propertyType =
     /villa|bungalow|independent home|independent house/.test(normalized)
@@ -205,12 +227,24 @@ function getLoanPayment(settings: LoanSettings) {
   );
 }
 
+function getMaximumLoanForEmi(emi: number, interestRate: number, tenure: number) {
+  const monthlyRate = interestRate / 100 / 12;
+  const months = tenure * 12;
+  if (!monthlyRate) return emi * months;
+  return (
+    (emi * ((1 + monthlyRate) ** months - 1)) /
+    (monthlyRate * (1 + monthlyRate) ** months)
+  );
+}
+
 function LoanPlanner({
   settings,
   onChange,
+  onSave,
 }: {
   settings: LoanSettings;
   onChange: (settings: LoanSettings) => void;
+  onSave: () => void;
 }) {
   const emi = getLoanPayment(settings);
   const loanAmount =
@@ -244,6 +278,15 @@ function LoanPlanner({
             max: 20_000_000,
             step: 250_000,
             display: formatCurrency(settings.propertyValue),
+          },
+          {
+            key: "monthlyIncome" as const,
+            label: "Monthly income",
+            value: settings.monthlyIncome,
+            min: 30_000,
+            max: 500_000,
+            step: 10_000,
+            display: formatCurrency(settings.monthlyIncome),
           },
           {
             key: "downPayment" as const,
@@ -312,9 +355,16 @@ function LoanPlanner({
         </div>
       </div>
       <p className="mt-3 text-[11px] leading-relaxed text-white/50">
-        Best fit: keep the EMI near one-third of your monthly take-home income
-        and compare offers from at least two lenders before deciding.
+        We use up to 35% of your monthly income as a comfortable EMI estimate.
       </p>
+      <button
+        type="button"
+        onClick={onSave}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-xs font-bold text-[#141419] transition-colors hover:bg-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+      >
+        Save & find eligible properties
+        <ArrowRight className="h-3.5 w-3.5 text-[#7c2cff]" />
+      </button>
     </div>
   );
 }
@@ -333,9 +383,45 @@ export default function AiAssistantPage() {
     downPayment: 20,
     interestRate: 8.5,
     tenure: 20,
+    monthlyIncome: 150_000,
   });
 
   const loanEmi = useMemo(() => getLoanPayment(loanSettings), [loanSettings]);
+
+  const saveLoanAndFindProperties = () => {
+    const comfortableEmi = loanSettings.monthlyIncome * 0.35;
+    const maximumLoan = getMaximumLoanForEmi(
+      comfortableEmi,
+      loanSettings.interestRate,
+      loanSettings.tenure,
+    );
+    const maximumPropertyValue =
+      maximumLoan / (1 - loanSettings.downPayment / 100);
+    const matches = getPropertyMatches({
+      intent: "property",
+      maxBudget: maximumPropertyValue,
+    });
+
+    if (matches.length === 0) {
+      addAssistantMessage(
+        `I couldn't find a map listing that fits your current eligibility up to ${formatCurrency(
+          maximumPropertyValue,
+        )}. Try a higher down payment, a longer tenure, or a wider property search.`,
+      );
+      return;
+    }
+
+    addAssistantMessage(
+      `Saved. Based on a ${formatCurrency(
+        loanSettings.monthlyIncome,
+      )} monthly income, your comfortable EMI is about ${formatCurrency(
+        comfortableEmi,
+      )}. I found ${matches.length} properties up to about ${formatCurrency(
+        maximumPropertyValue,
+      )}.`,
+      matches,
+    );
+  };
 
   const addAssistantMessage = (
     text: string,
@@ -538,6 +624,7 @@ export default function AiAssistantPage() {
                     <LoanPlanner
                       settings={loanSettings}
                       onChange={setLoanSettings}
+                      onSave={saveLoanAndFindProperties}
                     />
                   )}
                 </div>
