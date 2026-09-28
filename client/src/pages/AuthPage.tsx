@@ -4007,9 +4007,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 strokeWidth={2.5}
               />
             </div>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/35">
-              Curated property ads
-            </span>
           </div>
           <div className="relative overflow-hidden rounded-[24px] border border-white/15 bg-[#101016] shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
             <motion.div
@@ -4023,7 +4020,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
               {PROPERTY_ADS.map((ad) => (
                 <article
                   key={ad.eyebrow}
-                  className="relative h-[258px] shrink-0 overflow-hidden bg-[#101016]"
+                  className="relative h-[226px] shrink-0 overflow-hidden bg-[#101016]"
                   style={{ width: `${100 / PROPERTY_ADS.length}%` }}
                 >
                   <img
