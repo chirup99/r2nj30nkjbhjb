@@ -608,10 +608,8 @@ function RadiusArcControl({
       initial={{ opacity: 0, y: 20, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: "spring", damping: 24, stiffness: 300 }}
-      className={`pointer-events-auto relative h-[166px] w-[310px] rounded-[28px] border px-3 pt-2 shadow-2xl backdrop-blur-xl ${
-        isDarkMap
-          ? "border-white/20 bg-slate-950/92 text-white"
-          : "border-slate-200/90 bg-white/95 text-slate-950 shadow-slate-950/20"
+      className={`pointer-events-auto relative h-[142px] w-[282px] overflow-visible px-0 pt-0 ${
+        isDarkMap ? "text-white" : "text-slate-950"
       }`}
       aria-label="Adjust search radius"
     >
@@ -629,7 +627,7 @@ function RadiusArcControl({
       </button>
       <svg
         viewBox="0 0 280 150"
-        className={`h-[132px] w-full touch-none select-none ${
+        className={`h-[124px] w-full touch-none select-none ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
         role="slider"
@@ -718,8 +716,8 @@ function RadiusArcControl({
         </text>
       </svg>
       <p
-        className={`absolute bottom-1 left-0 right-0 text-center text-[8px] font-semibold uppercase tracking-[0.14em] ${
-          isDarkMap ? "text-white/35" : "text-slate-500"
+        className={`absolute bottom-0 left-0 right-0 text-center text-[8px] font-semibold uppercase tracking-[0.14em] drop-shadow-sm ${
+          isDarkMap ? "text-white/55" : "text-slate-700"
         }`}
       >
         Drag the arc to expand or compress
