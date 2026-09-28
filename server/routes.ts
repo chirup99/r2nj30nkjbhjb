@@ -125,6 +125,77 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/assistant/understand", async (req, res) => {
+    try {
+      const { text } = z
+        .object({ text: z.string().trim().min(1).max(1000) })
+        .parse(req.body);
+      const apiKey = process.env.GEMINI_API_KEY;
+
+      if (!apiKey) {
+        return res.json({ available: false });
+      }
+
+      const model = process.env.GEMINI_MODEL || "gemini-2.0-flash-lite";
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [
+                {
+                  text: [
+                    "Extract property search intent from the user's text.",
+                    "Return JSON only with these optional keys:",
+                    'intent: "property" or "loan", location: string, maxBudget: number in INR, propertyType: "plot", "farm", "villa", or "flat".',
+                    "Use null for unknown values. Do not invent a location or budget.",
+                  ].join(" "),
+                },
+              ],
+            },
+            contents: [{ role: "user", parts: [{ text }] }],
+            generationConfig: {
+              temperature: 0,
+              responseMimeType: "application/json",
+            },
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        return res.json({ available: false });
+      }
+
+      const payload = (await response.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
+      const generatedText =
+        payload.candidates?.[0]?.content?.parts
+          ?.map((part) => part.text || "")
+          .join("")
+          .trim() || "";
+      const parsed = JSON.parse(generatedText.replace(/^```json\s*|\s*```$/g, ""));
+      const allowedTypes = new Set(["plot", "farm", "villa", "flat"]);
+
+      return res.json({
+        available: true,
+        query: {
+          intent: parsed.intent === "loan" ? "loan" : "property",
+          location: typeof parsed.location === "string" ? parsed.location : undefined,
+          maxBudget:
+            typeof parsed.maxBudget === "number" ? parsed.maxBudget : undefined,
+          propertyType: allowedTypes.has(parsed.propertyType)
+            ? parsed.propertyType
+            : undefined,
+        },
+      });
+    } catch {
+      return res.json({ available: false });
+    }
+  });
+
   app.post(api.auth.login.path, async (req, res) => {
     try {
       const input = api.auth.login.input.parse(req.body);
