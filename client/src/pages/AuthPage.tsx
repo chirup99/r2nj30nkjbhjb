@@ -543,6 +543,48 @@ const CARDS = [
     bgStack1: "bg-fuchsia-950/50",
     bgStack2: "bg-rose-950/60",
   },
+  {
+    id: 6,
+    type: "property",
+    title: "GARDEN VILLAS",
+    name: "Cedar Grove",
+    subname: "Gachibowli · Hyderabad",
+    location: "Gachibowli, Hyderabad",
+    price: "₹1.95 Cr onwards",
+    details: "4 BHK · 2,900 sq ft",
+    imageUrl: villaSunset,
+    color: "from-cyan-950 via-sky-900 to-slate-950",
+    bgStack1: "bg-sky-950/50",
+    bgStack2: "bg-cyan-950/60",
+  },
+  {
+    id: 7,
+    type: "property",
+    title: "SKYLINE RESIDENCES",
+    name: "The Vertex",
+    subname: "Kondapur · Hyderabad",
+    location: "Kondapur, Hyderabad",
+    price: "₹1.1 Cr onwards",
+    details: "3 BHK · 1,850 sq ft",
+    imageUrl: apartmentResidence,
+    color: "from-violet-950 via-indigo-900 to-slate-950",
+    bgStack1: "bg-violet-950/50",
+    bgStack2: "bg-indigo-950/60",
+  },
+  {
+    id: 8,
+    type: "property",
+    title: "HILLSIDE VILLAS",
+    name: "Mango Valley",
+    subname: "Mokila · West Hyderabad",
+    location: "Mokila, Hyderabad",
+    price: "₹1.35 Cr onwards",
+    details: "3 BHK · 2,400 sq ft",
+    imageUrl: villaCommunity,
+    color: "from-lime-950 via-green-900 to-slate-950",
+    bgStack1: "bg-green-950/50",
+    bgStack2: "bg-lime-950/60",
+  },
 ];
 
 type PersonaMapLocation = {
@@ -4149,7 +4191,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   mode === "swipe" ? "text-white" : "text-white/50",
                 )}
               >
-                    Saved
+                    Saved Cards
               </button>
               <motion.div
                 layoutId="activeTab"
@@ -5016,26 +5058,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 </div>
               )}
             </motion.div>
-
-            <div
-              className={clsx(
-                "relative py-2",
-                mode === "login" && "hidden",
-              )}
-            >
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10"></span>
-              </div>
-              <div className="relative flex justify-center text-[10px] uppercase">
-                <span className="bg-card px-2 text-white/40 font-bold">
-                  {mode === "customize"
-                    ? "EDITING"
-                    : mode === "login"
-                      ? "FREE"
-                      : "FREE"}
-                </span>
-              </div>
-            </div>
 
             {mode === "swipe" && (
               <div className="flex items-center justify-between text-white/40 text-[10px] uppercase tracking-wider font-bold px-4 mt-3">
