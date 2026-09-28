@@ -2348,6 +2348,8 @@ export default function AuthPage({ slug }: { slug?: string }) {
     const currentUser = slug ? null : loggedInUser;
     return currentUser?.cards || [];
   });
+  const savedCardCount =
+    user || publicUser ? selectedCards.length : CARDS.length;
 
   useEffect(() => {
     // Sync selectedCards whenever user data changes
@@ -4187,11 +4189,14 @@ export default function AuthPage({ slug }: { slug?: string }) {
               <button
                 onClick={() => setMode("swipe")}
                 className={clsx(
-                  "flex-1 py-2 text-sm font-semibold rounded-md z-10 transition-colors",
+                  "flex-1 py-2 text-sm font-semibold rounded-md z-10 transition-colors flex items-center justify-center gap-1.5",
                   mode === "swipe" ? "text-white" : "text-white/50",
                 )}
               >
-                    Saved Cards
+                <span>Saved Cards</span>
+                <span className="rounded-full bg-white/15 px-1.5 py-0.5 text-[9px] tabular-nums text-white/75">
+                  {savedCardCount}
+                </span>
               </button>
               <motion.div
                 layoutId="activeTab"
