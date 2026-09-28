@@ -834,11 +834,13 @@ function ControlButton({
   label,
   children,
   disabled = false,
+  className,
 }: {
   onClick: () => void;
   label: string;
   children: React.ReactNode;
   disabled?: boolean;
+  className?: string;
 }) {
   return (
     <button
@@ -851,6 +853,7 @@ function ControlButton({
         "hover:bg-accent dark:hover:bg-accent/40",
         "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
         "disabled:pointer-events-none disabled:opacity-50",
+        className,
       )}
       disabled={disabled}
     >
@@ -975,6 +978,7 @@ function MapControls({
               onClick={handleLocate}
               label="Find my location"
               disabled={waitingForLocation}
+              className="text-primary hover:!bg-primary/10 active:!bg-primary/15 dark:hover:!bg-primary/20"
             >
               {waitingForLocation ? (
                 <Loader2 className="size-4 animate-spin" />
