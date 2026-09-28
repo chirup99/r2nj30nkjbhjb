@@ -28,3 +28,17 @@ mtime_ms = 1790603963140
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:bc39eee7-77fa-4474-b8a0-5ea0e136857f/d2022ec8-0aad-4078-9a66-3058d0621105/4e2e4b80-4eee-4abd-8874-209b35f03342"
 storage_version_token = "1790603976473536"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "KIP9bcw2fOonDbBZzkShr"
+uri = "file://persona-hub-eb-latest-fixed.zip"
+type = "unspecified"
+title = "Latest AWS Elastic Beanstalk deployment ZIP"
+description = "Built from the latest source, including the saved-cards banner change and scrollable property meetup sheet with hidden scrollbar. Includes the current production build, working EB configuration, and a public-registry package lockfile. Clean production npm install, runtime HTTP 200 on port 8081, and ZIP integrity checks passed."
+logical_id = "23edc7e3-cf59-48ce-983e-21aa0f8a8924"
+content_hash = "sha256:e9c0b383e8e581e976f9f8963b5129211abe17ea4a23251b8c03024ef07c9332"
+size = 14078712
+mtime_ms = 1790604849404
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:bc39eee7-77fa-4474-b8a0-5ea0e136857f/23edc7e3-cf59-48ce-983e-21aa0f8a8924/1a84c436-8ff8-4e77-ac6a-3c9a6fdba382"
+storage_version_token = "1790604891573805"
+content_type = "application/octet-stream"
