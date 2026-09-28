@@ -130,6 +130,17 @@ function createRadiusPolygon(
   };
 }
 
+function getRadiusHandleCoordinate(
+  center: MapCoordinate,
+  radiusInKilometers: number,
+): MapCoordinate {
+  const latitudeRadians = (center[1] * Math.PI) / 180;
+  const longitudeDelta =
+    radiusInKilometers / (111.32 * Math.max(0.2, Math.cos(latitudeRadians)));
+
+  return [center[0] + longitudeDelta, center[1]];
+}
+
 function getPricePerSquareYard(project: PropertyProject) {
   const price = project.price.replace(/[^\d]/g, "");
   return Number(price) || 0;
@@ -469,13 +480,19 @@ function FitProjectPins({ projects }: { projects: PropertyProject[] }) {
 function RadiusFilterLayer({
   center,
   radiusInKilometers,
+  onRadiusChange,
 }: {
   center: MapCoordinate;
   radiusInKilometers: number;
+  onRadiusChange: (radius: number) => void;
 }) {
   const { map, isLoaded } = useMap();
   const radiusPolygon = useMemo(
     () => createRadiusPolygon(center, radiusInKilometers),
+    [center, radiusInKilometers],
+  );
+  const radiusHandle = useMemo(
+    () => getRadiusHandleCoordinate(center, radiusInKilometers),
     [center, radiusInKilometers],
   );
 
@@ -548,6 +565,30 @@ function RadiusFilterLayer({
               </span>
             </div>
           </div>
+        </MarkerContent>
+      </MapMarker>
+      <MapMarker
+        longitude={radiusHandle[0]}
+        latitude={radiusHandle[1]}
+        draggable
+        onDragEnd={({ lng, lat }) => {
+          const draggedRadius = distanceInKilometers(center, [lng, lat]);
+          const snappedRadius = Math.round(draggedRadius / 5) * 5;
+          onRadiusChange(Math.min(100, Math.max(5, snappedRadius)));
+        }}
+      >
+        <MarkerContent>
+          <motion.div
+            className="relative flex h-11 w-11 cursor-grab items-center justify-center rounded-full active:cursor-grabbing"
+            animate={{ scale: [1, 1.12, 1] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            title="Drag to change radius"
+          >
+            <span className="absolute inset-0 rounded-full bg-cyan-300/25 blur-[2px]" />
+            <span className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-cyan-500 shadow-[0_0_0_5px_rgba(34,211,238,0.28),0_0_24px_rgba(34,211,238,0.95)]">
+              <span className="h-2.5 w-2.5 rounded-full bg-white" />
+            </span>
+          </motion.div>
         </MarkerContent>
       </MapMarker>
     </>
@@ -918,7 +959,6 @@ export function HyderabadPropertyMapOverlay({
   const [isDarkMap, setIsDarkMap] = useState(false);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [isRadiusFilterOpen, setIsRadiusFilterOpen] = useState(false);
-  const [isRadiusEditorOpen, setIsRadiusEditorOpen] = useState(false);
   const [radiusInKilometers, setRadiusInKilometers] = useState(25);
   const [userLocation, setUserLocation] = useState<MapCoordinate | null>(null);
   const [locationStatus, setLocationStatus] = useState<
@@ -1042,17 +1082,10 @@ export function HyderabadPropertyMapOverlay({
   }, [isRadiusFilterOpen, locationStatus]);
 
   const toggleRadiusFilter = () => {
-    if (!isRadiusFilterOpen) {
-      setIsRadiusFilterOpen(true);
-      setIsRadiusEditorOpen(true);
-      return;
-    }
-
-    setIsRadiusEditorOpen((open) => !open);
-  };
-
-  const saveRadiusFilter = () => {
-    setIsRadiusEditorOpen(false);
+    setIsRadiusFilterOpen((open) => {
+      if (open) setLocationStatus("idle");
+      return !open;
+    });
   };
 
   return (
@@ -1096,6 +1129,7 @@ export function HyderabadPropertyMapOverlay({
           <RadiusFilterLayer
             center={userLocation}
             radiusInKilometers={radiusInKilometers}
+            onRadiusChange={setRadiusInKilometers}
           />
         )}
         {visibleProjects.map((project) => (
@@ -1197,56 +1231,6 @@ export function HyderabadPropertyMapOverlay({
           </div>
         </div>
       </div>
-
-      {isRadiusEditorOpen && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-[84px] z-30 px-3 sm:bottom-[78px] sm:px-5">
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: "spring", damping: 24, stiffness: 300 }}
-            className="pointer-events-auto mx-auto flex w-full max-w-[620px] items-center gap-3 rounded-2xl border border-cyan-200/25 bg-slate-950/95 px-3 py-2.5 text-white shadow-2xl backdrop-blur-xl sm:px-4"
-            aria-label="Adjust search radius"
-          >
-            <div className="flex min-w-[74px] items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-300/15 text-cyan-200">
-                <Ruler className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">
-                  Radius
-                </p>
-                <p className="text-sm font-bold leading-none text-cyan-100">
-                  {radiusInKilometers} km
-                </p>
-              </div>
-            </div>
-            <input
-              type="range"
-              min={5}
-              max={100}
-              step={5}
-              value={radiusInKilometers}
-              onChange={(event) =>
-                setRadiusInKilometers(Number(event.target.value))
-              }
-              className="h-1.5 min-w-0 flex-1 cursor-pointer accent-cyan-300"
-              aria-label="Slide to adjust search radius in kilometres"
-            />
-            <span className="hidden text-[9px] font-semibold uppercase tracking-[0.12em] text-white/35 sm:inline">
-              {locationStatus === "loading"
-                ? "Locating"
-                : `${visibleProjects.length} nearby`}
-            </span>
-            <button
-              type="button"
-              onClick={saveRadiusFilter}
-              className="shrink-0 rounded-xl bg-cyan-300 px-3.5 py-2 text-xs font-bold text-slate-950 shadow-lg shadow-cyan-950/40 transition-colors hover:bg-cyan-200"
-            >
-              Save
-            </button>
-          </motion.div>
-        </div>
-      )}
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-10 pt-3 sm:px-5 sm:pb-8 sm:pt-5">
         <div className="relative mx-auto w-full max-w-[680px]">
