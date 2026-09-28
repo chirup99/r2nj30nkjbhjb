@@ -1,12 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
+  BadgeCheck,
+  Banknote,
   Building2,
   Check,
+  ChevronRight,
+  ExternalLink,
+  FileCheck2,
+  FileText,
+  House,
   Info,
+  Landmark,
   MapPin,
+  Maximize2,
+  Navigation,
+  Ruler,
   Search,
   Sparkles,
+  Trees,
   X,
 } from "lucide-react";
 import {
@@ -15,7 +27,6 @@ import {
   MapMarker,
   MapRoute,
   MarkerContent,
-  MarkerPopup,
   MarkerTooltip,
   RouteProgress,
   useMap,
@@ -168,16 +179,20 @@ function MagicProjectRoute({
 function PropertyPin({
   accent,
   selected = false,
+  onSelect,
 }: {
   accent: string;
   selected?: boolean;
+  onSelect: () => void;
 }) {
   return (
-    <div
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-label="View project details"
       className={`relative h-10 w-10 transition-transform ${
         selected ? "scale-125" : ""
       }`}
-      aria-hidden="true"
     >
       <span
         className={`absolute inset-0 rounded-full opacity-30 ${
@@ -195,7 +210,7 @@ function PropertyPin({
         className="absolute bottom-0 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-white"
         style={{ backgroundColor: accent }}
       />
-    </div>
+    </button>
   );
 }
 
@@ -254,6 +269,294 @@ export function HyderabadPropertyMapThumbnail() {
   );
 }
 
+type ProjectListingDetails = {
+  imageUrl?: string;
+  startingPrice?: string;
+  availablePlots?: number;
+  about?: string;
+  locationDetail?: string;
+  rera?: string;
+  loan?: string;
+  amenities?: string[];
+};
+
+const ASTA_MEADOWS_DETAILS: ProjectListingDetails = {
+  imageUrl:
+    "https://plotsview.com/api/storage/objects/uploads/81f67f12-84bc-412a-a6d3-63be7123350f",
+  startingPrice: "₹1.40 Cr onwards",
+  availablePlots: 46,
+  about:
+    "Premium HMDA & RERA approved villa plots located at Beeramguda – BHEL, one of Hyderabad’s fastest-growing residential corridors. Spread across 15+ acres, the project offers well-planned villa plots with 100% Vastu-compliant layout, wide CC roads, and underground infrastructure. Designed for luxury living and long-term investment.",
+  locationDetail: "Beeramguda – BHEL, Telangana, India",
+  rera: "RERA approved",
+  loan: "Loan Calculator available on PlotsView",
+  amenities: [
+    "Pickle ball court",
+    "Tennis court",
+    "Children's play area",
+    "Central lawn for yoga",
+    "Meridian landscape",
+    "Cricket pitch",
+    "OAT seating",
+    "Open fitness area",
+  ],
+};
+
+const PROJECT_LISTING_DETAILS: Record<string, ProjectListingDetails> = {
+  "asta-meadows": ASTA_MEADOWS_DETAILS,
+};
+
+function getProjectListingDetails(project: PropertyProject) {
+  return PROJECT_LISTING_DETAILS[project.slug] ?? {};
+}
+
+function DetailValue({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  icon: typeof MapPin;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+        <Icon className="h-3.5 w-3.5" />
+        {label}
+      </div>
+      <p className="mt-1.5 text-sm font-bold leading-tight text-slate-800">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ProjectDetailSheet({
+  project,
+  onClose,
+}: {
+  project: PropertyProject;
+  onClose: () => void;
+}) {
+  const details = getProjectListingDetails(project);
+  const mapLink = `https://www.google.com/maps/search/?api=1&query=${project.latitude},${project.longitude}`;
+
+  return (
+    <motion.section
+      initial={{ y: "100%", opacity: 0.8 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: "100%", opacity: 0 }}
+      transition={{ type: "spring", damping: 30, stiffness: 280 }}
+      className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 mx-auto flex max-h-[88vh] w-full max-w-[560px] flex-col overflow-hidden rounded-t-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_-18px_60px_rgba(15,23,42,0.28)]"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${project.name} project details`}
+    >
+      <div className="shrink-0 border-b border-slate-100 bg-white px-4 pb-3 pt-2.5 sm:px-5">
+        <div className="mx-auto mb-2.5 h-1 w-12 rounded-full bg-slate-300" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="truncate text-xl font-bold tracking-tight text-slate-950">
+              {project.name}
+            </h2>
+            <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+              <MapPin className="h-3.5 w-3.5 text-violet-500" />
+              {details.locationDetail ?? `${project.locality}, Telangana`}
+              <span className="text-slate-300">·</span>
+              PlotsView listing
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900"
+            aria-label="Close project details"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4 sm:px-5">
+        <div className="relative mb-4 h-44 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-violet-100 via-slate-100 to-cyan-50">
+          {details.imageUrl ? (
+            <img
+              src={details.imageUrl}
+              alt={`${project.name} layout`}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <>
+              <div className="absolute inset-0 opacity-50 [background-image:linear-gradient(135deg,transparent_24%,rgba(124,58,237,.2)_25%,transparent_26%,transparent_49%,rgba(124,58,237,.2)_50%,transparent_51%,transparent_74%,rgba(124,58,237,.2)_75%,transparent_76%)] [background-size:42px_42px]" />
+              <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-900/35 to-transparent" />
+              <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full bg-white/85 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-700 backdrop-blur-sm">
+                <House className="h-3.5 w-3.5 text-violet-600" />
+                {project.type}
+              </div>
+            </>
+          )}
+          <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-violet-600 px-2.5 py-1.5 text-[10px] font-bold text-white shadow-sm">
+            <BadgeCheck className="h-3.5 w-3.5" />
+            Verified listing
+          </div>
+        </div>
+
+        <div className="mb-4 grid grid-cols-2 gap-2">
+          <DetailValue label="Price" value={project.price} icon={Banknote} />
+          <DetailValue label="Plot sizes" value={project.bedrooms} icon={Ruler} />
+          <DetailValue
+            label="Total plots"
+            value={project.totalPlots.toLocaleString("en-IN")}
+            icon={House}
+          />
+          <DetailValue
+            label="Project area"
+            value={`${project.acres} acres`}
+            icon={Maximize2}
+          />
+          {details.startingPrice && (
+            <DetailValue
+              label="Starting from"
+              value={details.startingPrice}
+              icon={Banknote}
+            />
+          )}
+          {details.availablePlots !== undefined && (
+            <DetailValue
+              label="Available"
+              value={`${details.availablePlots} plots`}
+              icon={Check}
+            />
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <section className="rounded-2xl border border-slate-200 p-4">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+              <Info className="h-4 w-4 text-violet-600" />
+              About this project
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {details.about ??
+                `${project.name} is a ${project.type.toLowerCase()} project in ${project.locality}. View the full project description, documents, and current availability on PlotsView.`}
+            </p>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 p-4">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+              <FileCheck2 className="h-4 w-4 text-emerald-600" />
+              Approvals & documentation
+            </h3>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-emerald-50 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700/70">
+                  Approval
+                </p>
+                <p className="mt-1 text-sm font-bold text-emerald-900">
+                  {project.approvalType} approved
+                </p>
+              </div>
+              <div className="rounded-xl bg-blue-50 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-blue-700/70">
+                  RERA
+                </p>
+                <p className="mt-1 text-sm font-bold text-blue-900">
+                  {details.rera ?? "Not listed"}
+                </p>
+              </div>
+            </div>
+            <p className="mt-3 text-xs leading-5 text-slate-500">
+              Verify approval documents and registration details with the seller
+              before making a purchase.
+            </p>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 p-4">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+              <Landmark className="h-4 w-4 text-amber-600" />
+              Location & connectivity
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {details.locationDetail ?? `${project.locality}, Telangana, India`}
+            </p>
+            <a
+              href={mapLink}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:underline"
+            >
+              <Navigation className="h-3.5 w-3.5" />
+              Open location in Maps
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 p-4">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+              <Trees className="h-4 w-4 text-green-600" />
+              Amenities
+            </h3>
+            {details.amenities?.length ? (
+              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+                {details.amenities.map((amenity) => (
+                  <div
+                    key={amenity}
+                    className="flex items-start gap-2 text-xs text-slate-600"
+                  >
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                    {amenity}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-slate-500">
+                Amenities are not listed in the imported catalog.
+              </p>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+              <Banknote className="h-4 w-4 text-violet-600" />
+              Loan & purchase information
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {details.loan ??
+                "Loan information is not listed in the imported catalog. Contact the listing team for lender and eligibility details."}
+            </p>
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Final loan approval, interest rate, and eligibility depend on the
+              lender’s legal, technical, and borrower checks.
+            </p>
+          </section>
+        </div>
+
+        <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
+          <a
+            href={project.sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-slate-800"
+          >
+            <FileText className="h-4 w-4" />
+            View full listing
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center justify-center rounded-xl border border-slate-200 px-4 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900"
+            aria-label="Close project details"
+          >
+            <ChevronRight className="h-5 w-5 rotate-90" />
+          </button>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
 export function HyderabadPropertyMapOverlay({
   onClose,
 }: {
@@ -262,6 +565,9 @@ export function HyderabadPropertyMapOverlay({
   const [query, setQuery] = useState("");
   const [showMapInfo, setShowMapInfo] = useState(false);
   const [selectedIntentId, setSelectedIntentId] = useState<string | null>(null);
+  const [selectedPinProjectId, setSelectedPinProjectId] = useState<string | null>(
+    null,
+  );
   const [routeProgress, setRouteProgress] = useState(0);
 
   const visibleProjects = useMemo(() => {
@@ -279,12 +585,15 @@ export function HyderabadPropertyMapOverlay({
   const selectedIntent = MAGIC_INTENTS.find(
     (intent) => intent.id === selectedIntentId,
   );
-  const selectedProject = PROJECTS.find(
+  const magicProject = PROJECTS.find(
     (project) => project.id === selectedIntent?.projectId,
+  );
+  const selectedPinProject = PROJECTS.find(
+    (project) => project.id === selectedPinProjectId,
   );
 
   useEffect(() => {
-    if (!selectedProject) {
+    if (!magicProject) {
       setRouteProgress(0);
       return;
     }
@@ -299,7 +608,7 @@ export function HyderabadPropertyMapOverlay({
     };
     frame = requestAnimationFrame(animateRoute);
     return () => cancelAnimationFrame(frame);
-  }, [selectedProject?.id]);
+  }, [magicProject?.id]);
 
   const chooseMagicIntent = (intentId: string) => {
     if (selectedIntentId === intentId) {
@@ -335,9 +644,9 @@ export function HyderabadPropertyMapOverlay({
           className="!bottom-28"
         />
         <FitProjectPins projects={visibleProjects} />
-        {selectedProject && selectedIntent && (
+        {magicProject && selectedIntent && (
           <MagicProjectRoute
-            project={selectedProject}
+            project={magicProject}
             intent={selectedIntent}
             progress={routeProgress}
           />
@@ -351,63 +660,14 @@ export function HyderabadPropertyMapOverlay({
             <MarkerContent>
               <PropertyPin
                 accent={project.accent}
-                selected={project.id === selectedProject?.id}
+                selected={
+                  project.id === magicProject?.id ||
+                  project.id === selectedPinProject?.id
+                }
+                onSelect={() => setSelectedPinProjectId(project.id)}
               />
             </MarkerContent>
             <MarkerTooltip>{project.name}</MarkerTooltip>
-            <MarkerPopup closeButton>
-              <div className="min-w-[220px] space-y-3">
-                <div>
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-bold text-foreground">
-                      {project.name}
-                    </p>
-                    <span
-                      className="mt-1 h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: project.accent }}
-                    />
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {project.locality} · {project.developer}
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <div className="rounded-lg bg-muted px-2 py-1.5">
-                    <p className="text-muted-foreground">Price</p>
-                    <p className="font-semibold text-foreground">
-                      {project.price}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-muted px-2 py-1.5">
-                    <p className="text-muted-foreground">Plot sizes</p>
-                    <p className="font-semibold text-foreground">
-                      {project.bedrooms}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3 text-[10px] text-muted-foreground">
-                  <span>
-                    {project.totalPlots.toLocaleString("en-IN")} plots ·{" "}
-                    {project.acres || "—"} acres
-                  </span>
-                  <span className="font-semibold text-foreground">
-                    {project.approvalType}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
-                  <Check className="h-3.5 w-3.5" />
-                  {project.status}
-                </div>
-                <a
-                  href={project.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block text-[10px] font-semibold text-blue-600 hover:underline"
-                >
-                  View on PlotsView ↗
-                </a>
-              </div>
-            </MarkerPopup>
           </MapMarker>
         ))}
       </PropertyMap>
@@ -486,6 +746,12 @@ export function HyderabadPropertyMapOverlay({
           </div>
         )}
       </div>
+      {selectedPinProject && (
+        <ProjectDetailSheet
+          project={selectedPinProject}
+          onClose={() => setSelectedPinProjectId(null)}
+        />
+      )}
     </motion.div>
   );
 }
