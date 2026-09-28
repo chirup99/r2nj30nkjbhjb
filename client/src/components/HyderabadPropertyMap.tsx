@@ -378,17 +378,58 @@ function FitProjectPins({ projects }: { projects: PropertyProject[] }) {
 }
 
 export function HyderabadPropertyMapThumbnail() {
+  const previewZoom = 10;
+  const tileSize = 256;
+  const thumbnailWidth = 132;
+  const thumbnailHeight = 76;
+  const centerX =
+    ((HYDERABAD_CENTER[0] + 180) / 360) * 2 ** previewZoom;
+  const centerY =
+    ((1 -
+      Math.asinh(
+        Math.tan((HYDERABAD_CENTER[1] * Math.PI) / 180),
+      ) /
+        Math.PI) /
+      2) *
+    2 ** previewZoom;
+  const tileOriginX = Math.floor(centerX) - 1;
+  const tileOriginY = Math.floor(centerY) - 1;
+  const tilePositions = Array.from({ length: 9 }, (_, index) => {
+    const column = index % 3;
+    const row = Math.floor(index / 3);
+    const tileX = tileOriginX + column;
+    const tileY = tileOriginY + row;
+
+    return {
+      src: `https://tile.openstreetmap.de/${previewZoom}/${tileX}/${tileY}.png`,
+      left: (tileX - centerX) * tileSize + thumbnailWidth / 2,
+      top: (tileY - centerY) * tileSize + thumbnailHeight / 2,
+    };
+  });
+
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit] bg-[#121b2a]">
-      <div className="absolute inset-0 opacity-80">
-        <div className="absolute -left-8 top-10 h-24 w-48 rotate-12 rounded-full border border-cyan-300/20" />
-        <div className="absolute left-1/4 top-1/3 h-28 w-48 -rotate-12 rounded-full border border-white/10" />
-        <div className="absolute left-1/3 top-1/2 h-40 w-px rotate-[35deg] bg-white/20" />
-        <div className="absolute left-1/2 top-0 h-48 w-px rotate-[65deg] bg-white/15" />
-        <div className="absolute right-0 top-1/2 h-px w-48 -rotate-12 bg-white/15" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_48%,rgba(34,211,238,0.3),transparent_26%),linear-gradient(135deg,rgba(16,185,129,0.14),transparent_55%)]" />
+      <div className="absolute inset-0 overflow-hidden bg-[#121b2a]">
+        {tilePositions.map((tile) => (
+          <img
+            key={tile.src}
+            src={tile.src}
+            alt=""
+            draggable={false}
+            referrerPolicy="no-referrer"
+            className="pointer-events-none absolute max-w-none select-none"
+            style={{
+              width: tileSize,
+              height: tileSize,
+              left: tile.left,
+              top: tile.top,
+              filter:
+                "invert(0.9) hue-rotate(180deg) brightness(0.65) saturate(0.8) contrast(1.15)",
+            }}
+          />
+        ))}
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#07111f]/90 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#07111f]/50 via-transparent to-[#07111f]/15" />
     </div>
   );
 }
