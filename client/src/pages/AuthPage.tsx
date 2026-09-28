@@ -241,7 +241,7 @@ function PropertyProjectFeed({
             onClick={() => onProjectSelect(project.id)}
             className="group grid grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-2.5 text-left transition-all hover:border-purple-300/40 hover:bg-white/[0.07] hover:shadow-[0_8px_24px_rgba(124,58,237,0.14)]"
           >
-            <div className="relative min-h-[168px] overflow-hidden rounded-xl border border-white/10 bg-black/20">
+            <div className="relative min-h-[92px] overflow-hidden rounded-xl border border-white/10 bg-black/20">
               <img
                 src={getPropertyProjectImage(project, index)}
                 alt={`${project.name} property`}
@@ -253,7 +253,7 @@ function PropertyProjectFeed({
                 View on map
               </span>
             </div>
-            <div className="flex min-w-0 flex-col justify-between gap-3 py-1">
+            <div className="flex min-w-0 flex-col justify-between gap-1.5 py-0.5">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-start gap-2">
                 <span
@@ -277,7 +277,7 @@ function PropertyProjectFeed({
                 <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-white/25 transition-transform group-hover:translate-x-0.5 group-hover:text-white/70" />
               </div>
 
-              <div className="grid gap-1.5">
+              <div className="grid grid-cols-2 gap-1.5">
                 <div className="rounded-lg bg-black/20 px-2.5 py-2">
                   <p className="text-[8px] font-bold uppercase tracking-wider text-white/30">
                   Price
@@ -296,9 +296,9 @@ function PropertyProjectFeed({
                 </div>
               </div>
 
-              <div className="space-y-1 text-[9px] leading-tight text-white/40">
-                <p>{project.type}</p>
-                <p>
+              <div className="flex items-center justify-between gap-2 text-[9px] leading-tight text-white/40">
+                <p className="truncate">{project.type}</p>
+                <p className="shrink-0">
                   {project.acres} acres · {project.totalPlots} plots
                 </p>
               </div>
