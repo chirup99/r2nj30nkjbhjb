@@ -4084,7 +4084,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-           className="w-full max-w-md max-h-[calc(100dvh-300px)] min-h-0 bg-card border border-white/10 rounded-[20px] shadow-2xl p-5 sm:p-6 z-10 relative overflow-hidden flex flex-col"
+            className="w-full max-w-md flex-1 min-h-0 bg-card border border-white/10 rounded-[20px] shadow-2xl p-5 sm:p-6 z-10 relative overflow-hidden flex flex-col"
         >
           {(mode === "login" || mode === "swipe") && (
             <div className="sticky top-0 z-30 -mx-5 bg-card px-5 pb-2 pt-1 sm:-mx-6 sm:px-6">
@@ -4118,6 +4118,26 @@ export default function AuthPage({ slug }: { slug?: string }) {
             </div>
           )}
 
+          {mode === "login" && (
+            <button
+              type="button"
+              onClick={() =>
+                toast({
+                  title: "Ask AI",
+                  description: "AI assistance is coming soon.",
+                })
+              }
+              className="absolute top-0 right-0 z-40 flex h-6 w-[76px] items-center justify-center gap-0.5 rounded-md border border-purple-300/40 bg-gradient-to-r from-[#27134a] to-[#171222] text-white shadow-[0_5px_14px_rgba(124,58,237,0.22)] transition-shadow hover:shadow-[0_8px_18px_rgba(124,58,237,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+              aria-label="Ask AI"
+              title="Ask AI"
+            >
+              <MessageCircle className="h-2.5 w-2.5 text-purple-200" />
+              <span className="text-[7px] font-bold uppercase tracking-[0.08em]">
+                Ask AI
+              </span>
+            </button>
+          )}
+
           <div
             ref={personaCardRef}
             className="scrollbar-hide min-h-0 flex-1 space-y-4 overflow-y-auto"
@@ -4133,23 +4153,6 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   className="space-y-4"
                 >
                   <div className="flex flex-col items-center text-center space-y-4 py-2 relative">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        toast({
-                          title: "Ask AI",
-                          description: "AI assistance is coming soon.",
-                        })
-                      }
-                      className="absolute top-0 right-0 z-10 flex h-6 w-[76px] items-center justify-center gap-0.5 rounded-md border border-purple-300/40 bg-gradient-to-r from-[#27134a] to-[#171222] text-white shadow-[0_5px_14px_rgba(124,58,237,0.22)] transition-shadow hover:shadow-[0_8px_18px_rgba(124,58,237,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
-                      aria-label="Ask AI"
-                      title="Ask AI"
-                    >
-                      <MessageCircle className="h-2.5 w-2.5 text-purple-200" />
-                      <span className="text-[7px] font-bold uppercase tracking-[0.08em]">
-                        Ask AI
-                      </span>
-                    </button>
                      <PropertyProjectFeed
                        onProjectSelect={(projectId) => {
                          setSelectedMapProjectId(projectId);
