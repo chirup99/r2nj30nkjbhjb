@@ -863,12 +863,12 @@ function ProjectDetailSheet({
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: "100%", opacity: 0 }}
       transition={{ type: "spring", damping: 30, stiffness: 280 }}
-      className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 mx-auto flex max-h-[88vh] w-full max-w-[560px] flex-col overflow-hidden rounded-t-[28px] border border-slate-200 bg-white text-slate-900 shadow-[0_-18px_60px_rgba(15,23,42,0.28)]"
+      className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 mx-auto flex max-h-[88vh] w-full max-w-[560px] flex-col overflow-hidden rounded-t-[28px] bg-white text-slate-900 shadow-[0_-18px_60px_rgba(15,23,42,0.28)]"
       role="dialog"
       aria-modal="true"
       aria-label={`${project.name} project details`}
     >
-      <div className="shrink-0 border-b border-slate-100 bg-white px-4 pb-3 pt-2.5 sm:px-5">
+      <div className="shrink-0 bg-white px-4 pb-3 pt-2.5 sm:px-5">
         <div className="mx-auto mb-2.5 h-1 w-12 rounded-full bg-slate-300" />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
