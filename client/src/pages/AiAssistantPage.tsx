@@ -30,12 +30,18 @@ type AssistantQuery = {
   intent: "property" | "loan";
   location?: string;
   maxBudget?: number;
-  propertyType?: "plot" | "farm" | "villa" | "flat";
+  propertyType?: "plot" | "farm" | "villa" | "flat" | "commercial";
 };
 
 type PropertyMatch = PlotsViewProject & {
   estimatedEntryPrice: number;
   pricePerSqYd: number;
+};
+
+type PropertySearchSettings = {
+  maxBudget: number;
+  location: string;
+  propertyType: "" | "flat" | "plot" | "villa" | "commercial";
 };
 
 type Message = {
@@ -44,6 +50,7 @@ type Message = {
   text: string;
   matches?: PropertyMatch[];
   showLoanPlanner?: boolean;
+  showPropertyPlanner?: boolean;
 };
 
 type LoanSettings = {
@@ -147,14 +154,16 @@ function parseQuery(text: string): AssistantQuery {
 
   const propertyType =
     /villa|bungalow|independent home|independent house/.test(normalized)
-    ? "villa"
-    : /flat|apartment|\bbhk\b/.test(normalized)
-      ? "flat"
-      : /farm|farmland|agricultural land/.test(normalized)
-        ? "farm"
-        : /plot|open site|residential site|residential land/.test(normalized)
-          ? "plot"
-          : undefined;
+      ? "villa"
+      : /flat|apartment|\bbhk\b/.test(normalized)
+        ? "flat"
+        : /commercial space|commercial|office|retail|shop/.test(normalized)
+          ? "commercial"
+          : /farm|farmland|agricultural land/.test(normalized)
+            ? "farm"
+            : /plot|open site|residential site|residential land/.test(normalized)
+              ? "plot"
+              : undefined;
 
   return {
     intent:
@@ -219,7 +228,12 @@ function getPropertyMatches(query: AssistantQuery): PropertyMatch[] {
         (query.propertyType === "farm" && type.includes("farm")) ||
         (query.propertyType === "villa" && type.includes("villa")) ||
         (query.propertyType === "flat" &&
-          (type.includes("flat") || type.includes("apartment")));
+          (type.includes("flat") || type.includes("apartment"))) ||
+        (query.propertyType === "commercial" &&
+          (type.includes("commercial") ||
+            type.includes("office") ||
+            type.includes("retail") ||
+            type.includes("shop")));
       return matchesLocation && matchesBudget && matchesType;
     })
     .sort((a, b) => a.estimatedEntryPrice - b.estimatedEntryPrice)
@@ -538,12 +552,150 @@ function LoanPlanner({
   );
 }
 
+const PROPERTY_TYPE_OPTIONS = [
+  { value: "", label: "Any property type" },
+  { value: "flat", label: "Flat / apartment" },
+  { value: "plot", label: "Plot" },
+  { value: "villa", label: "Villa" },
+  { value: "commercial", label: "Commercial space" },
+] as const;
+
+const LOCATION_OPTIONS = [
+  { value: "", label: "Any Hyderabad location" },
+  ...Object.keys(LOCATION_GROUPS).map((location) => ({
+    value: location,
+    label: location.replace(/\b\w/g, (letter) => letter.toUpperCase()),
+  })),
+  ...Array.from(
+    new Set(PLOTSVIEW_PROJECTS.map((project) => project.locality)),
+  ).map((location) => ({
+    value: normalizeLocationText(location),
+    label: location,
+  })),
+];
+
+function PropertySearchPlanner({
+  settings,
+  onChange,
+  onSearch,
+}: {
+  settings: PropertySearchSettings;
+  onChange: (settings: PropertySearchSettings) => void;
+  onSearch: () => void;
+}) {
+  return (
+    <div className="mt-5 rounded-2xl border border-purple-300/20 bg-purple-500/[0.08] p-4">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-purple-200">
+          Search preferences
+        </p>
+        <h2 className="mt-1 text-sm font-semibold text-white">
+          What is your budget and preferred property?
+        </h2>
+        <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+          Choose a budget first, then narrow the search by location and type.
+        </p>
+      </div>
+
+      <label className="mt-4 block">
+        <span className="mb-1.5 flex items-center justify-between text-[11px] text-white/65">
+          <span>Maximum budget</span>
+          <span className="font-semibold text-white">
+            {formatCurrency(settings.maxBudget)}
+          </span>
+        </span>
+        <input
+          type="range"
+          min={1_000_000}
+          max={50_000_000}
+          step={500_000}
+          value={settings.maxBudget}
+          onChange={(event) =>
+            onChange({
+              ...settings,
+              maxBudget: Number(event.target.value),
+            })
+          }
+          className="h-1.5 w-full accent-purple-300"
+          aria-label="Maximum property budget"
+        />
+        <span className="mt-1 flex justify-between text-[10px] text-white/35">
+          <span>₹10L</span>
+          <span>₹5Cr</span>
+        </span>
+      </label>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1.5 block text-[11px] text-white/65">
+            Location
+          </span>
+          <select
+            value={settings.location}
+            onChange={(event) =>
+              onChange({ ...settings, location: event.target.value })
+            }
+            className="w-full rounded-xl border border-white/10 bg-[#17151d] px-3 py-2.5 text-xs text-white outline-none focus:border-purple-300/50"
+            aria-label="Property location"
+          >
+            {LOCATION_OPTIONS.map((option) => (
+              <option key={option.value || "any-location"} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-[11px] text-white/65">
+            Property type
+          </span>
+          <select
+            value={settings.propertyType}
+            onChange={(event) =>
+              onChange({
+                ...settings,
+                propertyType: event.target
+                  .value as PropertySearchSettings["propertyType"],
+              })
+            }
+            className="w-full rounded-xl border border-white/10 bg-[#17151d] px-3 py-2.5 text-xs text-white outline-none focus:border-purple-300/50"
+            aria-label="Property type"
+          >
+            {PROPERTY_TYPE_OPTIONS.map((option) => (
+              <option key={option.value || "any-type"} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <button
+        type="button"
+        onClick={onSearch}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-xs font-bold text-[#141419] transition-colors hover:bg-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+      >
+        Find matching properties
+        <ArrowRight className="h-3.5 w-3.5 text-[#7c2cff]" />
+      </button>
+    </div>
+  );
+}
+
 export default function AiAssistantPage() {
   const [, setLocation] = useLocation();
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [showLoanPlanner, setShowLoanPlanner] = useState(false);
+  const [propertySearchQuery, setPropertySearchQuery] =
+    useState<AssistantQuery | null>(null);
+  const [propertySearchSettings, setPropertySearchSettings] =
+    useState<PropertySearchSettings>({
+      maxBudget: 5_000_000,
+      location: "",
+      propertyType: "",
+    });
   const [selectedMapProjectId, setSelectedMapProjectId] = useState<string | null>(
     null,
   );
@@ -593,10 +745,40 @@ export default function AiAssistantPage() {
     );
   };
 
+  const searchWithPropertyPreferences = () => {
+    const query: AssistantQuery = {
+      ...(propertySearchQuery ?? { intent: "property" }),
+      maxBudget: propertySearchSettings.maxBudget,
+      location: propertySearchSettings.location || undefined,
+      propertyType: propertySearchSettings.propertyType || undefined,
+    };
+    const matches = getPropertyMatches(query);
+    const typeLabel =
+      PROPERTY_TYPE_OPTIONS.find(
+        (option) => option.value === propertySearchSettings.propertyType,
+      )?.label ?? "properties";
+    const locationLabel =
+      LOCATION_OPTIONS.find(
+        (option) => option.value === propertySearchSettings.location,
+      )?.label ?? "Hyderabad";
+    const filters = [
+      `up to ${formatCurrency(propertySearchSettings.maxBudget)}`,
+      propertySearchSettings.location ? `in ${locationLabel}` : "",
+      propertySearchSettings.propertyType ? `for ${typeLabel.toLowerCase()}` : "",
+    ].filter(Boolean);
+    const filterText = filters.join(" ");
+    const textResponse = matches.length
+      ? `I found ${matches.length} map listings ${filterText}. These are ranked by the lowest estimated entry price from the published plot size and rate.`
+      : "I couldn’t find a matching listing in the imported Hyderabad catalog for those filters. Try a higher budget, another location, or Any property type.";
+
+    addAssistantMessage(textResponse, matches);
+  };
+
   const addAssistantMessage = (
     text: string,
     matches?: PropertyMatch[],
     showLoan = false,
+    showProperty = false,
   ) => {
     setMessages((current) => [
       ...current,
@@ -606,6 +788,7 @@ export default function AiAssistantPage() {
         text,
         matches,
         showLoanPlanner: showLoan,
+        showPropertyPlanner: showProperty,
       },
     ]);
   };
@@ -621,6 +804,29 @@ export default function AiAssistantPage() {
           loanSettings.propertyValue,
         )} property. Adjust the sliders to compare EMI, down payment, interest, and tenure.`,
         undefined,
+        true,
+      );
+      return;
+    }
+
+    if (!query.maxBudget) {
+      const nextSettings: PropertySearchSettings = {
+        maxBudget: 5_000_000,
+        location: query.location ?? "",
+        propertyType:
+          query.propertyType === "flat" ||
+          query.propertyType === "plot" ||
+          query.propertyType === "villa" ||
+          query.propertyType === "commercial"
+            ? query.propertyType
+            : "",
+      };
+      setPropertySearchQuery(query);
+      setPropertySearchSettings(nextSettings);
+      addAssistantMessage(
+        "I can help narrow that down. Please choose your maximum budget, location, and property type.",
+        undefined,
+        false,
         true,
       );
       return;
@@ -822,6 +1028,13 @@ export default function AiAssistantPage() {
                       settings={loanSettings}
                       onChange={setLoanSettings}
                       onSave={saveLoanAndFindProperties}
+                    />
+                  )}
+                  {message.showPropertyPlanner && (
+                    <PropertySearchPlanner
+                      settings={propertySearchSettings}
+                      onChange={setPropertySearchSettings}
+                      onSearch={searchWithPropertyPreferences}
                     />
                   )}
                 </div>
