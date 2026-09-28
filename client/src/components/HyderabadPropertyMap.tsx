@@ -1077,6 +1077,7 @@ export function HyderabadPropertyMapOverlay({
   const [isDarkMap, setIsDarkMap] = useState(false);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [showProjectList, setShowProjectList] = useState(false);
+  const [listSort, setListSort] = useState<"price" | "rate" | "size">("price");
   const [isRadiusFilterOpen, setIsRadiusFilterOpen] = useState(false);
   const [radiusInKilometers, setRadiusInKilometers] = useState(25);
   const [userLocation, setUserLocation] = useState<MapCoordinate | null>(null);
@@ -1120,6 +1121,18 @@ export function HyderabadPropertyMapOverlay({
     selectedSubcategory,
     userLocation,
   ]);
+
+  const sortedVisibleProjects = useMemo(() => {
+    return [...visibleProjects].sort((a, b) => {
+      if (listSort === "rate") {
+        return getPricePerSquareYard(a) - getPricePerSquareYard(b);
+      }
+      if (listSort === "size") {
+        return a.acres - b.acres;
+      }
+      return getEstimatedMinimumPlotValue(a) - getEstimatedMinimumPlotValue(b);
+    });
+  }, [listSort, visibleProjects]);
 
   const routeProjectIds = visibleProjects.map((project) => project.id).join(",");
   const selectedPinProject = PROJECTS.find(
@@ -1388,18 +1401,32 @@ export function HyderabadPropertyMapOverlay({
                 {visibleProjects.length === 1 ? "" : "s"} on the map
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowProjectList(false)}
-              className="rounded-full p-1.5 text-white/55 transition-colors hover:bg-white/10 hover:text-white"
-              aria-label="Close property list"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <select
+                value={listSort}
+                onChange={(event) =>
+                  setListSort(event.target.value as typeof listSort)
+                }
+                className="rounded-lg border border-white/15 bg-white/[0.08] px-2 py-1.5 text-[10px] text-white outline-none focus:border-cyan-300/60"
+                aria-label="Sort visible properties"
+              >
+                <option value="price">Lowest price</option>
+                <option value="rate">Lowest rate</option>
+                <option value="size">Smallest layout</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => setShowProjectList(false)}
+                className="rounded-full p-1.5 text-white/55 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Close property list"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
           <div className="max-h-[calc(58vh-64px)] overflow-y-auto p-2">
             {visibleProjects.length > 0 ? (
-              visibleProjects.map((project) => (
+              sortedVisibleProjects.map((project) => (
                 <button
                   key={project.id}
                   type="button"
