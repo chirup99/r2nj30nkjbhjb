@@ -424,13 +424,13 @@ export function HyderabadPropertyMapThumbnail() {
               left: tile.left,
               top: tile.top,
               filter:
-                "invert(0.88) hue-rotate(180deg) brightness(0.78) saturate(0.45) contrast(1.35)",
+                "grayscale(1) invert(0.88) brightness(0.78) contrast(1.3)",
             }}
           />
         ))}
       </div>
-      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(7,11,22,0.18),rgba(14,20,38,0.02)_46%,rgba(7,11,22,0.32))]" />
-      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#050916]/45 to-transparent" />
+      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(10,10,12,0.2),rgba(28,28,30,0.02)_46%,rgba(10,10,12,0.32))]" />
+      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#0b0b0d]/45 to-transparent" />
     </div>
   );
 }
