@@ -19,6 +19,7 @@ import {
   Save,
   Check,
   ChevronDown,
+  ChevronUp,
   Plus,
   X,
   Trash2,
@@ -2198,6 +2199,8 @@ export default function AuthPage({ slug }: { slug?: string }) {
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isTradersExpanded, setIsTradersExpanded] = useState(false);
+  const [isTradersPanelCollapsed, setIsTradersPanelCollapsed] =
+    useState(false);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
   const [showTradersModal, setShowTradersModal] = useState(false);
   const [selectedPropertyEvent, setSelectedPropertyEvent] =
@@ -3444,6 +3447,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
               <motion.button
                 onClick={() => {
                   setIsTradersExpanded(!isTradersExpanded);
+                  setIsTradersPanelCollapsed(false);
                   setShowTradersModal(true);
                 }}
                 animate={{
@@ -3491,43 +3495,79 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 onClick={() => {
                   setShowTradersModal(false);
                   setIsTradersExpanded(false);
+                  setIsTradersPanelCollapsed(false);
                   setSelectedPropertyEvent(null);
                 }}
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
               />
               <motion.div
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                exit={{ y: "100%" }}
+                initial={isMobile ? { y: "100%" } : { x: "100%" }}
+                animate={isMobile ? { y: 0 } : { x: 0 }}
+                exit={isMobile ? { y: "100%" } : { x: "100%" }}
                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                className="fixed bottom-0 left-0 right-0 z-50 max-h-[74vh] overflow-y-auto rounded-t-[26px] border-t border-white/[.12] bg-[#0b0c0f] shadow-2xl"
+                className={`fixed bottom-0 left-0 right-0 z-50 overflow-hidden border-white/[.12] bg-[#0b0c0f] shadow-2xl transition-[width,height,max-height] duration-300 md:bottom-0 md:left-auto md:top-0 md:right-0 md:h-full md:border-l md:border-t-0 md:rounded-l-[26px] ${
+                  isTradersPanelCollapsed
+                    ? "h-[62px] rounded-t-[26px] border-t md:w-16 md:rounded-t-none"
+                    : "max-h-[74vh] rounded-t-[26px] border-t md:w-[min(440px,100vw)] md:max-h-none md:rounded-t-none"
+                }`}
               >
                 <div className="sticky top-0 z-10 border-b border-white/[.08] bg-[#0b0c0f]/95 px-4 pb-3 pt-4 backdrop-blur-xl">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
+                    {!isTradersPanelCollapsed && (
+                      <div>
                       <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/35">
                         NEST AI · HYDERABAD
                       </p>
                       <h3 className="mt-1 text-base font-semibold tracking-tight text-white">
                         Meet the project
                       </h3>
+                      </div>
+                    )}
+                    <div className={`flex items-center gap-1 ${isTradersPanelCollapsed ? "mx-auto" : ""}`}>
+                      <button
+                        onClick={() =>
+                          setIsTradersPanelCollapsed((collapsed) => !collapsed)
+                        }
+                        className="rounded-full p-1.5 text-white/45 transition-colors hover:bg-white/[.08] hover:text-white"
+                        aria-label={
+                          isTradersPanelCollapsed
+                            ? "Show property meetups"
+                            : "Hide property meetups"
+                        }
+                        title={
+                          isTradersPanelCollapsed
+                            ? "Show property meetups"
+                            : "Hide property meetups"
+                        }
+                      >
+                        {isTradersPanelCollapsed ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </button>
+                      {!isTradersPanelCollapsed && (
+                        <button
+                          onClick={() => {
+                            setShowTradersModal(false);
+                            setIsTradersExpanded(false);
+                            setIsTradersPanelCollapsed(false);
+                            setSelectedPropertyEvent(null);
+                          }}
+                          className="rounded-full p-1.5 text-white/45 transition-colors hover:bg-white/[.08] hover:text-white"
+                          aria-label="Close property meetups"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
-                    <button
-                      onClick={() => {
-                        setShowTradersModal(false);
-                        setIsTradersExpanded(false);
-                        setSelectedPropertyEvent(null);
-                      }}
-                      className="rounded-full p-1.5 text-white/45 transition-colors hover:bg-white/[.08] hover:text-white"
-                      aria-label="Close property meetups"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
                   </div>
-                  <p className="mt-1 text-[11px] text-white/45">
-                    Visit, compare and decide in person.
-                  </p>
-                  <div className="relative mt-3">
+                  {!isTradersPanelCollapsed && (
+                    <>
+                      <p className="mt-1 text-[11px] text-white/45">
+                        Visit, compare and decide in person.
+                      </p>
+                      <div className="relative mt-3">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
                     <input
                       value={eventSearch}
@@ -3545,8 +3585,8 @@ export default function AuthPage({ slug }: { slug?: string }) {
                         <X className="h-3.5 w-3.5" />
                       </button>
                     )}
-                  </div>
-                  <div className="scrollbar-hide mt-2 flex gap-1 overflow-x-auto">
+                      </div>
+                      <div className="scrollbar-hide mt-2 flex gap-1 overflow-x-auto">
                     {(["All", "Villa", "Plots", "Flat", "Meetup"] as const).map(
                       (filter) => (
                         <button
@@ -3562,9 +3602,13 @@ export default function AuthPage({ slug }: { slug?: string }) {
                         </button>
                       ),
                     )}
-                  </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
+                {!isTradersPanelCollapsed && (
+                  <>
                  <div className="px-4 pb-6 pt-4">
                    <div className="mb-3 flex items-center justify-between gap-3">
                      <div>
@@ -3667,6 +3711,8 @@ export default function AuthPage({ slug }: { slug?: string }) {
                    </div>
 
                  </div>
+                  </>
+                )}
 
                  <AnimatePresence>
                    {selectedPropertyEvent && (
