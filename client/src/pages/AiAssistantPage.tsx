@@ -184,6 +184,10 @@ function formatCurrency(value: number) {
   return `₹${Math.round(value / 100_000)}L`;
 }
 
+function formatMonthlyCurrency(value: number) {
+  return `₹${Math.round(value).toLocaleString("en-IN")}`;
+}
+
 function formatRate(value: number) {
   return `₹${value.toLocaleString("en-IN")} / sq yd`;
 }
@@ -451,7 +455,7 @@ function LoanPlanner({
             min: 30_000,
             max: 500_000,
             step: 10_000,
-            display: formatCurrency(settings.monthlyIncome),
+            display: formatMonthlyCurrency(settings.monthlyIncome),
           },
           {
             key: "downPayment" as const,
@@ -507,7 +511,7 @@ function LoanPlanner({
             Estimated EMI
           </p>
           <p className="mt-1 text-lg font-bold text-white">
-            {formatCurrency(emi)} / mo
+            {formatMonthlyCurrency(emi)} / mo
           </p>
         </div>
         <div className="rounded-xl bg-white/[0.08] p-3">
@@ -578,9 +582,9 @@ export default function AiAssistantPage() {
     }
 
     addAssistantMessage(
-      `Saved. Based on a ${formatCurrency(
+      `Saved. Based on a ${formatMonthlyCurrency(
         loanSettings.monthlyIncome,
-      )} monthly income, your comfortable EMI is about ${formatCurrency(
+      )} monthly income, your comfortable EMI is about ${formatMonthlyCurrency(
         comfortableEmi,
       )}. I found ${matches.length} properties up to about ${formatCurrency(
         maximumPropertyValue,
@@ -660,7 +664,7 @@ export default function AiAssistantPage() {
     if (label === "Loan") {
       setShowLoanPlanner(true);
       addAssistantMessage(
-        `Let’s compare your loan options. The current estimate is ${formatCurrency(
+        `Let’s compare your loan options. The current estimate is ${formatMonthlyCurrency(
           loanEmi,
         )} per month. Adjust the sliders below for a better fit.`,
         undefined,
