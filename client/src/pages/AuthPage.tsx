@@ -4029,7 +4029,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   <img
                     src={ad.image}
                     alt={ad.title}
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="absolute inset-0 h-full w-full object-contain object-right"
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-[#08080b]/95 via-[#08080b]/65 to-[#08080b]/10" />
                   <div className="relative flex h-full flex-col items-start justify-between p-5 text-left">
