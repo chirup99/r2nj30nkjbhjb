@@ -1074,7 +1074,7 @@ export function HyderabadPropertyMapOverlay({
     null,
   );
   const [routeProgress, setRouteProgress] = useState(0);
-  const [isDarkMap, setIsDarkMap] = useState(false);
+  const [isDarkMap, setIsDarkMap] = useState(true);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [showProjectList, setShowProjectList] = useState(false);
   const [listSort, setListSort] = useState<"price" | "rate" | "size">("price");
