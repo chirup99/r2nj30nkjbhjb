@@ -157,8 +157,9 @@ export default function AiAssistantPage() {
             <button
               type="submit"
               disabled={!draft.trim()}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#141419] transition-colors hover:bg-white/85 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/90 bg-white text-[#7c2cff] shadow-[0_8px_22px_rgba(255,255,255,0.12)] transition-all hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-[0_10px_26px_rgba(255,255,255,0.2)] active:translate-y-0 active:scale-95 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/10 disabled:text-white/25 disabled:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label="Send question"
+              title="Send question"
             >
               <Send className="h-4 w-4" />
             </button>
