@@ -20,121 +20,43 @@ import {
   RouteProgress,
   useMap,
 } from "@/components/ui/map";
+import { PLOTSVIEW_PROJECTS } from "@/data/plotsviewProjects";
 
-type PropertyProject = {
-  id: string;
-  name: string;
-  locality: string;
-  developer: string;
-  type: string;
-  price: string;
-  status: string;
-  bedrooms: string;
-  longitude: number;
-  latitude: number;
-  accent: string;
-};
+type PropertyProject = (typeof PLOTSVIEW_PROJECTS)[number];
 
 const HYDERABAD_CENTER: [number, number] = [78.385, 17.42];
 const MAGIC_ANCHOR: [number, number] = [78.386, 17.455];
 
-// Curated demo pins for the Hyderabad discovery experience. Exact availability
-// and pricing should come from a verified listings feed before launch.
-const PROJECTS: PropertyProject[] = [
-  {
-    id: "my-home-bhooja",
-    name: "My Home Bhooja",
-    locality: "HITEC City",
-    developer: "My Home Constructions",
-    type: "High-rise residences",
-    price: "₹2.1 Cr onwards",
-    status: "Ready to move",
-    bedrooms: "3 & 4 BHK",
-    longitude: 78.3547,
-    latitude: 17.4228,
-    accent: "#7c3aed",
-  },
-  {
-    id: "rajapushpa-provincia",
-    name: "Rajapushpa Provincia",
-    locality: "Narsingi",
-    developer: "Rajapushpa Properties",
-    type: "Gated community",
-    price: "₹1.3 Cr onwards",
-    status: "Under construction",
-    bedrooms: "2, 3 & 4 BHK",
-    longitude: 78.3257,
-    latitude: 17.3918,
-    accent: "#f59e0b",
-  },
-  {
-    id: "aparna-sarovar-zenith",
-    name: "Aparna Sarovar Zenith",
-    locality: "Nallagandla",
-    developer: "Aparna Constructions",
-    type: "Premium apartments",
-    price: "₹1.5 Cr onwards",
-    status: "Ready to move",
-    bedrooms: "2, 3 & 4 BHK",
-    longitude: 78.3035,
-    latitude: 17.472,
-    accent: "#10b981",
-  },
-  {
-    id: "prestige-city",
-    name: "Prestige City Hyderabad",
-    locality: "Rajendra Nagar",
-    developer: "Prestige Group",
-    type: "Integrated township",
-    price: "₹1.1 Cr onwards",
-    status: "New launch",
-    bedrooms: "2, 3 & 4 BHK",
-    longitude: 78.412,
-    latitude: 17.315,
-    accent: "#ec4899",
-  },
-  {
-    id: "kokapet-heights",
-    name: "Kokapet Heights",
-    locality: "Kokapet",
-    developer: "Curated area watchlist",
-    type: "New launch corridor",
-    price: "₹95 L onwards",
-    status: "Explore area",
-    bedrooms: "2 & 3 BHK",
-    longitude: 78.334,
-    latitude: 17.384,
-    accent: "#06b6d4",
-  },
-];
+// Snapshot of every venture currently returned by PlotsView's public catalog.
+const PROJECTS: PropertyProject[] = PLOTSVIEW_PROJECTS;
 
 const MAGIC_INTENTS = [
   {
     id: "uber-class",
-    label: "Uber-class",
-    detail: "Signature living",
-    projectId: "my-home-bhooja",
+    label: "Premium plots",
+    detail: "Higher-value shortlist",
+    projectId: "56",
     accent: "#8b5cf6",
   },
   {
     id: "ultra-luxury",
-    label: "Ultra luxury",
-    detail: "Premium shortlist",
-    projectId: "aparna-sarovar-zenith",
+    label: "Large layouts",
+    detail: "Big development",
+    projectId: "49",
     accent: "#ec4899",
   },
   {
     id: "ready-now",
-    label: "Ready to move",
-    detail: "Move in sooner",
-    projectId: "my-home-bhooja",
+    label: "Serengeti",
+    detail: "Thummaloor venture",
+    projectId: "58",
     accent: "#10b981",
   },
   {
     id: "growth-pick",
     label: "Growth pick",
-    detail: "West Hyderabad",
-    projectId: "rajapushpa-provincia",
+    detail: "New corridor",
+    projectId: "37",
     accent: "#f59e0b",
   },
 ] as const;
@@ -277,6 +199,29 @@ function PropertyPin({
   );
 }
 
+function FitProjectPins({ projects }: { projects: PropertyProject[] }) {
+  const { map, isLoaded } = useMap();
+
+  useEffect(() => {
+    if (!map || !isLoaded || projects.length === 0) return;
+
+    const longitudes = projects.map((project) => project.longitude);
+    const latitudes = projects.map((project) => project.latitude);
+    const bounds: [[number, number], [number, number]] = [
+      [Math.min(...longitudes), Math.min(...latitudes)],
+      [Math.max(...longitudes), Math.max(...latitudes)],
+    ];
+
+    map.fitBounds(bounds, {
+      padding: { top: 150, right: 100, bottom: 170, left: 100 },
+      maxZoom: 10.5,
+      duration: 650,
+    });
+  }, [isLoaded, map, projects]);
+
+  return null;
+}
+
 export function HyderabadPropertyMapThumbnail() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit] bg-[#121b2a]">
@@ -288,13 +233,13 @@ export function HyderabadPropertyMapThumbnail() {
         <div className="absolute right-0 top-1/2 h-px w-48 -rotate-12 bg-white/15" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_48%,rgba(34,211,238,0.3),transparent_26%),linear-gradient(135deg,rgba(16,185,129,0.14),transparent_55%)]" />
       </div>
-      {PROJECTS.slice(0, 4).map((project, index) => (
+      {PROJECTS.map((project, index) => (
         <span
           key={project.id}
           className="absolute h-2.5 w-2.5 rounded-full border border-white shadow-[0_0_10px_currentColor]"
           style={{
-            left: `${26 + (index % 2) * 28 + index * 2}%`,
-            top: `${27 + index * 13}%`,
+            left: `${20 + ((index * 23) % 62)}%`,
+            top: `${20 + ((index * 17) % 54)}%`,
             color: project.accent,
             backgroundColor: project.accent,
           }}
@@ -303,7 +248,7 @@ export function HyderabadPropertyMapThumbnail() {
       <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#07111f]/90 to-transparent" />
       <div className="absolute bottom-2 left-3 flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.18em] text-white/80">
         <MapPin className="h-3 w-3 text-cyan-300" />
-        Hyderabad
+         PlotsView
       </div>
     </div>
   );
@@ -315,7 +260,6 @@ export function HyderabadPropertyMapOverlay({
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const [activeType, setActiveType] = useState<"all" | "ready" | "new">("all");
   const [showMapInfo, setShowMapInfo] = useState(false);
   const [selectedIntentId, setSelectedIntentId] = useState<string | null>(null);
   const [routeProgress, setRouteProgress] = useState(0);
@@ -328,13 +272,9 @@ export function HyderabadPropertyMapOverlay({
         `${project.name} ${project.locality} ${project.developer}`
           .toLowerCase()
           .includes(normalizedQuery);
-      const matchesType =
-        activeType === "all" ||
-        (activeType === "ready" && project.status === "Ready to move") ||
-        (activeType === "new" && project.status !== "Ready to move");
-      return matchesQuery && matchesType;
+      return matchesQuery;
     });
-  }, [activeType, query]);
+  }, [query]);
 
   const selectedIntent = MAGIC_INTENTS.find(
     (intent) => intent.id === selectedIntentId,
@@ -368,7 +308,6 @@ export function HyderabadPropertyMapOverlay({
     }
 
     setSelectedIntentId(intentId);
-    setActiveType("all");
     setQuery("");
   };
 
@@ -380,11 +319,11 @@ export function HyderabadPropertyMapOverlay({
       className="fixed inset-0 z-[140] overflow-hidden bg-[#07111f]"
       role="dialog"
       aria-modal="true"
-      aria-label="Hyderabad property map"
+      aria-label="PlotsView projects map"
     >
       <PropertyMap
         center={HYDERABAD_CENTER}
-        zoom={10.65}
+        zoom={9}
         theme="light"
         attributionControl={false}
         className="h-full w-full"
@@ -395,6 +334,7 @@ export function HyderabadPropertyMapOverlay({
           showLocate
           className="!bottom-28"
         />
+        <FitProjectPins projects={visibleProjects} />
         {selectedProject && selectedIntent && (
           <MagicProjectRoute
             project={selectedProject}
@@ -433,22 +373,39 @@ export function HyderabadPropertyMapOverlay({
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div className="rounded-lg bg-muted px-2 py-1.5">
-                    <p className="text-muted-foreground">From</p>
+                    <p className="text-muted-foreground">Price</p>
                     <p className="font-semibold text-foreground">
                       {project.price}
                     </p>
                   </div>
                   <div className="rounded-lg bg-muted px-2 py-1.5">
-                    <p className="text-muted-foreground">Layout</p>
+                    <p className="text-muted-foreground">Plot sizes</p>
                     <p className="font-semibold text-foreground">
                       {project.bedrooms}
                     </p>
                   </div>
                 </div>
+                <div className="flex items-center justify-between gap-3 text-[10px] text-muted-foreground">
+                  <span>
+                    {project.totalPlots.toLocaleString("en-IN")} plots ·{" "}
+                    {project.acres || "—"} acres
+                  </span>
+                  <span className="font-semibold text-foreground">
+                    {project.approvalType}
+                  </span>
+                </div>
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
                   <Check className="h-3.5 w-3.5" />
                   {project.status}
                 </div>
+                <a
+                  href={project.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block text-[10px] font-semibold text-blue-600 hover:underline"
+                >
+                  View on PlotsView ↗
+                </a>
               </div>
             </MarkerPopup>
           </MapMarker>
@@ -463,18 +420,21 @@ export function HyderabadPropertyMapOverlay({
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search locality or project"
+                placeholder="Search any PlotsView project or locality"
                 className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                aria-label="Search Hyderabad projects"
+                aria-label="Search PlotsView projects"
               />
             </label>
+            <p className="mt-2 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              {visibleProjects.length} of {PROJECTS.length} projects pinned
+            </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
             className="pointer-events-auto rounded-full border border-white/30 bg-slate-950/80 p-3 text-white shadow-xl backdrop-blur-md transition-colors hover:bg-slate-900"
-            aria-label="Close Hyderabad property map"
+            aria-label="Close PlotsView projects map"
           >
             <X className="h-5 w-5" />
           </button>
@@ -521,8 +481,8 @@ export function HyderabadPropertyMapOverlay({
         </div>
         {showMapInfo && (
           <div className="pointer-events-auto absolute bottom-14 left-3 max-w-[280px] rounded-xl border border-white/20 bg-slate-950/90 px-3 py-2 text-[10px] text-white/70 shadow-xl backdrop-blur-md sm:left-5">
-            Map tiles © OpenStreetMap contributors · project pins are curated
-            demo data for the product concept.
+            Map tiles © OpenStreetMap contributors · {PROJECTS.length} project
+            pins imported from the public PlotsView venture catalog.
           </div>
         )}
       </div>

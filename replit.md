@@ -45,8 +45,8 @@ A React + Express (TypeScript) property discovery concept branded as NEST AI. Th
 ## Current Product Direction
 
 - The main entry point is branded **NEST AI** and positioned as Hyderabad Property Discovery.
-- The floating Hyderabad map opens a MapLibre view centered on Hyderabad with curated demo pins for My Home Bhooja, Rajapushpa Provincia, Aparna Sarovar Zenith, Prestige City Hyderabad, and a Kokapet area watchlist.
-- Map prices, availability, and project coordinates are concept data for the product direction. Replace them with a verified listings source before treating the map as live inventory.
+- The floating property map opens a MapLibre view with all 81 ventures from the public PlotsView catalog, using each venture's published latitude and longitude.
+- The map fits its initial viewport to every visible project pin, supports searching the full catalog, and links each popup back to its PlotsView venture page. The imported catalog is a snapshot and should be refreshed when listings change.
 
 ## Port Configuration
 
