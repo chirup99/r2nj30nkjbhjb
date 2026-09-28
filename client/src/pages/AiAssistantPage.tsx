@@ -1005,11 +1005,10 @@ export default function AiAssistantPage() {
     ]);
     setDraft("");
     setIsThinking(true);
-    try {
+    window.setTimeout(() => {
       respondToQuery(text);
-    } finally {
       setIsThinking(false);
-    }
+    }, 650);
   };
 
   const sendMessage = (event?: FormEvent) => {
@@ -1230,7 +1229,24 @@ export default function AiAssistantPage() {
                 </div>
               ))}
               {isThinking && (
-                <div className="text-xs text-white/40">Finding the best matches…</div>
+                <div
+                  className="flex justify-start"
+                  aria-live="polite"
+                  aria-label="R Cliq AI is thinking"
+                >
+                  <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-white/10 bg-white/[0.06] px-4 py-3 text-xs text-white/45">
+                    <span>Thinking</span>
+                    <span className="flex items-center gap-1" aria-hidden="true">
+                      {[0, 1, 2].map((index) => (
+                        <span
+                          key={index}
+                          className="h-1.5 w-1.5 animate-bounce rounded-full bg-purple-300"
+                          style={{ animationDelay: `${index * 140}ms` }}
+                        />
+                      ))}
+                    </span>
+                  </div>
+                </div>
               )}
             </div>
           )}
