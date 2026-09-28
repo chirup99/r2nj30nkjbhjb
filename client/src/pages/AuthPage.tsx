@@ -61,6 +61,9 @@ import clsx from "clsx";
 import { SiInstagram, SiWhatsapp, SiX } from "react-icons/si";
 import avatarWoman from "@assets/female.png";
 import avatarMan from "@assets/male.png";
+import villaSunset from "@assets/generated_images/rciq-villa-sunset.png";
+import villaCommunity from "@assets/generated_images/rciq-community.png";
+import apartmentResidence from "@assets/generated_images/rciq-residence.png";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -159,6 +162,30 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
     icon: Building2,
   },
 ];
+
+const PROPERTY_ADS = [
+  {
+    eyebrow: "LUXURY VILLAS · WEST HYDERABAD",
+    title: "A better address starts here.",
+    description: "Explore design-led villas made for the way you want to live.",
+    cta: "Explore villas",
+    image: villaSunset,
+  },
+  {
+    eyebrow: "GATED COMMUNITIES · HYDERABAD",
+    title: "Find space for what matters.",
+    description: "Compare curated villa communities with confidence.",
+    cta: "View communities",
+    image: villaCommunity,
+  },
+  {
+    eyebrow: "PREMIUM RESIDENCES · HYDERABAD",
+    title: "Your next move, made clearer.",
+    description: "Discover apartments with the details that help you decide.",
+    cta: "See residences",
+    image: apartmentResidence,
+  },
+] as const;
 
 function PropertyMeetupMark({ className = "" }: { className?: string }) {
   return (
@@ -2197,6 +2224,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
   const [showNavToggle, setShowNavToggle] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [activePropertyAd, setActivePropertyAd] = useState(0);
   const [isTradersExpanded, setIsTradersExpanded] = useState(false);
   const [showTradersModal, setShowTradersModal] = useState(false);
   const [selectedPropertyEvent, setSelectedPropertyEvent] =
@@ -2222,6 +2250,14 @@ export default function AuthPage({ slug }: { slug?: string }) {
     "All" | "Villa" | "Plots" | "Flat" | "Meetup"
   >("All");
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 768 : false);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActivePropertyAd((current) => (current + 1) % PROPERTY_ADS.length);
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   const filteredPropertyEvents = useMemo(() => {
     const query = eventSearch.trim().toLowerCase();
@@ -3817,37 +3853,81 @@ export default function AuthPage({ slug }: { slug?: string }) {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md text-center mb-6 z-10"
+          className="z-10 mb-6 w-full max-w-md"
         >
-          <h1 className="text-2xl font-display font-bold tracking-widest uppercase text-white">
-            RCiQ-AI
-          </h1>
-          <p className="text-[10px] tracking-[0.3em] text-white/50 font-medium mb-6 flex items-center justify-center gap-2">
-            DISCOVER . COMPARE . MOVE{" "}
-            <InfinityIcon
-              className="w-3.5 h-3.5 text-purple-500/50"
-              strokeWidth={2.5}
-            />
-          </p>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">
-            Hyderabad Property Discovery
-          </h2>
-          <p className="text-white/70 text-base mb-6 max-w-sm mx-auto">
-            AI-guided real estate intelligence for your next move.
-          </p>
-
-          <div className="flex items-center justify-center gap-6 mb-4">
+          <div className="mb-3 flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-              <span className="text-[11px] font-medium text-emerald-500/90 uppercase tracking-wider">
-                Smart Property Search
+              <span className="text-[11px] font-bold uppercase tracking-[0.28em] text-white">
+                RCiQ-AI
               </span>
+              <InfinityIcon
+                className="h-3.5 w-3.5 text-purple-500/70"
+                strokeWidth={2.5}
+              />
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-              <span className="text-[11px] font-medium text-emerald-500/90 uppercase tracking-wider">
-                Area Intelligence
-              </span>
+            <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/35">
+              Curated property ads
+            </span>
+          </div>
+          <div className="relative overflow-hidden rounded-[24px] border border-white/15 bg-[#101016] shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+            <motion.div
+              className="flex"
+              style={{ width: `${PROPERTY_ADS.length * 100}%` }}
+              animate={{
+                x: `-${activePropertyAd * (100 / PROPERTY_ADS.length)}%`,
+              }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {PROPERTY_ADS.map((ad) => (
+                <article
+                  key={ad.eyebrow}
+                  className="relative h-[238px] shrink-0 overflow-hidden"
+                  style={{ width: `${100 / PROPERTY_ADS.length}%` }}
+                >
+                  <img
+                    src={ad.image}
+                    alt={ad.title}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#08080b]/95 via-[#08080b]/65 to-[#08080b]/10" />
+                  <div className="relative flex h-full flex-col items-start justify-between p-5 text-left">
+                    <div className="max-w-[78%]">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-300/90">
+                        {ad.eyebrow}
+                      </p>
+                      <h2 className="mt-3 text-2xl font-bold leading-[1.05] tracking-tight text-white">
+                        {ad.title}
+                      </h2>
+                      <p className="mt-2 max-w-[245px] text-xs leading-relaxed text-white/65">
+                        {ad.description}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowMapDialog(true)}
+                      className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-[#111116] transition-colors hover:bg-emerald-200"
+                    >
+                      {ad.cta}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </motion.div>
+            <div className="absolute bottom-4 right-5 flex items-center gap-1.5">
+              {PROPERTY_ADS.map((ad, index) => (
+                <button
+                  key={ad.eyebrow}
+                  type="button"
+                  onClick={() => setActivePropertyAd(index)}
+                  aria-label={`Show property ad ${index + 1}`}
+                  className={`h-1.5 rounded-full transition-all ${
+                    activePropertyAd === index
+                      ? "w-5 bg-white"
+                      : "w-1.5 bg-white/45 hover:bg-white/75"
+                  }`}
+                />
+              ))}
             </div>
           </div>
         </motion.div>
