@@ -35,6 +35,7 @@ const {
   CreateApplicationCommand,
   CreateApplicationVersionCommand,
   CreateEnvironmentCommand,
+  UpdateEnvironmentCommand,
   DescribeEnvironmentsCommand,
   DescribeEnvironmentResourcesCommand,
 } = await import("@aws-sdk/client-elastic-beanstalk");
@@ -80,7 +81,7 @@ const APP_NAME = "personaconnect";
 const ENV_NAME = "personaconnect-prod";
 const DOMAIN = "personaconnect.xyz";
 const WWW_DOMAIN = `www.${DOMAIN}`;
-const PLATFORM = "64bit Amazon Linux 2023 v6.5.1 running Node.js 20";
+const PLATFORM = "64bit Amazon Linux 2023 v6.10.2 running Node.js 20";
 const INSTANCE_TYPE = "t3.small";
 const PROJECT_TAG = "personaconnect-current";
 const VPC_CIDR = "10.2.0.0/16";
@@ -114,7 +115,7 @@ async function ensureRole(roleName, service, policyArns) {
     const result = await iam.send(new GetRoleCommand({ RoleName: roleName }));
     return result.Role.Arn;
   } catch (error) {
-    if (error.name !== "NoSuchEntity") throw error;
+    if (!["NoSuchEntity", "NoSuchEntityException"].includes(error.name)) throw error;
     const result = await iam.send(new CreateRoleCommand({
       RoleName: roleName,
       AssumeRolePolicyDocument: JSON.stringify({
@@ -141,7 +142,7 @@ async function ensureInstanceProfile(profileName, roleName) {
     }));
     return result.InstanceProfile.Arn;
   } catch (error) {
-    if (error.name !== "NoSuchEntity") throw error;
+    if (!["NoSuchEntity", "NoSuchEntityException"].includes(error.name)) throw error;
     const result = await iam.send(new CreateInstanceProfileCommand({
       InstanceProfileName: profileName,
       Tags: [tag("Project", PROJECT_TAG)],
@@ -440,7 +441,9 @@ async function main() {
       Description: "PersonaConnect current project",
     }));
   } catch (error) {
-    if (error.name !== "InvalidParameterValueException") throw error;
+    const alreadyExists = ["InvalidParameterValueException", "InvalidParameterValue"].includes(error.name)
+      && /already exists/i.test(error.message || "");
+    if (!alreadyExists) throw error;
   }
   await eb.send(new CreateApplicationVersionCommand({
     ApplicationName: APP_NAME,
@@ -461,6 +464,17 @@ async function main() {
   if (existingEnvironment.Environments?.[0]) {
     environment = existingEnvironment.Environments[0];
     log("EB", `reusing ${ENV_NAME} status=${environment.Status}`);
+    await eb.send(new UpdateEnvironmentCommand({
+      ApplicationName: APP_NAME,
+      EnvironmentName: ENV_NAME,
+      VersionLabel: versionLabel,
+      OptionSettings: [
+        { Namespace: "aws:autoscaling:asg", OptionName: "MinSize", Value: "1" },
+        { Namespace: "aws:autoscaling:asg", OptionName: "MaxSize", Value: "1" },
+        { Namespace: "aws:autoscaling:launchconfiguration", OptionName: "InstanceType", Value: INSTANCE_TYPE },
+      ],
+    }));
+    log("EB", `updated ${ENV_NAME} to ${versionLabel} with one ${INSTANCE_TYPE} instance`);
   } else {
     await eb.send(new CreateEnvironmentCommand({
       ApplicationName: APP_NAME,
@@ -480,7 +494,7 @@ async function main() {
         { Namespace: "aws:autoscaling:launchconfiguration", OptionName: "SecurityGroups", Value: securityGroups.instance },
         { Namespace: "aws:elbv2:loadbalancer", OptionName: "SecurityGroups", Value: securityGroups.alb },
         { Namespace: "aws:autoscaling:asg", OptionName: "MinSize", Value: "1" },
-        { Namespace: "aws:autoscaling:asg", OptionName: "MaxSize", Value: "2" },
+        { Namespace: "aws:autoscaling:asg", OptionName: "MaxSize", Value: "1" },
         { Namespace: "aws:elasticbeanstalk:healthreporting:system", OptionName: "SystemType", Value: "enhanced" },
         { Namespace: "aws:elasticbeanstalk:application:environment", OptionName: "NODE_ENV", Value: "production" },
         { Namespace: "aws:elasticbeanstalk:application:environment", OptionName: "PORT", Value: "8080" },
@@ -498,7 +512,8 @@ async function main() {
     EnvironmentName: ENV_NAME,
     EnvironmentId: environment.EnvironmentId,
   }));
-  const loadBalancerName = resources.LoadBalancers?.[0]?.Name;
+  const environmentResources = resources.EnvironmentResources || resources;
+  const loadBalancerName = environmentResources.LoadBalancers?.[0]?.Name;
   if (!loadBalancerName) throw new Error("Elastic Beanstalk did not return an ALB.");
   const loadBalancers = await alb.send(new DescribeLoadBalancersCommand({
     Names: [loadBalancerName],
