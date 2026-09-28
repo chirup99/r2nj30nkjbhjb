@@ -404,6 +404,12 @@ const COUNTRY_CODES = [
 
 const CARD_TYPES = [
   {
+    type: "property",
+    label: "Property / Villa",
+    icon: Building2,
+    color: "from-slate-900 via-purple-950 to-slate-950",
+  },
+  {
     type: "reel",
     label: "Reel / Short",
     icon: Video,
@@ -469,68 +475,73 @@ const ROLES = [
 const CARDS = [
   {
     id: 1,
-    title: "Networking",
-    name: "Collaborate",
-    subname: "Connect",
-    color: "from-blue-500 to-blue-600",
-    bgStack1: "bg-blue-900/40",
-    bgStack2: "bg-indigo-900/40",
+    type: "property",
+    title: "PREMIUM VILLA",
+    name: "Palm Grove Villas",
+    subname: "Kokapet · West Hyderabad",
+    location: "Kokapet, Hyderabad",
+    price: "₹2.4 Cr onwards",
+    details: "4 BHK · 3,200 sq ft",
+    imageUrl: villaSunset,
+    color: "from-slate-900 via-purple-950 to-slate-950",
+    bgStack1: "bg-purple-950/50",
+    bgStack2: "bg-slate-950/60",
   },
   {
     id: 2,
-    title: "Startup Expo",
-    name: "Pitch",
-    subname: "Growth",
-    color: "from-purple-500 to-purple-600",
-    bgStack1: "bg-purple-900/40",
-    bgStack2: "bg-fuchsia-900/40",
+    type: "property",
+    title: "GATED COMMUNITY",
+    name: "The Courtyard",
+    subname: "Financial District · Hyderabad",
+    location: "Nanakramguda, Hyderabad",
+    price: "₹1.85 Cr onwards",
+    details: "3 BHK · 2,450 sq ft",
+    imageUrl: villaCommunity,
+    color: "from-emerald-950 via-teal-900 to-slate-950",
+    bgStack1: "bg-teal-950/50",
+    bgStack2: "bg-emerald-950/60",
   },
   {
     id: 3,
-    title: "Marketing",
-    name: "Exposure",
-    subname: "Reach",
-    color: "from-emerald-500 to-emerald-600",
-    bgStack1: "bg-emerald-900/40",
-    bgStack2: "bg-teal-900/40",
+    type: "property",
+    title: "MODERN RESIDENCES",
+    name: "Aster Heights",
+    subname: "Narsingi · West Hyderabad",
+    location: "Narsingi, Hyderabad",
+    price: "₹1.25 Cr onwards",
+    details: "3 BHK · 1,980 sq ft",
+    imageUrl: apartmentResidence,
+    color: "from-blue-950 via-indigo-900 to-slate-950",
+    bgStack1: "bg-indigo-950/50",
+    bgStack2: "bg-blue-950/60",
   },
   {
     id: 4,
-    title: "AI Analysis",
-    name: "Insights",
-    subname: "Strategy",
-    color: "from-orange-500 to-orange-600",
-    bgStack1: "bg-orange-900/40",
-    bgStack2: "bg-amber-900/40",
+    type: "property",
+    title: "LAKEFRONT VILLAS",
+    name: "Willow Creek",
+    subname: "Shamirpet · North Hyderabad",
+    location: "Shamirpet, Hyderabad",
+    price: "₹98 L onwards",
+    details: "3 BHK · 2,200 sq ft",
+    imageUrl: villaSunset,
+    color: "from-amber-950 via-orange-900 to-slate-950",
+    bgStack1: "bg-orange-950/50",
+    bgStack2: "bg-amber-950/60",
   },
   {
     id: 5,
-    title: "Persona Hub",
-    name: "Digital",
-    subname: "Identity",
-    color: "from-rose-500 to-rose-600",
-    bgStack1: "bg-rose-900/40",
-    bgStack2: "bg-rose-900/40",
-  },
-  {
-    id: 6,
-    title: "Revenue",
-    name: "$1.2M",
-    subname: "Annual Revenue",
-    type: "revenue",
-    color: "from-emerald-600 to-teal-700",
-    bgStack1: "bg-emerald-900/40",
-    bgStack2: "bg-teal-900/40",
-  },
-  {
-    id: 7,
-    title: "Traction",
-    name: "50k+",
-    subname: "Active Users",
-    type: "traction",
-    color: "from-amber-500 to-orange-600",
-    bgStack1: "bg-amber-900/40",
-    bgStack2: "bg-orange-900/40",
+    type: "property",
+    title: "SIGNATURE VILLAS",
+    name: "Olive Grove",
+    subname: "Tellapur · Hyderabad",
+    location: "Tellapur, Hyderabad",
+    price: "₹1.6 Cr onwards",
+    details: "4 BHK · 2,850 sq ft",
+    imageUrl: villaCommunity,
+    color: "from-rose-950 via-fuchsia-900 to-slate-950",
+    bgStack1: "bg-fuchsia-950/50",
+    bgStack2: "bg-rose-950/60",
   },
 ];
 
@@ -695,6 +706,11 @@ interface SwipeCardProps {
     title: string;
     name: string;
     subname: string;
+    type?: string;
+    location?: string;
+    price?: string;
+    details?: string;
+    imageUrl?: string;
     color: string;
     bgStack1: string;
     bgStack2: string;
@@ -1032,6 +1048,34 @@ const SwipeCardContent = forwardRef(
                     </div>
                   </div>
                 )
+              ) : card.type === "property" ? (
+                <div className="w-full space-y-3">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/15 bg-black/20 shadow-lg">
+                    <img
+                      src={card.imageUrl}
+                      alt={card.name}
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10" />
+                    <span className="absolute bottom-2 left-2 rounded-full border border-white/20 bg-black/40 px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-white/85 backdrop-blur-sm">
+                      {card.location}
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="text-white text-xl font-bold leading-tight">
+                      {card.name}
+                    </h3>
+                    <p className="mt-1 text-white/60 text-[10px] uppercase tracking-wider font-bold">
+                      {card.subname}
+                    </p>
+                    <div className="mt-3 flex items-center justify-center gap-2 text-[10px]">
+                      <span className="rounded-full bg-white/15 px-2.5 py-1 font-bold text-emerald-200">
+                        {card.price}
+                      </span>
+                      <span className="text-white/55">{card.details}</span>
+                    </div>
+                  </div>
+                </div>
               ) : card.type === "product" ? (
                 (card as any).imageUrl ? (
                   <div className="w-full aspect-square rounded-xl overflow-hidden shadow-lg border border-white/10 mb-4">
@@ -1107,7 +1151,8 @@ const SwipeCardContent = forwardRef(
               )}
             </div>
 
-            {card.type !== "product" &&
+            {card.type !== "property" &&
+              card.type !== "product" &&
               card.type !== "traction" &&
               card.type !== "revenue" && (
                 <div className="w-full">
@@ -4104,7 +4149,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   mode === "swipe" ? "text-white" : "text-white/50",
                 )}
               >
-                    AI Briefs
+                    Saved
               </button>
               <motion.div
                 layoutId="activeTab"
