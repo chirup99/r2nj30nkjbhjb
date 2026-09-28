@@ -4119,23 +4119,25 @@ export default function AuthPage({ slug }: { slug?: string }) {
           )}
 
           {mode === "login" && (
-            <button
-              type="button"
-              onClick={() =>
-                toast({
-                  title: "Ask AI",
-                  description: "AI assistance is coming soon.",
-                })
-              }
-              className="absolute top-0 right-0 z-40 flex h-6 w-[76px] items-center justify-center gap-0.5 rounded-md border border-purple-300/40 bg-gradient-to-r from-[#27134a] to-[#171222] text-white shadow-[0_5px_14px_rgba(124,58,237,0.22)] transition-shadow hover:shadow-[0_8px_18px_rgba(124,58,237,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
-              aria-label="Ask AI"
-              title="Ask AI"
-            >
-              <MessageCircle className="h-2.5 w-2.5 text-purple-200" />
-              <span className="text-[7px] font-bold uppercase tracking-[0.08em]">
-                Ask AI
-              </span>
-            </button>
+            <div className="flex shrink-0 justify-end pb-2">
+              <button
+                type="button"
+                onClick={() =>
+                  toast({
+                    title: "Ask AI",
+                    description: "AI assistance is coming soon.",
+                  })
+                }
+                className="flex h-6 w-[76px] items-center justify-center gap-0.5 rounded-md border border-purple-300/40 bg-gradient-to-r from-[#27134a] to-[#171222] text-white shadow-[0_5px_14px_rgba(124,58,237,0.22)] transition-shadow hover:shadow-[0_8px_18px_rgba(124,58,237,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                aria-label="Ask AI"
+                title="Ask AI"
+              >
+                <MessageCircle className="h-2.5 w-2.5 text-purple-200" />
+                <span className="text-[7px] font-bold uppercase tracking-[0.08em]">
+                  Ask AI
+                </span>
+              </button>
+            </div>
           )}
 
           <div
