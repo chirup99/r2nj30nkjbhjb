@@ -389,10 +389,6 @@ export function HyderabadPropertyMapThumbnail() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_48%,rgba(34,211,238,0.3),transparent_26%),linear-gradient(135deg,rgba(16,185,129,0.14),transparent_55%)]" />
       </div>
       <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#07111f]/90 to-transparent" />
-      <div className="absolute bottom-2 left-3 flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.18em] text-white/80">
-        <MapPin className="h-3 w-3 text-cyan-300" />
-         PlotsView
-      </div>
     </div>
   );
 }
