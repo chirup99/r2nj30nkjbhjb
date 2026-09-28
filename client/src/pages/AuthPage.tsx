@@ -41,6 +41,7 @@ import {
   ChevronRight,
   Building2,
   Search,
+  Lock,
 } from "lucide-react";
 import {
   motion,
@@ -2323,6 +2324,9 @@ export default function AuthPage({ slug }: { slug?: string }) {
   const [tweetSubChooser, setTweetSubChooser] = useState<number | null>(null);
   const [isEditingPin, setIsEditingPin] = useState(false);
   const [newPinValue, setNewPinValue] = useState("");
+  const [showCreatePropertyPinDialog, setShowCreatePropertyPinDialog] =
+    useState(false);
+  const [createPropertyPin, setCreatePropertyPin] = useState("");
 
   const updatePinMutation = useMutation({
     mutationFn: async (newPin: string) => {
@@ -2360,6 +2364,44 @@ export default function AuthPage({ slug }: { slug?: string }) {
     }
     updatePinMutation.mutate(newPinValue);
   };
+
+  const startPropertyCreation = () => {
+    setMode("register");
+    setPublicUser(null);
+    setLastLoadedSlug(null);
+    form.reset({
+      password: "",
+      name: "",
+      role: "founder",
+      bio: "",
+      instagram: "",
+      linkedin: "",
+      whatsapp: "",
+      website: "",
+      cards: [],
+      email: "",
+    });
+    setSelectedCards([]);
+    setLocation("/");
+    setIsMenuOpen(false);
+  };
+
+  const handleCreatePropertyAccess = () => {
+    if (createPropertyPin !== "0001") {
+      setCreatePropertyPin("");
+      toast({
+        title: "Access denied",
+        description: "Enter the correct 4-digit PIN to create a property profile.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCreatePropertyPin("");
+    setShowCreatePropertyPinDialog(false);
+    startPropertyCreation();
+  };
+
   const [qrColor, setQrColor] = useState("#000000");
   const [qrBgColor, setQrBgColor] = useState("#ffffff");
   const professionalAvatars = [avatarWoman, avatarMan];
@@ -3585,28 +3627,13 @@ export default function AuthPage({ slug }: { slug?: string }) {
                <button
                  type="button"
                  onClick={() => {
-                   setMode("register");
-                   setPublicUser(null);
-                   setLastLoadedSlug(null);
-                   form.reset({
-                     password: "",
-                     name: "",
-                     role: "founder",
-                     bio: "",
-                     instagram: "",
-                     linkedin: "",
-                     whatsapp: "",
-                     website: "",
-                     cards: [],
-                     email: "",
-                   });
-                   setSelectedCards([]);
-                   setLocation("/");
-                   setIsMenuOpen(false);
+                    setCreatePropertyPin("");
+                    setShowCreatePropertyPinDialog(true);
                  }}
                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-black shadow-lg transition-all hover:bg-white/90"
                >
-                 create your property profile
+                  <Lock className="h-3.5 w-3.5" />
+                  create your property profile
                </button>
               )}
             </>
@@ -5034,6 +5061,90 @@ export default function AuthPage({ slug }: { slug?: string }) {
 
           </div>
         </motion.div>
+
+        <AnimatePresence>
+          {showCreatePropertyPinDialog && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => {
+                  setCreatePropertyPin("");
+                  setShowCreatePropertyPinDialog(false);
+                }}
+                className="absolute inset-0 bg-black/90 backdrop-blur-md"
+              />
+              <motion.form
+                initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: 16 }}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleCreatePropertyAccess();
+                }}
+                className="relative z-10 w-full max-w-sm space-y-6 rounded-[24px] border border-white/10 bg-[#111116] p-7 text-center shadow-2xl"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreatePropertyPin("");
+                    setShowCreatePropertyPinDialog(false);
+                  }}
+                  className="absolute right-4 top-4 p-2 text-white/40 transition-colors hover:text-white"
+                  aria-label="Close PIN dialog"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-300">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold uppercase tracking-widest text-white">
+                    Create Property
+                  </h3>
+                  <p className="text-xs text-white/45">
+                    Enter the access PIN to unlock property profile creation.
+                  </p>
+                </div>
+
+                <div className="space-y-2 text-left">
+                  <label
+                    htmlFor="create-property-pin"
+                    className="ml-1 text-[10px] font-bold uppercase tracking-widest text-white/40"
+                  >
+                    Access PIN
+                  </label>
+                  <input
+                    id="create-property-pin"
+                    type="password"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    autoFocus
+                    maxLength={4}
+                    value={createPropertyPin}
+                    onChange={(event) =>
+                      setCreatePropertyPin(
+                        event.target.value.replace(/\D/g, "").slice(0, 4),
+                      )
+                    }
+                    placeholder="••••"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center font-mono text-xl tracking-[0.7em] text-white focus:border-purple-500/50 focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={createPropertyPin.length !== 4}
+                  className="w-full rounded-xl bg-white py-4 text-sm font-bold text-black transition-all hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Unlock and continue
+                </button>
+              </motion.form>
+            </div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {showScannerDialog && (
