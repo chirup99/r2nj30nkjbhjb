@@ -42,6 +42,7 @@ import {
   ChevronRight,
   Heart,
   Building2,
+  Search,
 } from "lucide-react";
 import {
   motion,
@@ -82,6 +83,7 @@ type PropertyEvent = {
   id: string;
   title: string;
   type: string;
+  propertyType: "Villa" | "Plots" | "Flat" | "Meetup";
   dateLabel: string;
   timeLabel: string;
   location: string;
@@ -99,6 +101,7 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
     id: "uber-villa-luxury-walkthrough",
     title: "Uber Villa Luxury Walkthrough",
     type: "Villa visit",
+    propertyType: "Villa",
     dateLabel: "Sunday, 4 October",
     timeLabel: "11:00 AM – 1:00 PM",
     location: "Uber Villa Luxury, Kokapet",
@@ -115,6 +118,7 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
     id: "financial-district-investor-open-house",
     title: "Financial District Investor Open House",
     type: "Investor meetup",
+    propertyType: "Meetup",
     dateLabel: "Sunday, 11 October",
     timeLabel: "4:00 PM – 6:00 PM",
     location: "The Grand Courtyard, Nanakramguda",
@@ -131,6 +135,7 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
     id: "lakefront-plots-site-meet",
     title: "Lakefront Plots Site Meet",
     type: "Site visit",
+    propertyType: "Plots",
     dateLabel: "Saturday, 17 October",
     timeLabel: "9:30 AM – 12:00 PM",
     location: "Lakefront Estates, Shamirpet",
@@ -142,6 +147,23 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
     capacity: 25,
     accent: "from-emerald-500/35 via-teal-500/15 to-[#071713]",
     icon: MapPin,
+  },
+  {
+    id: "kokapet-skyline-flat-open-house",
+    title: "Kokapet Skyline Flat Open House",
+    type: "Flat open house",
+    propertyType: "Flat",
+    dateLabel: "Sunday, 25 October",
+    timeLabel: "2:00 PM – 5:00 PM",
+    location: "Skyline Residences, Kokapet",
+    area: "West Hyderabad",
+    host: "Skyline Residences",
+    description:
+      "Tour the model flat, compare 2 and 3 BHK layouts, and speak with the project team about possession and pricing.",
+    attendees: 15,
+    capacity: 35,
+    accent: "from-sky-500/35 via-cyan-500/15 to-[#07151b]",
+    icon: Building2,
   },
 ];
 
@@ -2135,7 +2157,31 @@ export default function AuthPage({ slug }: { slug?: string }) {
   const [eventPhone, setEventPhone] = useState(
     loggedInUser?.whatsapp || "",
   );
+  const [eventSearch, setEventSearch] = useState("");
+  const [eventFilter, setEventFilter] = useState<
+    "All" | "Villa" | "Plots" | "Flat" | "Meetup"
+  >("All");
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 768 : false);
+
+  const filteredPropertyEvents = useMemo(() => {
+    const query = eventSearch.trim().toLowerCase();
+    return PROPERTY_EVENTS.filter((event) => {
+      const matchesFilter =
+        eventFilter === "All" || event.propertyType === eventFilter;
+      const searchableText = [
+        event.title,
+        event.type,
+        event.propertyType,
+        event.location,
+        event.area,
+        event.host,
+        event.description,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return matchesFilter && (!query || searchableText.includes(query));
+    });
+  }, [eventFilter, eventSearch]);
 
   const registerForPropertyEvent = async (event: PropertyEvent) => {
     if (!eventName.trim() || !eventPhone.trim()) {
@@ -3393,19 +3439,20 @@ export default function AuthPage({ slug }: { slug?: string }) {
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                 className="fixed bottom-0 left-0 right-0 z-50 max-h-[86vh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#090a0d]/[.98] shadow-2xl"
+                 className="fixed bottom-0 left-0 right-0 z-50 max-h-[78vh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#090a0d]/[.98] shadow-2xl"
               >
-                 <div className="sticky top-0 z-10 flex items-start justify-between border-b border-white/10 bg-[#090a0d]/95 p-5 pb-4 backdrop-blur-xl">
+                 <div className="sticky top-0 z-10 border-b border-white/10 bg-[#090a0d]/95 px-4 pb-3 pt-4 backdrop-blur-xl">
+                   <div className="flex items-start justify-between gap-3">
                    <div className="flex items-start gap-3">
-                     <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-400/10 ring-1 ring-emerald-300/20">
-                       <MapPin className="h-5 w-5 text-emerald-300" />
+                     <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/10 ring-1 ring-emerald-300/20">
+                       <MapPin className="h-4 w-4 text-emerald-300" />
                      </div>
                      <div>
-                       <h3 className="text-lg font-bold text-white">
+                       <h3 className="text-base font-bold text-white">
                          Meet the project in person
                        </h3>
-                       <p className="mt-1 text-[11px] text-white/45">
-                         Curated property visits, open houses and investor meetups
+                       <p className="mt-0.5 text-[10px] text-white/45">
+                         Visits, open houses & meetups
                        </p>
                      </div>
                    </div>
@@ -3417,27 +3464,69 @@ export default function AuthPage({ slug }: { slug?: string }) {
                      className="rounded-full bg-white/10 p-2 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
                      aria-label="Close property meetups"
                    >
-                     <X className="h-5 w-5" />
+                     <X className="h-4 w-4" />
                    </button>
                  </div>
+                   <div className="relative mt-3">
+                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
+                     <input
+                       value={eventSearch}
+                       onChange={(event) => setEventSearch(event.target.value)}
+                       placeholder="Search villa, flat, plot or location..."
+                       className="h-10 w-full rounded-xl border border-white/10 bg-white/[.06] pl-9 pr-9 text-xs text-white outline-none placeholder:text-white/30 focus:border-emerald-300/50 focus:bg-white/[.08]"
+                       aria-label="Search property meetups"
+                     />
+                     {eventSearch && (
+                       <button
+                         onClick={() => setEventSearch("")}
+                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/45 hover:bg-white/10 hover:text-white"
+                         aria-label="Clear property search"
+                       >
+                         <X className="h-3.5 w-3.5" />
+                       </button>
+                     )}
+                   </div>
+                   <div className="scrollbar-hide mt-2 flex gap-1.5 overflow-x-auto">
+                     {(["All", "Villa", "Plots", "Flat", "Meetup"] as const).map(
+                       (filter) => (
+                         <button
+                           key={filter}
+                           onClick={() => setEventFilter(filter)}
+                           className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-semibold transition-colors ${
+                             eventFilter === filter
+                               ? "bg-emerald-300 text-[#07130e]"
+                               : "border border-white/10 bg-white/[.04] text-white/55 hover:bg-white/[.08] hover:text-white"
+                           }`}
+                         >
+                           {filter === "All" ? "All projects" : filter}
+                         </button>
+                       ),
+                     )}
+                   </div>
+                 </div>
 
-                 <div className="px-5 pb-8 pt-5">
-                   <div className="mb-5 flex items-end justify-between gap-4">
+                 <div className="px-4 pb-6 pt-4">
+                   <div className="mb-3 flex items-center justify-between gap-3">
                      <div>
-                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300/80">
-                         Hyderabad, this month
-                       </p>
-                       <h4 className="mt-1 text-2xl font-bold tracking-tight text-white">
-                         Find your next place
+                       <h4 className="text-sm font-bold tracking-tight text-white">
+                         {eventSearch || eventFilter !== "All"
+                           ? "Matching projects"
+                           : "Upcoming near Hyderabad"}
                        </h4>
+                       <p className="mt-0.5 text-[10px] text-white/35">
+                         {filteredPropertyEvents.length}{" "}
+                         {filteredPropertyEvents.length === 1 ? "result" : "results"}{" "}
+                         found
+                       </p>
                      </div>
-                     <span className="rounded-full border border-white/10 bg-white/[.06] px-3 py-1.5 text-[10px] font-medium text-white/60">
-                       {PROPERTY_EVENTS.length} meetups
+                     <span className="flex items-center gap-1 text-[10px] text-white/35">
+                       <MapPin className="h-3 w-3" />
+                       Hyderabad
                      </span>
                    </div>
 
                    <div className="space-y-3">
-                     {PROPERTY_EVENTS.map((event) => {
+                     {filteredPropertyEvents.map((event) => {
                        const EventIcon = event.icon;
                        const isRegistered = Boolean(eventRegistration[event.id]);
                        const spotsLeft =
@@ -3451,16 +3540,16 @@ export default function AuthPage({ slug }: { slug?: string }) {
                            animate={{ opacity: 1, y: 0 }}
                            transition={{ duration: 0.25 }}
                            onClick={() => setSelectedPropertyEvent(event)}
-                           className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[.045] p-4 text-left transition-all hover:border-emerald-300/30 hover:bg-white/[.07]"
+                            className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[.045] p-3 text-left transition-all hover:border-emerald-300/30 hover:bg-white/[.07]"
                          >
                            <div
                              className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${event.accent}`}
                            />
                            <div className="flex items-start gap-3">
                              <div
-                               className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${event.accent} ring-1 ring-white/10`}
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${event.accent} ring-1 ring-white/10`}
                              >
-                               <EventIcon className="h-5 w-5 text-white/90" />
+                              <EventIcon className="h-4 w-4 text-white/90" />
                              </div>
                              <div className="min-w-0 flex-1">
                                <div className="flex items-start justify-between gap-3">
@@ -3478,21 +3567,21 @@ export default function AuthPage({ slug }: { slug?: string }) {
                                    <ChevronRight className="h-5 w-5 shrink-0 text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-white/70" />
                                  )}
                                </div>
-                               <div className="mt-3 grid grid-cols-1 gap-1.5 text-[11px] text-white/55 sm:grid-cols-2">
+                               <div className="mt-2 grid grid-cols-1 gap-1 text-[10px] text-white/55 sm:grid-cols-2">
                                  <span className="flex items-center gap-1.5">
-                                   <CalendarDays className="h-3.5 w-3.5 text-white/35" />
+                                   <CalendarDays className="h-3 w-3 text-white/35" />
                                    {event.dateLabel}
                                  </span>
                                  <span className="flex items-center gap-1.5">
-                                   <Clock3 className="h-3.5 w-3.5 text-white/35" />
+                                   <Clock3 className="h-3 w-3 text-white/35" />
                                    {event.timeLabel}
                                  </span>
                                  <span className="flex items-center gap-1.5 sm:col-span-2">
-                                   <MapPin className="h-3.5 w-3.5 text-white/35" />
+                                   <MapPin className="h-3 w-3 text-white/35" />
                                    {event.location}
                                  </span>
                                </div>
-                               <div className="mt-3 flex items-center justify-between gap-3">
+                               <div className="mt-2 flex items-center justify-between gap-3">
                                  <span className="text-[10px] text-white/35">
                                    {spotsLeft} spots left · hosted by {event.host}
                                  </span>
@@ -3506,12 +3595,23 @@ export default function AuthPage({ slug }: { slug?: string }) {
                          </motion.button>
                        );
                      })}
+                     {filteredPropertyEvents.length === 0 && (
+                       <div className="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-center">
+                         <Search className="mx-auto h-5 w-5 text-white/25" />
+                         <p className="mt-2 text-sm font-semibold text-white/70">
+                           No projects found
+                         </p>
+                         <p className="mt-1 text-[10px] text-white/35">
+                           Try another location, villa, plot or flat.
+                         </p>
+                       </div>
+                     )}
                    </div>
 
-                   <div className="mt-5 flex items-center gap-3 rounded-2xl border border-emerald-300/15 bg-emerald-300/[.06] p-4">
-                     <Heart className="h-5 w-5 shrink-0 text-emerald-300" />
-                     <p className="text-[11px] leading-relaxed text-white/55">
-                       Register your interest and meet the developer, sales team and other serious buyers at the actual project location.
+                   <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-emerald-300/15 bg-emerald-300/[.06] px-3 py-2.5">
+                     <Heart className="h-4 w-4 shrink-0 text-emerald-300" />
+                     <p className="text-[10px] leading-relaxed text-white/55">
+                       Register to meet the project team at the actual location.
                      </p>
                    </div>
                  </div>
