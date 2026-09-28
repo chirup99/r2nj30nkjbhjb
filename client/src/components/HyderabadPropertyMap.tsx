@@ -466,6 +466,27 @@ function FitProjectPins({ projects }: { projects: PropertyProject[] }) {
   return null;
 }
 
+function FocusProjectPin({
+  project,
+}: {
+  project?: PropertyProject;
+}) {
+  const { map, isLoaded } = useMap();
+
+  useEffect(() => {
+    if (!map || !isLoaded || !project) return;
+
+    map.flyTo({
+      center: [project.longitude, project.latitude],
+      zoom: 13.5,
+      duration: 900,
+      essential: true,
+    });
+  }, [isLoaded, map, project]);
+
+  return null;
+}
+
 function RadiusFilterLayer({
   center,
   radiusInKilometers,
@@ -1037,8 +1058,10 @@ function ProjectDetailSheet({
 
 export function HyderabadPropertyMapOverlay({
   onClose,
+  initialProjectId = null,
 }: {
   onClose: () => void;
+  initialProjectId?: string | null;
 }) {
   const [query, setQuery] = useState("");
   const [showMapInfo, setShowMapInfo] = useState(false);
@@ -1100,6 +1123,18 @@ export function HyderabadPropertyMapOverlay({
   const selectedPinProject = PROJECTS.find(
     (project) => project.id === selectedPinProjectId,
   );
+  const initialProject = PROJECTS.find(
+    (project) => project.id === initialProjectId,
+  );
+
+  useEffect(() => {
+    setSelectedPinProjectId(initialProjectId);
+    if (initialProjectId) {
+      setQuery("");
+      setSelectedIntentId(null);
+      setSelectedSubcategoryId(null);
+    }
+  }, [initialProjectId]);
 
   useEffect(() => {
     if (!selectedIntent || !selectedSubcategory || visibleProjects.length === 0) {
@@ -1211,6 +1246,7 @@ export function HyderabadPropertyMapOverlay({
           className="!bottom-28"
         />
         <FitProjectPins projects={visibleProjects} />
+        <FocusProjectPin project={initialProject} />
         {selectedIntent && selectedSubcategory && visibleProjects.length > 0 && (
           <MagicProjectRoute
             projects={visibleProjects}

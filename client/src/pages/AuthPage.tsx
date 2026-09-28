@@ -188,7 +188,25 @@ const PROPERTY_ADS = [
   },
 ] as const;
 
-function PropertyProjectFeed() {
+function getPropertyProjectImage(project: (typeof PLOTSVIEW_PROJECTS)[number], index: number) {
+  const projectType = project.type.toLowerCase();
+
+  if (projectType.includes("flat") || projectType.includes("apartment")) {
+    return apartmentResidence;
+  }
+
+  if (projectType.includes("villa")) {
+    return villaSunset;
+  }
+
+  return index % 2 === 0 ? villaCommunity : villaSunset;
+}
+
+function PropertyProjectFeed({
+  onProjectSelect,
+}: {
+  onProjectSelect: (projectId: string) => void;
+}) {
   return (
     <section
       aria-labelledby="mapped-projects-heading"
@@ -216,14 +234,25 @@ function PropertyProjectFeed() {
       </p>
 
       <div className="space-y-2.5 pr-1">
-        {PLOTSVIEW_PROJECTS.map((project) => (
-          <motion.a
+        {PLOTSVIEW_PROJECTS.map((project, index) => (
+          <motion.button
             key={project.id}
-            href={project.sourceUrl}
-            target="_blank"
-            rel="noreferrer"
+            type="button"
+            onClick={() => onProjectSelect(project.id)}
             className="group block rounded-2xl border border-white/10 bg-white/[0.035] p-3 transition-all hover:border-purple-300/40 hover:bg-white/[0.07] hover:shadow-[0_8px_24px_rgba(124,58,237,0.14)]"
           >
+            <div className="relative mb-3 h-28 overflow-hidden rounded-xl border border-white/10 bg-black/20">
+              <img
+                src={getPropertyProjectImage(project, index)}
+                alt={`${project.name} property`}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+              <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full border border-white/20 bg-black/35 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.12em] text-white/85 backdrop-blur-sm">
+                <MapPin className="h-3 w-3" />
+                View on map
+              </span>
+            </div>
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-2.5">
                 <span
@@ -272,7 +301,7 @@ function PropertyProjectFeed() {
                 {project.acres} acres · {project.totalPlots} plots
               </span>
             </div>
-          </motion.a>
+          </motion.button>
         ))}
       </div>
 
@@ -2316,6 +2345,9 @@ export default function AuthPage({ slug }: { slug?: string }) {
   const [showQRDialog, setShowQRDialog] = useState(false);
   const [showScannerDialog, setShowScannerDialog] = useState(false);
   const [showMapDialog, setShowMapDialog] = useState(false);
+  const [selectedMapProjectId, setSelectedMapProjectId] = useState<string | null>(
+    null,
+  );
   const [scannerTab, setScannerTab] = useState<"scan" | "code">("scan");
   const [showNavToggle, setShowNavToggle] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
@@ -4095,7 +4127,12 @@ export default function AuthPage({ slug }: { slug?: string }) {
                         Ask AI
                       </span>
                     </button>
-                    <PropertyProjectFeed />
+                     <PropertyProjectFeed
+                       onProjectSelect={(projectId) => {
+                         setSelectedMapProjectId(projectId);
+                         setShowMapDialog(true);
+                       }}
+                     />
                     <div className="hidden">
                     <div className="flex items-center justify-center gap-3 w-full pt-1">
                       {(() => {
@@ -5110,7 +5147,11 @@ export default function AuthPage({ slug }: { slug?: string }) {
         <AnimatePresence>
           {showMapDialog && (
             <HyderabadPropertyMapOverlay
-              onClose={() => setShowMapDialog(false)}
+              initialProjectId={selectedMapProjectId}
+              onClose={() => {
+                setShowMapDialog(false);
+                setSelectedMapProjectId(null);
+              }}
             />
           )}
         </AnimatePresence>
