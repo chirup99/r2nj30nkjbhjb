@@ -2352,6 +2352,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showMapThumbnail, setShowMapThumbnail] = useState(true);
+  const [showPropertyAd, setShowPropertyAd] = useState(true);
   const [activePropertyAd, setActivePropertyAd] = useState(0);
   const [isTradersExpanded, setIsTradersExpanded] = useState(false);
   const [showTradersModal, setShowTradersModal] = useState(false);
@@ -2516,6 +2517,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
         const isScrollingDown =
           scrollTop > lastFeedScrollTopRef.current;
         setShowMapThumbnail(!isScrollingDown || scrollTop < 24);
+        setShowPropertyAd(scrollTop < 24);
         lastFeedScrollTopRef.current = scrollTop;
         setShowNavToggle(isAtBottom);
       }
@@ -3986,10 +3988,14 @@ export default function AuthPage({ slug }: { slug?: string }) {
           )}
         </AnimatePresence>
 
+        <AnimatePresence initial={false}>
+          {showPropertyAd && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="z-10 mb-6 w-full max-w-md"
+          initial={{ opacity: 0, y: -10, height: 0, marginBottom: 0 }}
+          animate={{ opacity: 1, y: 0, height: "auto", marginBottom: 24 }}
+          exit={{ opacity: 0, y: -10, height: 0, marginBottom: 0 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="z-10 w-full max-w-md overflow-hidden"
         >
           <div className="mb-3 flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
@@ -4067,6 +4073,8 @@ export default function AuthPage({ slug }: { slug?: string }) {
             </div>
           </div>
         </motion.div>
+          )}
+        </AnimatePresence>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
