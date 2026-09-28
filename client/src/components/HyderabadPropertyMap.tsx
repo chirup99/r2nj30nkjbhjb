@@ -66,7 +66,6 @@ const SATELLITE_MAP_STYLE = {
 
 // Snapshot of every venture currently returned by PlotsView's public catalog.
 const PROJECTS: PropertyProject[] = PLOTSVIEW_PROJECTS;
-const RADIUS_OPTIONS = [5, 10, 25, 50, 100] as const;
 
 type MapCoordinate = [number, number];
 
@@ -901,150 +900,6 @@ function ProjectDetailSheet({
   );
 }
 
-function RadiusFilterPanel({
-  radiusInKilometers,
-  onRadiusChange,
-  locationStatus,
-  visibleProjectCount,
-}: {
-  radiusInKilometers: number;
-  onRadiusChange: (radius: number) => void;
-  locationStatus: "idle" | "loading" | "ready" | "fallback";
-  visibleProjectCount: number;
-}) {
-  const dialCircumference = 2 * Math.PI * 42;
-  const dialProgress = radiusInKilometers / 100;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -8, scale: 0.94 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.94 }}
-      transition={{ type: "spring", damping: 22, stiffness: 320 }}
-      className="w-[232px] rounded-[22px] border border-cyan-200/30 bg-slate-950/95 p-3 text-white shadow-2xl backdrop-blur-xl"
-      role="dialog"
-      aria-label="Search radius filter"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200">
-            Search radius
-          </p>
-          <p className="mt-1 text-[11px] text-white/55">
-            Filter projects around you
-          </p>
-        </div>
-        <div className="relative h-[88px] w-[88px] shrink-0">
-          <svg
-            viewBox="0 0 100 100"
-            className="h-full w-full -rotate-90"
-            aria-hidden="true"
-          >
-            <circle
-              cx="50"
-              cy="50"
-              r="42"
-              fill="none"
-              stroke="rgba(255,255,255,0.12)"
-              strokeWidth="5"
-            />
-            <motion.circle
-              cx="50"
-              cy="50"
-              r="42"
-              fill="none"
-              stroke="#67e8f9"
-              strokeLinecap="round"
-              strokeWidth="5"
-              strokeDasharray={dialCircumference}
-              initial={{ strokeDashoffset: dialCircumference }}
-              animate={{
-                strokeDashoffset:
-                  dialCircumference * (1 - dialProgress),
-              }}
-              transition={{ type: "spring", damping: 24, stiffness: 180 }}
-              style={{ filter: "drop-shadow(0 0 5px rgba(103,232,249,0.8))" }}
-            />
-            <motion.circle
-              cx="50"
-              cy="50"
-              r="46"
-              fill="none"
-              stroke="rgba(103,232,249,0.45)"
-              strokeDasharray="1 8"
-              strokeLinecap="round"
-              strokeWidth="1.5"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 8, ease: "linear", repeat: Infinity }}
-              style={{ transformOrigin: "50px 50px" }}
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-lg font-bold tracking-tight">
-              {radiusInKilometers}
-            </span>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white/50">
-              km
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <input
-        type="range"
-        min={5}
-        max={100}
-        step={5}
-        value={radiusInKilometers}
-        onChange={(event) => onRadiusChange(Number(event.target.value))}
-        className="mt-1 h-1.5 w-full cursor-pointer accent-cyan-300"
-        aria-label="Search radius in kilometres"
-      />
-      <div className="mt-2 flex justify-between text-[9px] font-semibold uppercase tracking-[0.12em] text-white/35">
-        <span>5 km</span>
-        <span>100 km</span>
-      </div>
-
-      <div className="mt-3 flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
-        {RADIUS_OPTIONS.map((radius) => (
-          <button
-            key={radius}
-            type="button"
-            onClick={() => onRadiusChange(radius)}
-            className={`shrink-0 rounded-full border px-2.5 py-1.5 text-[10px] font-bold transition-colors ${
-              radius === radiusInKilometers
-                ? "border-cyan-200 bg-cyan-300 text-slate-950"
-                : "border-white/15 bg-white/5 text-white/65 hover:border-cyan-200/60 hover:text-white"
-            }`}
-          >
-            {radius} km
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2.5">
-        <div className="min-w-0">
-          <p className="truncate text-[10px] font-bold text-white/85">
-            {visibleProjectCount} project{visibleProjectCount === 1 ? "" : "s"} nearby
-          </p>
-          <p className="mt-0.5 truncate text-[9px] text-white/45">
-            {locationStatus === "loading"
-              ? "Finding your location…"
-              : locationStatus === "ready"
-                ? "Using your current location"
-                : "Using Hyderabad map center"}
-          </p>
-        </div>
-        <span className="relative ml-2 h-2 w-2 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.9)]">
-          {locationStatus === "loading" && (
-            <span className="absolute inset-0 animate-ping rounded-full bg-cyan-300" />
-          )}
-        </span>
-      </div>
-    </motion.div>
-  );
-}
-
 export function HyderabadPropertyMapOverlay({
   onClose,
 }: {
@@ -1063,6 +918,7 @@ export function HyderabadPropertyMapOverlay({
   const [isDarkMap, setIsDarkMap] = useState(false);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [isRadiusFilterOpen, setIsRadiusFilterOpen] = useState(false);
+  const [isRadiusEditorOpen, setIsRadiusEditorOpen] = useState(false);
   const [radiusInKilometers, setRadiusInKilometers] = useState(25);
   const [userLocation, setUserLocation] = useState<MapCoordinate | null>(null);
   const [locationStatus, setLocationStatus] = useState<
@@ -1186,10 +1042,17 @@ export function HyderabadPropertyMapOverlay({
   }, [isRadiusFilterOpen, locationStatus]);
 
   const toggleRadiusFilter = () => {
-    setIsRadiusFilterOpen((open) => {
-      if (open) setLocationStatus("idle");
-      return !open;
-    });
+    if (!isRadiusFilterOpen) {
+      setIsRadiusFilterOpen(true);
+      setIsRadiusEditorOpen(true);
+      return;
+    }
+
+    setIsRadiusEditorOpen((open) => !open);
+  };
+
+  const saveRadiusFilter = () => {
+    setIsRadiusEditorOpen(false);
   };
 
   return (
@@ -1320,28 +1183,70 @@ export function HyderabadPropertyMapOverlay({
               }`}
               aria-label={
                 isRadiusFilterOpen
-                  ? "Close search radius filter"
-                  : "Open search radius filter"
+                  ? "Adjust search radius"
+                  : "Enable search radius filter"
               }
               title={
                 isRadiusFilterOpen
-                  ? "Close search radius filter"
+                  ? "Adjust search radius"
                   : "Search by radius"
               }
             >
               <Ruler className="h-4 w-4" />
             </button>
-            {isRadiusFilterOpen && (
-              <RadiusFilterPanel
-                radiusInKilometers={radiusInKilometers}
-                onRadiusChange={setRadiusInKilometers}
-                locationStatus={locationStatus}
-                visibleProjectCount={visibleProjects.length}
-              />
-            )}
           </div>
         </div>
       </div>
+
+      {isRadiusEditorOpen && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-[84px] z-30 px-3 sm:bottom-[78px] sm:px-5">
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", damping: 24, stiffness: 300 }}
+            className="pointer-events-auto mx-auto flex w-full max-w-[620px] items-center gap-3 rounded-2xl border border-cyan-200/25 bg-slate-950/95 px-3 py-2.5 text-white shadow-2xl backdrop-blur-xl sm:px-4"
+            aria-label="Adjust search radius"
+          >
+            <div className="flex min-w-[74px] items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-300/15 text-cyan-200">
+                <Ruler className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/45">
+                  Radius
+                </p>
+                <p className="text-sm font-bold leading-none text-cyan-100">
+                  {radiusInKilometers} km
+                </p>
+              </div>
+            </div>
+            <input
+              type="range"
+              min={5}
+              max={100}
+              step={5}
+              value={radiusInKilometers}
+              onChange={(event) =>
+                setRadiusInKilometers(Number(event.target.value))
+              }
+              className="h-1.5 min-w-0 flex-1 cursor-pointer accent-cyan-300"
+              aria-label="Slide to adjust search radius in kilometres"
+            />
+            <span className="hidden text-[9px] font-semibold uppercase tracking-[0.12em] text-white/35 sm:inline">
+              {locationStatus === "loading"
+                ? "Locating"
+                : `${visibleProjects.length} nearby`}
+            </span>
+            <button
+              type="button"
+              onClick={saveRadiusFilter}
+              className="shrink-0 rounded-xl bg-cyan-300 px-3.5 py-2 text-xs font-bold text-slate-950 shadow-lg shadow-cyan-950/40 transition-colors hover:bg-cyan-200"
+            >
+              Save
+            </button>
+          </motion.div>
+        </div>
+      )}
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-10 pt-3 sm:px-5 sm:pb-8 sm:pt-5">
         <div className="relative mx-auto w-full max-w-[680px]">
