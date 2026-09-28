@@ -848,9 +848,8 @@ export default function AiAssistantPage() {
     addAssistantMessage(textResponse, matches);
   };
 
-  const sendMessage = async (event?: FormEvent) => {
-    event?.preventDefault();
-    const text = draft.trim();
+  const submitQuestion = (question: string) => {
+    const text = question.trim();
     if (!text || isThinking) return;
 
     setMessages((current) => [
@@ -866,6 +865,11 @@ export default function AiAssistantPage() {
     }
   };
 
+  const sendMessage = (event?: FormEvent) => {
+    event?.preventDefault();
+    submitQuestion(draft);
+  };
+
   const handleQuickAction = (label: string, prompt: string) => {
     if (label === "Loan") {
       setShowLoanPlanner(true);
@@ -878,7 +882,7 @@ export default function AiAssistantPage() {
       );
       return;
     }
-    setDraft(prompt);
+    submitQuestion(prompt);
   };
 
   const toggleInsights = (projectId: string) => {
