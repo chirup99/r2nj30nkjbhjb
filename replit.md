@@ -31,7 +31,7 @@ A React + Express (TypeScript) property discovery concept branded as RCiQ-AI. Th
 | PORT | No | Server port (default: 5000) |
 | AWS_ACCESS_KEY_ID | No | AWS credentials for DynamoDB |
 | AWS_SECRET_ACCESS_KEY | No | AWS credentials for DynamoDB |
-| AWS_REGION | No | AWS region (default: ap-south-1) |
+| AWS_REGION | No | AWS region (default: ap-south-1, Mumbai) |
 | DYNAMODB_TABLE_NAME | No | DynamoDB table name (default: Users) |
 | LIVEKIT_API_KEY | No | LiveKit API key for token generation |
 | LIVEKIT_API_SECRET | No | LiveKit API secret |
