@@ -239,9 +239,9 @@ function PropertyProjectFeed({
             key={project.id}
             type="button"
             onClick={() => onProjectSelect(project.id)}
-            className="group block rounded-2xl border border-white/10 bg-white/[0.035] p-3 transition-all hover:border-purple-300/40 hover:bg-white/[0.07] hover:shadow-[0_8px_24px_rgba(124,58,237,0.14)]"
+            className="group block rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-left transition-all hover:border-purple-300/40 hover:bg-white/[0.07] hover:shadow-[0_8px_24px_rgba(124,58,237,0.14)]"
           >
-            <div className="relative mb-3 h-28 overflow-hidden rounded-xl border border-white/10 bg-black/20">
+            <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black/20">
               <img
                 src={getPropertyProjectImage(project, index)}
                 alt={`${project.name} property`}
@@ -253,7 +253,7 @@ function PropertyProjectFeed({
                 View on map
               </span>
             </div>
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 items-start gap-2.5">
                 <span
                   className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/15"
@@ -265,10 +265,10 @@ function PropertyProjectFeed({
                   <MapPin className="h-3.5 w-3.5" />
                 </span>
                 <div className="min-w-0">
-                  <h5 className="truncate text-xs font-bold text-white group-hover:text-purple-200">
+                   <h5 className="text-sm font-bold leading-tight text-white group-hover:text-purple-200">
                     {project.name}
                   </h5>
-                  <p className="mt-1 truncate text-[9px] font-medium uppercase tracking-[0.08em] text-white/40">
+                   <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.08em] text-white/40">
                     {project.locality} · {project.approvalType}
                   </p>
                 </div>
@@ -276,27 +276,27 @@ function PropertyProjectFeed({
               <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-white/25 transition-transform group-hover:translate-x-0.5 group-hover:text-white/70" />
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <div className="rounded-xl bg-black/20 px-2.5 py-2">
-                <p className="text-[8px] font-bold uppercase tracking-wider text-white/30">
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <div className="rounded-xl bg-black/20 px-3 py-2.5">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-white/30">
                   Price
                 </p>
-                <p className="mt-1 truncate text-[11px] font-bold text-emerald-300">
+                <p className="mt-1 text-xs font-bold text-emerald-300">
                   {project.price}
                 </p>
               </div>
-              <div className="rounded-xl bg-black/20 px-2.5 py-2">
-                <p className="text-[8px] font-bold uppercase tracking-wider text-white/30">
+              <div className="rounded-xl bg-black/20 px-3 py-2.5">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-white/30">
                   Plot range
                 </p>
-                <p className="mt-1 truncate text-[11px] font-bold text-white/75">
+                <p className="mt-1 text-xs font-bold text-white/75">
                   {project.bedrooms}
                 </p>
               </div>
             </div>
 
-            <div className="mt-2 flex items-center justify-between gap-2 text-[9px] text-white/40">
-              <span className="truncate">{project.type}</span>
+            <div className="mt-3 flex items-center justify-between gap-3 text-[10px] text-white/40">
+              <span>{project.type}</span>
               <span className="shrink-0">
                 {project.acres} acres · {project.totalPlots} plots
               </span>
