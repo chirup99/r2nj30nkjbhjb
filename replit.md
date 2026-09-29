@@ -45,7 +45,7 @@ A React + Express (TypeScript) property discovery concept branded as RCiQ-AI. Th
 ## Current Product Direction
 
 - The main entry point is branded **RCiQ-AI** and positioned as Hyderabad Property Discovery.
-- The floating property map opens a MapLibre view with all 81 ventures from the public PlotsView catalog, using each venture's published latitude and longitude.
+- The floating property map opens a MapLibre view with the public PlotsView catalog, using each venture's published latitude and longitude. Industrial development mode hides all plot/villa pins and shows only industrial development context; exiting that mode restores the property pins.
 - The map fits its initial viewport to every visible project pin, supports searching the full catalog, and links each popup back to its PlotsView venture page. The imported catalog is a snapshot and should be refreshed when listings change.
 
 ## Port Configuration

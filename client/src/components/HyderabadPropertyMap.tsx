@@ -2197,18 +2197,24 @@ export function HyderabadPropertyMapOverlay({
     });
   }, [listSort, visibleProjects]);
 
-  const routeProjectIds = visibleProjects.map((project) => project.id).join(",");
+  const visibleMapProjects = showCityLayers ? [] : visibleProjects;
+  const developmentContextCategories: Record<CityContextCategory, boolean> = {
+    airports: false,
+    industries: showCityLayers && visibleContextCategories.industries,
+    sez: false,
+    commercial: false,
+    metro: false,
+  };
+  const routeProjectIds = visibleMapProjects.map((project) => project.id).join(",");
   const selectedPinProject = PROJECTS.find(
     (project) => project.id === selectedPinProjectId,
   );
   const visibleContextPoints = useMemo(
     () =>
-      showCityLayers
-        ? CITY_CONTEXT_POINTS.filter(
-            (point) => visibleContextCategories[point.category],
-          )
+      showCityLayers && visibleContextCategories.industries
+        ? CITY_CONTEXT_POINTS.filter((point) => point.category === "industries")
         : [],
-    [showCityLayers, visibleContextCategories],
+    [showCityLayers, visibleContextCategories.industries],
   );
   const initialProject = PROJECTS.find(
     (project) => project.id === initialProjectId,
@@ -2224,7 +2230,20 @@ export function HyderabadPropertyMapOverlay({
   }, [initialProjectId]);
 
   useEffect(() => {
-    if (!selectedIntent || !selectedSubcategory || visibleProjects.length === 0) {
+    if (!showCityLayers) return;
+    setSelectedPinProjectId(null);
+    setShowProjectList(false);
+    setIsRadiusFilterOpen(false);
+    setSelectedContextPoint(null);
+  }, [showCityLayers]);
+
+  useEffect(() => {
+    if (
+      showCityLayers ||
+      !selectedIntent ||
+      !selectedSubcategory ||
+      visibleMapProjects.length === 0
+    ) {
       setRouteProgress(0);
       return;
     }
@@ -2243,7 +2262,8 @@ export function HyderabadPropertyMapOverlay({
     routeProjectIds,
     selectedIntent,
     selectedSubcategory,
-    visibleProjects.length,
+    showCityLayers,
+    visibleMapProjects.length,
   ]);
 
   const chooseMagicIntent = (intentId: string) => {
@@ -2337,8 +2357,8 @@ export function HyderabadPropertyMapOverlay({
           showLocate
           className="!bottom-28"
         />
-        <FitProjectPins projects={visibleProjects} />
-        <FocusProjectPin project={initialProject} />
+        <FitProjectPins projects={visibleMapProjects} />
+        <FocusProjectPin project={showCityLayers ? undefined : initialProject} />
         <DigitizedLakesLayer
           visible={showLakes}
           checkedProject={selectedPinProject}
@@ -2351,24 +2371,17 @@ export function HyderabadPropertyMapOverlay({
           onProjectCheck={setCheckedProjectLake}
         />
         <CityContextLayers
-          visibleCategories={
-            showCityLayers
-              ? visibleContextCategories
-              : {
-                  airports: false,
-                  industries: false,
-                  sez: false,
-                  commercial: false,
-                  metro: false,
-                }
-          }
+          visibleCategories={developmentContextCategories}
           show3d={showCityLayers}
         />
         <OuterRingRoadLayer />
         <RegionalRingRoadLayer visible />
-        {selectedIntent && selectedSubcategory && visibleProjects.length > 0 && (
+        {!showCityLayers &&
+          selectedIntent &&
+          selectedSubcategory &&
+          visibleMapProjects.length > 0 && (
           <MagicProjectRoute
-            projects={visibleProjects}
+            projects={visibleMapProjects}
             intent={selectedIntent}
             subcategoryId={selectedSubcategory.id}
             progress={routeProgress}
@@ -2380,7 +2393,7 @@ export function HyderabadPropertyMapOverlay({
             radiusInKilometers={radiusInKilometers}
           />
         )}
-        {visibleProjects.map((project) => (
+        {visibleMapProjects.map((project) => (
           <MapMarker
             key={project.id}
             longitude={project.longitude}
@@ -2420,18 +2433,33 @@ export function HyderabadPropertyMapOverlay({
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-4 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="pointer-events-auto w-full max-w-[430px] rounded-2xl border border-white/60 bg-white/90 p-3 shadow-2xl backdrop-blur-xl sm:p-4">
-             <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <Search className="h-4 w-4 text-slate-400" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search any PlotsView project or locality"
-                className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                aria-label="Search PlotsView projects"
-              />
-            </label>
+            {showCityLayers ? (
+              <div className="rounded-xl border border-emerald-200/60 bg-emerald-50 px-3 py-2">
+                <p className="flex items-center gap-2 text-xs font-bold text-emerald-900">
+                  <Factory className="h-4 w-4" />
+                  Industrial development mode
+                </p>
+                <p className="mt-1 text-[10px] leading-4 text-emerald-800/75">
+                  Plot and villa pins are hidden. Only industrial development
+                  context is shown.
+                </p>
+              </div>
+            ) : (
+              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                <Search className="h-4 w-4 text-slate-400" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search any PlotsView project or locality"
+                  className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
+                  aria-label="Search PlotsView projects"
+                />
+              </label>
+            )}
             <p className="mt-2 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-              {selectedIntent
+              {showCityLayers
+                ? `${visibleContextPoints.length} industrial development areas shown`
+                : selectedIntent
                 ? `${visibleProjects.length} ${selectedIntent.label.toLowerCase()} shown`
                 : `${visibleProjects.length} of ${PROJECTS.length} projects pinned`}
             </p>
@@ -2502,53 +2530,57 @@ export function HyderabadPropertyMapOverlay({
               }`}
               aria-label={
                 showCityLayers
-                  ? "Hide 3D development layers"
-                  : "Show 3D development layers"
+                  ? "Exit industrial development mode"
+                  : "Show industrial development mode"
               }
               title={
                 showCityLayers
-                  ? "Hide 3D development layers"
-                  : "Show 3D development layers"
+                  ? "Exit industrial development mode"
+                  : "Show industrial development mode"
               }
             >
               <Layers className="h-4 w-4" />
             </button>
-            <button
-              type="button"
-              onClick={toggleRadiusFilter}
-              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
-                isRadiusFilterOpen
-                  ? "border-cyan-300/80 bg-cyan-950/90"
-                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
-              }`}
-              aria-label={
-                isRadiusFilterOpen
-                  ? "Adjust search radius"
-                  : "Enable search radius filter"
-              }
-              title={
-                isRadiusFilterOpen
-                  ? "Adjust search radius"
-                  : "Search by radius"
-              }
-            >
-              <Ruler className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowProjectList((visible) => !visible)}
-              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-xl transition-colors ${
-                showProjectList
-                  ? "border-cyan-300/80 bg-cyan-950/90"
-                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
-              }`}
-              aria-label={
-                showProjectList ? "Hide property list" : "Show property list"
-              }
-              title={showProjectList ? "Hide property list" : "Show property list"}
-            >
-              <List className="h-4 w-4" />
-            </button>
+            {!showCityLayers && (
+              <>
+                <button
+                  type="button"
+                  onClick={toggleRadiusFilter}
+                  className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
+                    isRadiusFilterOpen
+                      ? "border-cyan-300/80 bg-cyan-950/90"
+                      : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+                  }`}
+                  aria-label={
+                    isRadiusFilterOpen
+                      ? "Adjust search radius"
+                      : "Enable search radius filter"
+                  }
+                  title={
+                    isRadiusFilterOpen
+                      ? "Adjust search radius"
+                      : "Search by radius"
+                  }
+                >
+                  <Ruler className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowProjectList((visible) => !visible)}
+                  className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-xl transition-colors ${
+                    showProjectList
+                      ? "border-cyan-300/80 bg-cyan-950/90"
+                      : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+                  }`}
+                  aria-label={
+                    showProjectList ? "Hide property list" : "Show property list"
+                  }
+                  title={showProjectList ? "Hide property list" : "Show property list"}
+                >
+                  <List className="h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -2560,10 +2592,10 @@ export function HyderabadPropertyMapOverlay({
               <div>
                 <p className="flex items-center gap-2 text-[11px] font-bold">
                   <Layers className="h-3.5 w-3.5 text-emerald-300" />
-                  3D development layers
+                  Industrial development mode
                 </p>
                 <p className="mt-1 text-[10px] text-white/50">
-                  Toggle the illustrated city context around each project.
+                  Plot and villa pins stay hidden while this mode is active.
                 </p>
               </div>
               <button
@@ -2576,7 +2608,9 @@ export function HyderabadPropertyMapOverlay({
               </button>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-1.5">
-              {CITY_CONTEXT_CATEGORIES.map((category) => {
+              {CITY_CONTEXT_CATEGORIES.filter(
+                (category) => category.id === "industries",
+              ).map((category) => {
                 const isVisible = visibleContextCategories[category.id];
                 return (
                   <button
@@ -2720,7 +2754,7 @@ export function HyderabadPropertyMapOverlay({
         </div>
       )}
 
-      {showProjectList && (
+      {showProjectList && !showCityLayers && (
         <div className="pointer-events-auto absolute right-4 top-28 z-30 max-h-[58vh] w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/20 bg-slate-950/90 text-white shadow-2xl backdrop-blur-xl sm:right-6">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <div>
@@ -2807,7 +2841,8 @@ export function HyderabadPropertyMapOverlay({
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-10 pt-3 sm:px-5 sm:pb-8 sm:pt-5">
         <div className="relative mx-auto w-full max-w-[680px]">
-          <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
+          {!showCityLayers && (
+            <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
             <Sparkles className="ml-1.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
             <div className="flex min-w-max gap-1.5">
               {selectedIntent ? (
@@ -2871,6 +2906,7 @@ export function HyderabadPropertyMapOverlay({
               )}
             </div>
           </div>
+          )}
 
           <button
             type="button"
