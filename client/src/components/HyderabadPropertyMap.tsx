@@ -2526,29 +2526,16 @@ export function HyderabadPropertyMapOverlay({
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-4 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="pointer-events-auto w-full max-w-[430px] rounded-2xl border border-white/60 bg-white/90 p-3 shadow-2xl backdrop-blur-xl sm:p-4">
-            {showCityLayers ? (
-              <div className="rounded-xl border border-emerald-200/60 bg-emerald-50 px-3 py-2">
-                <p className="flex items-center gap-2 text-xs font-bold text-emerald-900">
-                  <Factory className="h-4 w-4" />
-                  Development context mode
-                </p>
-                <p className="mt-1 text-[10px] leading-4 text-emerald-800/75">
-                  Plot and villa pins are hidden. Airports, industries, SEZs,
-                  malls, metro, data centres, and power plants are shown.
-                </p>
-              </div>
-            ) : (
-              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                <Search className="h-4 w-4 text-slate-400" />
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search any PlotsView project or locality"
-                  className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                  aria-label="Search PlotsView projects"
-                />
-              </label>
-            )}
+            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <Search className="h-4 w-4 text-slate-400" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search any PlotsView project or locality"
+                className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
+                aria-label="Search PlotsView projects"
+              />
+            </label>
             <p className="mt-2 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
               {showCityLayers
                 ? `${visibleContextPoints.length} development context markers shown`
