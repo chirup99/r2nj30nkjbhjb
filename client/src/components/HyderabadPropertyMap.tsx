@@ -656,13 +656,18 @@ function Airport3DIllustration({ selected }: { selected: boolean }) {
 
 function CityContext3DIllustration({
   category,
+  variant,
   selected,
 }: {
   category: Exclude<CityContextCategory, "airports">;
+  variant?: "life-science";
   selected: boolean;
 }) {
+  const isLifeScience = variant === "life-science";
   const baseColor =
-    category === "industries"
+    isLifeScience
+      ? "#42d7cf"
+      : category === "industries"
       ? "#e98b43"
       : category === "sez"
         ? "#a978e8"
@@ -693,7 +698,7 @@ function CityContext3DIllustration({
       />
       <path d="m19 42 23-12 23 10-23 12Z" fill="#10283a" opacity="0.92" />
 
-      {category === "industries" && (
+      {category === "industries" && !isLifeScience && (
         <g>
           <path d="m25 36 18-10 18 8-18 10Z" fill="#ffe0ae" />
           <path d="m25 36v10l18 9V44Z" fill="#a85a35" />
@@ -706,6 +711,27 @@ function CityContext3DIllustration({
           <path d="m55 27 5-2.8v12l-5 2.8Z" fill="#ca7446" />
           <path d="m54 22 1-6 2 5-2 4Z" fill="#d8eced" />
           <path d="m31 47 4 2M38 44l4 2M48 43l5-3" stroke="#ffbd64" strokeWidth="1.1" />
+        </g>
+      )}
+
+      {category === "industries" && isLifeScience && (
+        <g>
+          <path d="m23 37 22-12 23 10-22 12Z" fill="#e1fffb" />
+          <path d="m23 37v12l23 11V47Z" fill="#3d9d9b" />
+          <path d="m46 47 22-12v12L46 60Z" fill="#75d1c9" />
+          <path d="m28 35 17-9 17 8-17 9Z" fill="#c5fff5" />
+          <path d="m29 38 15-8 15 7-15 8Z" fill="#16485b" />
+          <path d="m29 38v10l15 7v-9Z" fill="#75bbc0" />
+          <path d="m44 46 15-9v10l-15 8Z" fill="#c8fbf2" />
+          <path d="M33 35h3v17h-3ZM41 31h3v21h-3ZM49 34h3v17h-3" fill="#d9fff7" opacity="0.9" />
+          <path d="m57 26 5-3 5 2.5-5 3Z" fill="#b8fff3" />
+          <path d="m58 26v8l4 2v-8Z" fill="#409b9b" />
+          <path d="m62 28 5-2.5v8l-5 2.5Z" fill="#73cfc4" />
+          <path d="m34 29 6-3M40 26l5 3M45 29l6-3M40 26l1-5" stroke="#d4fffa" strokeWidth="1" />
+          <circle cx="34" cy="29" r="2" fill="#a6f5ff" />
+          <circle cx="40" cy="26" r="2" fill="#d6b4ff" />
+          <circle cx="45" cy="29" r="2" fill="#ffca91" />
+          <circle cx="41" cy="21" r="2" fill="#a6f5ff" />
         </g>
       )}
 
@@ -740,17 +766,21 @@ function CityContext3DIllustration({
 
       {category === "metro" && (
         <g>
-          <path d="m22 40 20-11 24 11-20 11Z" fill="#234c4d" />
-          <path d="m27 40 15-8 19 9-15 8Z" fill="#b7f4dc" opacity="0.78" />
-          <path d="m31 42 11-6M37 45l11-6M43 48l11-6" stroke="#f3fff9" strokeWidth="1" />
-          <path d="m28 34 18-10 18 8-18 10Z" fill="#e6fff5" />
-          <path d="m28 34v8l18 9v-9Z" fill="#6ca59c" />
-          <path d="m46 42 18-10v8L46 51Z" fill="#9ed4c5" />
-          <path d="m35 29 11-6 11 5-11 6Z" fill="#59d08a" />
-          <path d="m37 31 9-5 9 4-9 5Z" fill="#163b55" />
-          <path d="m39 32v5M44 30v6M49 29v6" stroke="#d6fff2" strokeWidth="1" />
-          <circle cx="36" cy="43" r="1.3" fill="#ffdb75" />
-          <circle cx="57" cy="42" r="1.3" fill="#ffdb75" />
+          <path d="m21 43 21-12 27 12-21 12Z" fill="#183e4d" />
+          <path d="m25 42 17-9 23 10-17 9Z" fill="#a7f1db" opacity="0.78" />
+          <path d="m30 43 12-6M37 47l12-6M44 50l12-6" stroke="#f3fff9" strokeWidth="1" />
+          <path d="m25 33 23-13 23 11-23 13Z" fill="#dffff5" />
+          <path d="m25 33v11l23 11V44Z" fill="#319f9b" />
+          <path d="m48 44 23-13v11L48 55Z" fill="#70d7b0" />
+          <path d="m29 31 19-10 19 9-19 10Z" fill="#57d998" />
+          <path d="m31 33 17-9 17 8-17 9Z" fill="#18435a" />
+          <path d="m34 34v7M42 30v8M50 29v8M58 32v7" stroke="#d7fff1" strokeWidth="1.2" />
+          <path d="m48 45 15-8v8l-15 8Z" fill="#e9fff7" opacity="0.85" />
+          <path d="m51 45 4-2v6l-4 2ZM58 41l4-2v6l-4 2" fill="#4abfd0" />
+          <circle cx="32" cy="44" r="1.4" fill="#ffdb75" />
+          <circle cx="65" cy="43" r="1.4" fill="#ffdb75" />
+          <circle cx="36" cy="51" r="1.8" fill="#101f2b" />
+          <circle cx="59" cy="48" r="1.8" fill="#101f2b" />
         </g>
       )}
 
@@ -816,6 +846,7 @@ function CityContextPin({
       ) : (
         <CityContext3DIllustration
           category={point.category}
+          variant={point.id === "pharma-city" ? "life-science" : undefined}
           selected={selected}
         />
       )}
