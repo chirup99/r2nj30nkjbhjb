@@ -85,6 +85,7 @@ type LakeCheck = {
   type?: string;
   longitude: number;
   latitude: number;
+  areaAcres?: number;
 };
 
 function cleanLakeText(value: unknown) {
@@ -121,10 +122,87 @@ function parseLakeFields(value: unknown) {
   );
 }
 
+const EARTH_RADIUS_IN_METERS = 6_378_137;
+const SQUARE_METERS_PER_ACRE = 4_046.8564224;
+
+function ringAreaInSquareMeters(ring: GeoJSON.Position[]) {
+  if (ring.length < 4) return 0;
+
+  const area = ring.reduce((sum, position, index) => {
+    const nextPosition = ring[(index + 1) % ring.length];
+    const longitude = Number(position[0]);
+    const latitude = Number(position[1]);
+    const nextLongitude = Number(nextPosition[0]);
+    const nextLatitude = Number(nextPosition[1]);
+
+    if (
+      !Number.isFinite(longitude) ||
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(nextLongitude) ||
+      !Number.isFinite(nextLatitude)
+    ) {
+      return sum;
+    }
+
+    const longitudeDelta =
+      ((nextLongitude - longitude) * Math.PI) / 180;
+    const latitudeRadians = (latitude * Math.PI) / 180;
+    const nextLatitudeRadians = (nextLatitude * Math.PI) / 180;
+
+    return (
+      sum +
+      longitudeDelta *
+        (2 + Math.sin(latitudeRadians) + Math.sin(nextLatitudeRadians))
+    );
+  }, 0);
+
+  return Math.abs((area * EARTH_RADIUS_IN_METERS ** 2) / 2);
+}
+
+function polygonAreaInSquareMeters(polygon: GeoJSON.Polygon) {
+  const [outerRing, ...innerRings] = polygon.coordinates;
+  if (!outerRing) return 0;
+
+  return Math.max(
+    0,
+    ringAreaInSquareMeters(outerRing) -
+      innerRings.reduce(
+        (area, ring) => area + ringAreaInSquareMeters(ring),
+        0,
+      ),
+  );
+}
+
+function calculateLakeAreaAcres(geometry: GeoJSON.Geometry | null | undefined) {
+  if (!geometry) return undefined;
+
+  let areaInSquareMeters = 0;
+  if (geometry.type === "Polygon") {
+    areaInSquareMeters = polygonAreaInSquareMeters(geometry);
+  } else if (geometry.type === "MultiPolygon") {
+    areaInSquareMeters = geometry.coordinates.reduce(
+      (area, coordinates) =>
+        area +
+        polygonAreaInSquareMeters({
+          type: "Polygon",
+          coordinates,
+        }),
+      0,
+    );
+  } else {
+    return undefined;
+  }
+
+  return areaInSquareMeters > 0
+    ? areaInSquareMeters / SQUARE_METERS_PER_ACRE
+    : undefined;
+}
+
 function getLakeCheck(
   properties: Record<string, unknown>,
   longitude: number,
   latitude: number,
+  geometry?: GeoJSON.Geometry | null,
 ): LakeCheck {
   const parsedFields = parseLakeFields(properties.description);
   const lakeName =
@@ -139,6 +217,7 @@ function getLakeCheck(
     type: cleanLakeText(properties.TYPE) || parsedFields.TYPE || undefined,
     longitude,
     latitude,
+    areaAcres: calculateLakeAreaAcres(geometry),
   };
 }
 
@@ -1672,9 +1751,15 @@ function DigitizedLakesLayer({
     }
 
     const handleLakeClick = (event: MapLayerMouseEvent) => {
-      const properties = event.features?.[0]?.properties ?? {};
+      const feature = event.features?.[0];
+      const properties = feature?.properties ?? {};
       latestLakeSelect.current(
-        getLakeCheck(properties, event.lngLat.lng, event.lngLat.lat),
+        getLakeCheck(
+          properties,
+          event.lngLat.lng,
+          event.lngLat.lat,
+          feature?.geometry,
+        ),
       );
     };
     const handleLakeMouseEnter = () => {
@@ -1727,13 +1812,15 @@ function DigitizedLakesLayer({
       const features = map.queryRenderedFeatures(point, {
         layers: ["digitized-lakes-fill"],
       });
-      const properties = features[0]?.properties;
+      const feature = features[0];
+      const properties = feature?.properties;
       latestProjectCheck.current(
         properties
           ? getLakeCheck(
               properties,
               checkedProject.longitude,
               checkedProject.latitude,
+              feature?.geometry,
             )
           : null,
       );
@@ -3151,7 +3238,19 @@ export function HyderabadPropertyMapOverlay({
 
       {showLakes && (selectedLake || selectedPinProject) && (
         <div className="pointer-events-none absolute bottom-[86px] right-4 z-30 w-[min(330px,calc(100vw-2rem))] sm:bottom-[82px] sm:right-6">
-          <div className="pointer-events-auto rounded-2xl border border-cyan-200/40 bg-slate-950/95 p-4 text-white shadow-2xl backdrop-blur-xl">
+          <div className="pointer-events-auto relative rounded-2xl border border-cyan-200/40 bg-slate-950/95 p-4 text-white shadow-2xl backdrop-blur-xl">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedLake(null);
+                setSelectedPinProjectId(null);
+                setCheckedProjectLake(null);
+              }}
+              className="absolute right-3 top-3 rounded-full p-1.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+              aria-label="Close lake details"
+            >
+              <X className="h-4 w-4" />
+            </button>
             {selectedPinProject && (
               <>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-300">
@@ -3176,17 +3275,26 @@ export function HyderabadPropertyMapOverlay({
                   <dd className="break-words text-white/75">
                     {selectedLake.type || "—"}
                   </dd>
-                  <dt className="text-white/45">X</dt>
+                  <dt className="text-white/45">Longitude</dt>
                   <dd className="break-words text-white/75">
                     {selectedLake.longitude.toFixed(6)}
                   </dd>
-                  <dt className="text-white/45">Y</dt>
+                  <dt className="text-white/45">Latitude</dt>
                   <dd className="break-words text-white/75">
                     {selectedLake.latitude.toFixed(6)}
                   </dd>
                   <dt className="text-white/45">ID</dt>
                   <dd className="break-words text-white/75">
                     {selectedLake.id || "—"}
+                  </dd>
+                  <dt className="text-white/45">Area</dt>
+                  <dd className="break-words text-white/75">
+                    {selectedLake.areaAcres !== undefined
+                      ? `${selectedLake.areaAcres.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} acres`
+                      : "Unavailable"}
                   </dd>
                 </dl>
               </div>
