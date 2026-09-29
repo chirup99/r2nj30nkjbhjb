@@ -86,6 +86,86 @@ type LakeCheck = {
   latitude: number;
 };
 
+const LAKE_FIELD_LABELS: Record<string, string> = {
+  AC: "Area (acres)",
+  AREA_AC: "Area (acres)",
+  CREATED_BY: "Created by",
+  DATE: "Date",
+  DISTRICT: "District",
+  FID: "Lake ID",
+  LAKE_NAME: "Lake name",
+  MANDAL: "Mandal",
+  REMARKS: "Remarks",
+  SY_NO: "Survey number",
+  TYPE: "Type",
+  VILLAGE: "Village",
+};
+
+function cleanLakeText(value: unknown) {
+  return String(value ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&quot;/gi, '"')
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function formatLakeFieldLabel(value: string) {
+  const key = value.trim().toUpperCase().replace(/\s+/g, "_");
+  return (
+    LAKE_FIELD_LABELS[key] ??
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/(^|[\s_])\w/g, (letter) => letter.toUpperCase())
+  );
+}
+
+function formatLakeDescription(value: unknown) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return undefined;
+
+  const rows = raw.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) ?? [];
+  const fields = rows
+    .map((row) =>
+      Array.from(
+        row.matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi),
+      ).map((match) => cleanLakeText(match[1])),
+    )
+    .filter((cells) => cells.length >= 2)
+    .map(([label, ...values]) => {
+      const formattedLabel = formatLakeFieldLabel(label);
+      const formattedValue = values.filter(Boolean).join(" · ");
+      return formattedValue ? `${formattedLabel}: ${formattedValue}` : "";
+    })
+    .filter(Boolean);
+
+  return fields.length > 0 ? fields.join("\n") : cleanLakeText(raw);
+}
+
+function getLakeCheck(
+  properties: Record<string, unknown>,
+  longitude: number,
+  latitude: number,
+): LakeCheck {
+  const lakeName =
+    cleanLakeText(properties.name) ||
+    cleanLakeText(properties.LAKE_NAME) ||
+    "Unnamed lake";
+
+  return {
+    name: lakeName,
+    description: formatLakeDescription(properties.description),
+    longitude,
+    latitude,
+  };
+}
+
 const LAKES_TILE_URL =
   typeof window === "undefined"
     ? "/api/lakes/tiles/{z}/{x}/{y}.pbf"
@@ -1617,14 +1697,9 @@ function DigitizedLakesLayer({
 
     const handleLakeClick = (event: MapLayerMouseEvent) => {
       const properties = event.features?.[0]?.properties ?? {};
-      latestLakeSelect.current({
-        name: String(properties.name || "Unnamed lake"),
-        description: properties.description
-          ? String(properties.description)
-          : undefined,
-        longitude: event.lngLat.lng,
-        latitude: event.lngLat.lat,
-      });
+      latestLakeSelect.current(
+        getLakeCheck(properties, event.lngLat.lng, event.lngLat.lat),
+      );
     };
     const handleLakeMouseEnter = () => {
       map.getCanvas().style.cursor = "pointer";
@@ -1679,14 +1754,11 @@ function DigitizedLakesLayer({
       const properties = features[0]?.properties;
       latestProjectCheck.current(
         properties
-          ? {
-              name: String(properties.name || "Unnamed lake"),
-              description: properties.description
-                ? String(properties.description)
-                : undefined,
-              longitude: checkedProject.longitude,
-              latitude: checkedProject.latitude,
-            }
+          ? getLakeCheck(
+              properties,
+              checkedProject.longitude,
+              checkedProject.latitude,
+            )
           : null,
       );
     };
@@ -3124,7 +3196,7 @@ export function HyderabadPropertyMapOverlay({
                 </p>
                 <p className="mt-1 text-sm font-bold">{selectedLake.name}</p>
                 {selectedLake.description && (
-                  <p className="mt-1 text-xs leading-5 text-white/65">
+                  <p className="mt-2 max-h-[38vh] overflow-y-auto whitespace-pre-line break-words pr-1 text-xs leading-5 text-white/65">
                     {selectedLake.description}
                   </p>
                 )}
