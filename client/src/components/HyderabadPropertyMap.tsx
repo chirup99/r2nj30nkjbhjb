@@ -400,16 +400,24 @@ const CITY_CONTEXT_POINTS: CityContextPoint[] = [
     name: "Ameerpet Metro",
     category: "metro",
     detail: "Red and Blue Line interchange",
-    longitude: 78.448,
-    latitude: 17.437,
+    longitude: 78.4448,
+    latitude: 17.4355,
   },
   {
-    id: "metro-nagole",
-    name: "Nagole Metro",
+    id: "metro-uppal",
+    name: "Uppal Metro",
     category: "metro",
-    detail: "Red Line east terminus",
-    longitude: 78.557,
-    latitude: 17.39,
+    detail: "Blue Line station between Nagole and Stadium",
+    longitude: 78.5602,
+    latitude: 17.4002,
+  },
+  {
+    id: "metro-jubilee-hills-check-post",
+    name: "Jubilee Hills Check Post Metro",
+    category: "metro",
+    detail: "Blue Line station between Road No. 5 and Peddamma Gudi",
+    longitude: 78.4137,
+    latitude: 17.4282,
   },
   {
     id: "metro-rg-ia",
@@ -420,12 +428,12 @@ const CITY_CONTEXT_POINTS: CityContextPoint[] = [
     latitude: 17.286,
   },
   {
-    id: "metro-raaidurg",
+    id: "metro-raidurg",
     name: "Raidurg Metro",
     category: "metro",
     detail: "West Hyderabad business corridor",
-    longitude: 78.365,
-    latitude: 17.431,
+    longitude: 78.3772,
+    latitude: 17.4422,
   },
 ];
 
@@ -533,39 +541,109 @@ const METRO_LINES: GeoJSON.FeatureCollection<GeoJSON.LineString> = {
   features: [
     {
       type: "Feature",
-      properties: { name: "Hyderabad Metro Red Line" },
+      properties: {
+        name: "Hyderabad Metro Red Line",
+        status: "operational",
+      },
       geometry: {
         type: "LineString",
         coordinates: [
-          [78.373, 17.496],
-          [78.39, 17.475],
-          [78.414, 17.454],
-          [78.448, 17.437],
-          [78.468, 17.427],
-          [78.505, 17.404],
-          [78.539, 17.39],
-          [78.557, 17.39],
+          // Miyapur → LB Nagar, Corridor I (station-aligned geometry).
+          [78.373025, 17.496539], // Miyapur
+          [78.388866, 17.498656], // JNTU College
+          [78.401765, 17.493803], // KPHB Colony
+          [78.411638, 17.485088], // Kukatpally
+          [78.421965, 17.476822], // Balanagar
+          [78.426036, 17.471970], // Moosapet
+          [78.430005, 17.464160], // Bharat Nagar
+          [78.433462, 17.457328], // Erragadda
+          [78.438350, 17.447404], // ESI Hospital
+          [78.441608, 17.441707], // S.R. Nagar
+          [78.444793, 17.435721], // Ameerpet
+          [78.451132, 17.428631], // Panjagutta
+          [78.456101, 17.420556], // Irrum Manzil
+          [78.460846, 17.411532], // Khairatabad
+          [78.465025, 17.403906], // Lakdi-ka-pul
+          [78.470818, 17.398109], // Assembly
+          [78.470148, 17.392399], // Nampally
+          [78.473100, 17.386107], // Gandhi Bhavan
+          [78.481133, 17.382347], // Osmania Medical College
+          [78.486202, 17.379857], // M.G. Bus Station
+          [78.493936, 17.377189], // Malakpet
+          [78.503178, 17.373427], // New Market
+          [78.511948, 17.371073], // Musarambagh
+          [78.525717, 17.368552], // Dilsukhnagar
+          [78.535941, 17.368286], // Chaitanyapuri
+          [78.543930, 17.361854], // Victoria Memorial
+          [78.547914, 17.349829], // L.B. Nagar
         ],
       },
     },
     {
       type: "Feature",
-      properties: { name: "Hyderabad Metro Blue Line" },
+      properties: {
+        name: "Hyderabad Metro Blue Line",
+        status: "operational",
+      },
       geometry: {
         type: "LineString",
         coordinates: [
-          [78.448, 17.437],
-          [78.421, 17.414],
-          [78.397, 17.407],
-          [78.376, 17.414],
-          [78.365, 17.431],
-          [78.345, 17.45],
+          // Nagole → Raidurg, Corridor III. This follows the Jubilee Hills
+          // alignment rather than the former Shaikpet/Banjara Hills sketch.
+          [78.558822, 17.390768], // Nagole
+          [78.560183, 17.400161], // Uppal
+          [78.554253, 17.407400], // Stadium
+          [78.546335, 17.414826], // NGRI
+          [78.540548, 17.420180], // Habsiguda
+          [78.528441, 17.428296], // Tarnaka
+          [78.519575, 17.435521], // Mettuguda
+          [78.505462, 17.435718], // Secunderabad East
+          [78.497469, 17.443194], // Parade Grounds
+          [78.486244, 17.443467], // Paradise
+          [78.476405, 17.443612], // Rasoolpura
+          [78.465875, 17.444889], // Prakash Nagar
+          [78.456934, 17.437566], // Begumpet
+          [78.444783, 17.435286], // Ameerpet
+          [78.439099, 17.436965], // Madhura Nagar
+          [78.427322, 17.435113], // Yusufguda
+          [78.423207, 17.430049], // Road No. 5 Jubilee Hills
+          [78.413714, 17.428197], // Jubilee Hills Check Post
+          [78.408372, 17.430651], // Peddamma Gudi
+          [78.400426, 17.437264], // Madhapur
+          [78.387572, 17.442947], // Durgam Cheruvu
+          [78.383138, 17.449005], // HITEC City
+          [78.377182, 17.442180], // Raidurg
         ],
       },
     },
     {
       type: "Feature",
-      properties: { name: "Airport Metro corridor" },
+      properties: {
+        name: "Hyderabad Metro Green Line",
+        status: "operational",
+      },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          // JBS → M.G. Bus Station, Corridor II.
+          [78.496484, 17.448818], // JBS
+          [78.499518, 17.433803], // Secunderabad West
+          [78.501956, 17.425515], // Gandhi Hospital
+          [78.499505, 17.417874], // Musheerabad
+          [78.496802, 17.407032], // RTC Cross Roads
+          [78.494896, 17.400363], // Chikkadpally
+          [78.489958, 17.394366], // Narayanaguda
+          [78.484024, 17.384447], // Sultan Bazar
+          [78.485863, 17.379695], // M.G. Bus Station
+        ],
+      },
+    },
+    {
+      type: "Feature",
+      properties: {
+        name: "Airport Metro corridor",
+        status: "proposed",
+      },
       geometry: {
         type: "LineString",
         coordinates: [
