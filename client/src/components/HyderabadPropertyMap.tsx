@@ -800,33 +800,6 @@ function contextCategoryColor(category: CityContextCategory) {
   );
 }
 
-function ConstructionCraneIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.5"
-    >
-      <path d="M2.5 20h19" stroke="#8ee7d1" strokeWidth="1.8" />
-      <path d="M5.5 20 7.1 5.2h1.7L10.4 20" stroke="#ffd166" strokeWidth="1.8" />
-      <path d="M7.9 5.2h13.4" stroke="#ffd166" strokeWidth="2" />
-      <path d="m7.9 5.2 5.1 14.8M7.9 5.2 3.2 20" stroke="#f39a3d" />
-      <path d="m12 8.7 4.2-3.5M12 8.7 9.3 5.2" stroke="#f39a3d" strokeWidth="1" />
-      <path d="M16.8 5.2v8" stroke="#f8e4aa" />
-      <path d="M16.8 13.2v1l-1.1 1.1M16.8 14.2l1.1 1.1" stroke="#f8e4aa" />
-      <path d="m19.8 5.2 2.2.8v1.4l-2.2.5" fill="#e68b36" stroke="#e68b36" />
-      <path d="M14.1 15.3h5.4v3.8h-5.4z" fill="#f7b84b" stroke="#fff1b8" />
-      <path d="M14.1 17.2h5.4M16.8 15.3v3.8" stroke="#a9662e" strokeWidth="0.7" />
-      <path d="M4.6 18.2h2.2M9.8 18.2H12" stroke="#d9fff5" strokeWidth="1" />
-    </svg>
-  );
-}
-
 function Airport3DIllustration({ selected }: { selected: boolean }) {
   return (
     <svg
@@ -3099,7 +3072,7 @@ export function HyderabadPropertyMapOverlay({
                   : "Show city context mode"
               }
             >
-              <ConstructionCraneIcon className="h-5 w-5" />
+              <Layers className="h-4 w-4" />
             </button>
             {!showCityLayers && (
               <>
