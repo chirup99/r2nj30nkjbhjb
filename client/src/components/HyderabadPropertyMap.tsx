@@ -540,17 +540,31 @@ function CityContextPin({
     <button
       type="button"
       onClick={onSelect}
-      className={`relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-white shadow-lg transition-transform ${
+      className={`group relative h-12 w-12 transition-transform ${
         selected ? "scale-125" : "hover:scale-110"
       }`}
-      style={{ backgroundColor: accent }}
       aria-label={`Show ${point.name}`}
     >
       <span
-        className="absolute inset-0 rounded-full opacity-35"
-        style={{ boxShadow: `0 0 18px ${accent}` }}
+        className="absolute bottom-1 left-1/2 h-2.5 w-8 -translate-x-1/2 rounded-full bg-black/35 blur-[2px]"
       />
-      <ContextPointIcon category={point.category} />
+      <span
+        className="absolute bottom-1.5 left-1/2 h-6 w-8 -translate-x-1/2 rotate-45 rounded-[5px] border border-white/45 opacity-80"
+        style={{ backgroundColor: accent }}
+      />
+      <span
+        className="absolute bottom-3 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border-2 border-white shadow-[0_5px_10px_rgba(0,0,0,0.4)]"
+        style={{
+          background: `linear-gradient(145deg, ${accent}, ${accent}b8)`,
+          boxShadow: `0 0 18px ${accent}66`,
+        }}
+      >
+        <ContextPointIcon category={point.category} />
+      </span>
+      <span
+        className="absolute bottom-0 left-1/2 h-1.5 w-6 -translate-x-1/2 rounded-full opacity-80"
+        style={{ backgroundColor: accent }}
+      />
     </button>
   );
 }
@@ -659,17 +673,17 @@ function CityContextLayers({
         type: "fill-extrusion",
         source: "carto",
         "source-layer": "building",
-        minzoom: 12,
+        minzoom: 10,
         paint: {
-          "fill-extrusion-color": "#7dd3fc",
-          "fill-extrusion-opacity": 0.64,
+          "fill-extrusion-color": "#8bd5f5",
+          "fill-extrusion-opacity": 0.72,
           "fill-extrusion-height": [
             "interpolate",
             ["linear"],
             ["zoom"],
-            12,
+            10,
             0,
-            15,
+            12,
             ["coalesce", ["get", "render_height"], ["get", "height"], 12],
           ],
           "fill-extrusion-base": [
@@ -735,12 +749,18 @@ function CityContextLayers({
 
   useEffect(() => {
     if (!map || !isLoaded) return;
-    map.easeTo({
+    const camera: Parameters<typeof map.easeTo>[0] = {
       pitch: show3d ? 48 : 0,
       bearing: show3d ? -16 : 0,
       duration: 700,
       essential: true,
-    });
+    };
+
+    if (show3d) {
+      camera.zoom = Math.max(map.getZoom(), 10.5);
+    }
+
+    map.easeTo(camera);
   }, [isLoaded, map, show3d]);
 
   return null;
