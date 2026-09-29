@@ -2123,7 +2123,6 @@ export function HyderabadPropertyMapOverlay({
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [showLakes, setShowLakes] = useState(false);
   const [showCityLayers, setShowCityLayers] = useState(true);
-  const [show3dBuildings, setShow3dBuildings] = useState(false);
   const [visibleContextCategories, setVisibleContextCategories] = useState<
     Record<CityContextCategory, boolean>
   >({
@@ -2363,7 +2362,7 @@ export function HyderabadPropertyMapOverlay({
                   metro: false,
                 }
           }
-          show3d={show3dBuildings}
+          show3d={showCityLayers}
         />
         <OuterRingRoadLayer />
         <RegionalRingRoadLayer visible />
@@ -2503,31 +2502,16 @@ export function HyderabadPropertyMapOverlay({
               }`}
               aria-label={
                 showCityLayers
-                  ? "Hide city development layers"
-                  : "Show city development layers"
+                  ? "Hide 3D development layers"
+                  : "Show 3D development layers"
               }
               title={
                 showCityLayers
-                  ? "Hide city development layers"
-                  : "Show city development layers"
+                  ? "Hide 3D development layers"
+                  : "Show 3D development layers"
               }
             >
               <Layers className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setShow3dBuildings((visible) => !visible)}
-              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
-                show3dBuildings
-                  ? "border-sky-300/80 bg-sky-950/90"
-                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
-              }`}
-              aria-label={
-                show3dBuildings ? "Hide 3D buildings" : "Show 3D buildings"
-              }
-              title={show3dBuildings ? "Hide 3D buildings" : "Show 3D buildings"}
-            >
-              <Building2 className="h-4 w-4" />
             </button>
             <button
               type="button"
@@ -2576,10 +2560,10 @@ export function HyderabadPropertyMapOverlay({
               <div>
                 <p className="flex items-center gap-2 text-[11px] font-bold">
                   <Layers className="h-3.5 w-3.5 text-emerald-300" />
-                  City development layers
+                  3D development layers
                 </p>
                 <p className="mt-1 text-[10px] text-white/50">
-                  Toggle the growth signals around each project.
+                  Toggle the illustrated city context around each project.
                 </p>
               </div>
               <button
