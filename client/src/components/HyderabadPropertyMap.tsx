@@ -553,17 +553,21 @@ function DigitizedLakesLayer({
   visible,
   checkedProject,
   onLakeSelect,
+  onMapTap,
   onProjectCheck,
 }: {
   visible: boolean;
   checkedProject?: PropertyProject;
   onLakeSelect: (lake: LakeCheck) => void;
+  onMapTap: () => void;
   onProjectCheck: (lake: LakeCheck | null) => void;
 }) {
   const { map, isLoaded } = useMap();
   const latestLakeSelect = useRef(onLakeSelect);
+  const latestMapTap = useRef(onMapTap);
   const latestProjectCheck = useRef(onProjectCheck);
   latestLakeSelect.current = onLakeSelect;
+  latestMapTap.current = onMapTap;
   latestProjectCheck.current = onProjectCheck;
 
   useEffect(() => {
@@ -633,15 +637,20 @@ function DigitizedLakesLayer({
     const handleLakeMouseLeave = () => {
       map.getCanvas().style.cursor = "";
     };
+    const handleMapTap = () => {
+      latestMapTap.current();
+    };
 
     map.on("click", fillLayerId, handleLakeClick);
     map.on("mouseenter", fillLayerId, handleLakeMouseEnter);
     map.on("mouseleave", fillLayerId, handleLakeMouseLeave);
+    map.on("click", handleMapTap);
 
     return () => {
       map.off("click", fillLayerId, handleLakeClick);
       map.off("mouseenter", fillLayerId, handleLakeMouseEnter);
       map.off("mouseleave", fillLayerId, handleLakeMouseLeave);
+      map.off("click", handleMapTap);
       if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId);
       if (map.getLayer(fillLayerId)) map.removeLayer(fillLayerId);
       if (map.getSource(sourceId)) map.removeSource(sourceId);
@@ -1354,6 +1363,7 @@ export function HyderabadPropertyMapOverlay({
   const [isDarkMap, setIsDarkMap] = useState(true);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [showLakes, setShowLakes] = useState(false);
+  const [showLakeHelp, setShowLakeHelp] = useState(false);
   const [selectedLake, setSelectedLake] = useState<LakeCheck | null>(null);
   const [checkedProjectLake, setCheckedProjectLake] = useState<LakeCheck | null>(
     null,
@@ -1514,6 +1524,11 @@ export function HyderabadPropertyMapOverlay({
     });
   };
 
+  const selectProjectPin = (projectId: string) => {
+    setSelectedPinProjectId(projectId);
+    setShowLakeHelp(false);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -1549,8 +1564,10 @@ export function HyderabadPropertyMapOverlay({
           checkedProject={selectedPinProject}
           onLakeSelect={(lake) => {
             setSelectedLake(lake);
+            setShowLakeHelp(false);
             setCheckedProjectLake(null);
           }}
+          onMapTap={() => setShowLakeHelp(false)}
           onProjectCheck={setCheckedProjectLake}
         />
         <OuterRingRoadLayer />
@@ -1578,7 +1595,7 @@ export function HyderabadPropertyMapOverlay({
               <PropertyPin
                 accent={project.accent}
                 selected={project.id === selectedPinProject?.id}
-                onSelect={() => setSelectedPinProjectId(project.id)}
+                onSelect={() => selectProjectPin(project.id)}
               />
             </MarkerContent>
             <MarkerTooltip>{project.name}</MarkerTooltip>
@@ -1647,6 +1664,7 @@ export function HyderabadPropertyMapOverlay({
               type="button"
               onClick={() => {
                 setShowLakes((visible) => !visible);
+                setShowLakeHelp((visible) => !visible);
                 setSelectedLake(null);
                 setCheckedProjectLake(null);
               }}
@@ -1700,7 +1718,7 @@ export function HyderabadPropertyMapOverlay({
         </div>
       </div>
 
-      {showLakes && (
+      {showLakes && showLakeHelp && (
         <div className="pointer-events-none absolute right-4 top-4 z-20 mt-[238px] w-[min(290px,calc(100vw-2rem))] sm:right-6">
           <div className="pointer-events-auto rounded-2xl border border-cyan-200/40 bg-slate-950/90 px-3 py-2.5 text-white shadow-2xl backdrop-blur-xl">
             <p className="flex items-center gap-2 text-[11px] font-bold">
@@ -1792,7 +1810,7 @@ export function HyderabadPropertyMapOverlay({
                   key={project.id}
                   type="button"
                   onClick={() => {
-                    setSelectedPinProjectId(project.id);
+                    selectProjectPin(project.id);
                     setShowProjectList(false);
                   }}
                   className="w-full rounded-xl px-3 py-3 text-left transition-colors hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
