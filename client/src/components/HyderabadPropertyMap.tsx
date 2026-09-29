@@ -81,24 +81,10 @@ type MapCoordinate = [number, number];
 
 type LakeCheck = {
   name: string;
-  description?: string;
+  id?: string;
+  type?: string;
   longitude: number;
   latitude: number;
-};
-
-const LAKE_FIELD_LABELS: Record<string, string> = {
-  AC: "Area (acres)",
-  AREA_AC: "Area (acres)",
-  CREATED_BY: "Created by",
-  DATE: "Date",
-  DISTRICT: "District",
-  FID: "Lake ID",
-  LAKE_NAME: "Lake name",
-  MANDAL: "Mandal",
-  REMARKS: "Remarks",
-  SY_NO: "Survey number",
-  TYPE: "Type",
-  VILLAGE: "Village",
 };
 
 function cleanLakeText(value: unknown) {
@@ -115,37 +101,24 @@ function cleanLakeText(value: unknown) {
     .trim();
 }
 
-function formatLakeFieldLabel(value: string) {
-  const key = value.trim().toUpperCase().replace(/\s+/g, "_");
-  return (
-    LAKE_FIELD_LABELS[key] ??
-    value
-      .trim()
-      .toLowerCase()
-      .replace(/(^|[\s_])\w/g, (letter) => letter.toUpperCase())
-  );
-}
-
-function formatLakeDescription(value: unknown) {
+function parseLakeFields(value: unknown) {
   const raw = String(value ?? "").trim();
-  if (!raw) return undefined;
+  if (!raw) return {};
 
   const rows = raw.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) ?? [];
-  const fields = rows
-    .map((row) =>
-      Array.from(
-        row.matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi),
-      ).map((match) => cleanLakeText(match[1])),
-    )
-    .filter((cells) => cells.length >= 2)
-    .map(([label, ...values]) => {
-      const formattedLabel = formatLakeFieldLabel(label);
-      const formattedValue = values.filter(Boolean).join(" · ");
-      return formattedValue ? `${formattedLabel}: ${formattedValue}` : "";
-    })
-    .filter(Boolean);
-
-  return fields.length > 0 ? fields.join("\n") : cleanLakeText(raw);
+  return Object.fromEntries(
+    rows
+      .map((row) =>
+        Array.from(
+          row.matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi),
+        ).map((match) => cleanLakeText(match[1])),
+      )
+      .filter((cells) => cells.length >= 2)
+      .map(([label, ...values]) => [
+        label.trim().toUpperCase().replace(/\s+/g, "_"),
+        values.filter(Boolean).join(" · "),
+      ]),
+  );
 }
 
 function getLakeCheck(
@@ -153,14 +126,17 @@ function getLakeCheck(
   longitude: number,
   latitude: number,
 ): LakeCheck {
+  const parsedFields = parseLakeFields(properties.description);
   const lakeName =
     cleanLakeText(properties.name) ||
     cleanLakeText(properties.LAKE_NAME) ||
+    parsedFields.LAKE_NAME ||
     "Unnamed lake";
 
   return {
     name: lakeName,
-    description: formatLakeDescription(properties.description),
+    id: cleanLakeText(properties.FID) || parsedFields.FID || undefined,
+    type: cleanLakeText(properties.TYPE) || parsedFields.TYPE || undefined,
     longitude,
     latitude,
   };
@@ -3195,11 +3171,24 @@ export function HyderabadPropertyMapOverlay({
                   Selected mapped water area
                 </p>
                 <p className="mt-1 text-sm font-bold">{selectedLake.name}</p>
-                {selectedLake.description && (
-                  <p className="mt-2 max-h-[38vh] overflow-y-auto whitespace-pre-line break-words pr-1 text-xs leading-5 text-white/65">
-                    {selectedLake.description}
-                  </p>
-                )}
+                <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs leading-5">
+                  <dt className="text-white/45">Type</dt>
+                  <dd className="break-words text-white/75">
+                    {selectedLake.type || "—"}
+                  </dd>
+                  <dt className="text-white/45">X</dt>
+                  <dd className="break-words text-white/75">
+                    {selectedLake.longitude.toFixed(6)}
+                  </dd>
+                  <dt className="text-white/45">Y</dt>
+                  <dd className="break-words text-white/75">
+                    {selectedLake.latitude.toFixed(6)}
+                  </dd>
+                  <dt className="text-white/45">ID</dt>
+                  <dd className="break-words text-white/75">
+                    {selectedLake.id || "—"}
+                  </dd>
+                </dl>
               </div>
             )}
             <p className="mt-3 text-[9px] leading-4 text-white/40">
