@@ -605,6 +605,73 @@ function ContextPointIcon({ category }: { category: CityContextCategory }) {
   return <Train className={iconClass} />;
 }
 
+function Airport3DIllustration({ selected }: { selected: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 84 62"
+      aria-hidden="true"
+      className={`h-[3.9rem] w-[5.25rem] overflow-visible transition-transform ${
+        selected ? "scale-110" : ""
+      }`}
+    >
+      <defs>
+        <linearGradient id="airport-pad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#4bd4e8" />
+          <stop offset="1" stopColor="#16789f" />
+        </linearGradient>
+        <linearGradient id="airport-terminal" x1="0" y1="0" x2="0.9" y2="1">
+          <stop offset="0" stopColor="#f8fdff" />
+          <stop offset="1" stopColor="#b6cfda" />
+        </linearGradient>
+        <linearGradient id="airport-glass" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#94f4ff" />
+          <stop offset="1" stopColor="#2492bb" />
+        </linearGradient>
+        <filter id="airport-shadow" x="-30%" y="-30%" width="160%" height="180%">
+          <feDropShadow dx="0" dy="3" stdDeviation="2" floodColor="#00131f" floodOpacity="0.5" />
+        </filter>
+      </defs>
+      <ellipse cx="42" cy="55" rx="31" ry="4.5" fill="#020b13" opacity="0.38" />
+      <g filter="url(#airport-shadow)">
+        <path
+          d="M8 42 42 24l34 15-34 18Z"
+          fill="url(#airport-pad)"
+          stroke="#c7f8ff"
+          strokeOpacity="0.7"
+          strokeWidth="1"
+        />
+        <path d="m19 42 23-12 23 10-23 12Z" fill="#163b55" opacity="0.9" />
+        <path d="m24 40 18-9 18 8-18 9Z" fill="#d7fbff" opacity="0.78" />
+        <path d="m42 31 1 17" stroke="#ffffff" strokeDasharray="2 2" strokeWidth="1.2" />
+        <path
+          d="m25 34 17-9 17 7-17 9Z"
+          fill="url(#airport-terminal)"
+          stroke="#ffffff"
+          strokeWidth="0.8"
+        />
+        <path d="m25 34 0 8 17 8v-9Z" fill="#7ea5b5" />
+        <path d="m42 41 17-9v8l-17 10Z" fill="#dbe9ed" />
+        <path d="m27 34 15-7 15 6-15 8Z" fill="#ffae58" />
+        <path d="m29 36 13-6 13 5-13 6Z" fill="url(#airport-glass)" />
+        <path d="m34 34 0 5M39 32l0 8M44 31v8M49 33v7" stroke="#d9fbff" strokeWidth="0.8" />
+        <path d="m62 26 5-2.5 5 2.2-5 2.7Z" fill="#f7fbff" />
+        <path d="m63 26 0 12 4 2V28Z" fill="#8caab7" />
+        <path d="m67 28 5-2.7v12l-5 2.7Z" fill="#d9e7eb" />
+        <path d="m65 23 2-5 2 4-2 4Z" fill="#d7e9ee" />
+        <path d="m66 18 1-2 1 2" stroke="#ffb454" strokeWidth="1" />
+        <path
+          d="m52 21 7 2-7 2 2-2-10-3 1-1 10 3Z"
+          fill="#ffffff"
+          stroke="#c7e5ed"
+          strokeWidth="0.6"
+        />
+        <circle cx="53" cy="23" r="1.2" fill="#ff9c4a" />
+        <circle cx="59" cy="23" r="1.2" fill="#ff9c4a" />
+      </g>
+    </svg>
+  );
+}
+
 function CityContextPin({
   point,
   selected,
@@ -628,19 +695,25 @@ function CityContextPin({
       <span
         className="absolute bottom-1 left-1/2 h-2.5 w-8 -translate-x-1/2 rounded-full bg-black/35 blur-[2px]"
       />
-      <span
-        className="absolute bottom-1.5 left-1/2 h-6 w-8 -translate-x-1/2 rotate-45 rounded-[5px] border border-white/45 opacity-80"
-        style={{ backgroundColor: accent }}
-      />
-      <span
-        className="absolute bottom-3 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border-2 border-white shadow-[0_5px_10px_rgba(0,0,0,0.4)]"
-        style={{
-          background: `linear-gradient(145deg, ${accent}, ${accent}b8)`,
-          boxShadow: `0 0 18px ${accent}66`,
-        }}
-      >
-        <ContextPointIcon category={point.category} />
-      </span>
+      {point.category === "airports" ? (
+        <Airport3DIllustration selected={selected} />
+      ) : (
+        <>
+          <span
+            className="absolute bottom-1.5 left-1/2 h-6 w-8 -translate-x-1/2 rotate-45 rounded-[5px] border border-white/45 opacity-80"
+            style={{ backgroundColor: accent }}
+          />
+          <span
+            className="absolute bottom-3 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border-2 border-white shadow-[0_5px_10px_rgba(0,0,0,0.4)]"
+            style={{
+              background: `linear-gradient(145deg, ${accent}, ${accent}b8)`,
+              boxShadow: `0 0 18px ${accent}66`,
+            }}
+          >
+            <ContextPointIcon category={point.category} />
+          </span>
+        </>
+      )}
       <span
         className="absolute bottom-0 left-1/2 h-1.5 w-6 -translate-x-1/2 rounded-full opacity-80"
         style={{ backgroundColor: accent }}
@@ -2202,8 +2275,8 @@ export function HyderabadPropertyMapOverlay({
   const [isDarkMap, setIsDarkMap] = useState(true);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [showLakes, setShowLakes] = useState(false);
-  const [showCityLayers, setShowCityLayers] = useState(true);
-  const [showDevelopmentPanel, setShowDevelopmentPanel] = useState(true);
+  const [showCityLayers, setShowCityLayers] = useState(false);
+  const [showContextPanel, setShowContextPanel] = useState(false);
   const [visibleContextCategories, setVisibleContextCategories] = useState<
     Record<CityContextCategory, boolean>
   >({
@@ -2281,7 +2354,7 @@ export function HyderabadPropertyMapOverlay({
   }, [listSort, visibleProjects]);
 
   const visibleMapProjects = showCityLayers ? [] : visibleProjects;
-  const developmentContextCategories: Record<CityContextCategory, boolean> =
+  const contextCategoriesForMap: Record<CityContextCategory, boolean> =
     showCityLayers
       ? visibleContextCategories
       : {
@@ -2459,12 +2532,12 @@ export function HyderabadPropertyMapOverlay({
           }}
           onMapTap={() => {
             setShowLakeHelp(false);
-            setShowDevelopmentPanel(false);
+            setShowContextPanel(false);
           }}
           onProjectCheck={setCheckedProjectLake}
         />
         <CityContextLayers
-          visibleCategories={developmentContextCategories}
+          visibleCategories={contextCategoriesForMap}
           show3d={showCityLayers}
         />
         <OuterRingRoadLayer />
@@ -2538,7 +2611,7 @@ export function HyderabadPropertyMapOverlay({
             </label>
             <p className="mt-2 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
               {showCityLayers
-                ? `${visibleContextPoints.length} development context markers shown`
+                ? `${visibleContextPoints.length} city context markers shown`
                 : selectedIntent
                 ? `${visibleProjects.length} ${selectedIntent.label.toLowerCase()} shown`
                 : `${visibleProjects.length} of ${PROJECTS.length} projects pinned`}
@@ -2605,7 +2678,7 @@ export function HyderabadPropertyMapOverlay({
               onClick={() =>
                 setShowCityLayers((visible) => {
                   const nextVisible = !visible;
-                  setShowDevelopmentPanel(nextVisible);
+                  setShowContextPanel(nextVisible);
                   return nextVisible;
                 })
               }
@@ -2616,13 +2689,13 @@ export function HyderabadPropertyMapOverlay({
               }`}
               aria-label={
                 showCityLayers
-                  ? "Exit development context mode"
-                  : "Show development context mode"
+                  ? "Exit city context mode"
+                  : "Show city context mode"
               }
               title={
                 showCityLayers
-                  ? "Exit development context mode"
-                  : "Show development context mode"
+                  ? "Exit city context mode"
+                  : "Show city context mode"
               }
             >
               <Layers className="h-4 w-4" />
@@ -2671,25 +2744,25 @@ export function HyderabadPropertyMapOverlay({
         </div>
       </div>
 
-      {showCityLayers && showDevelopmentPanel && (
+      {showCityLayers && showContextPanel && (
         <div className="pointer-events-auto absolute right-4 top-4 z-20 mt-[286px] w-[min(290px,calc(100vw-2rem))] sm:right-6">
           <div className="rounded-2xl border border-emerald-200/25 bg-slate-950/92 p-3 text-white shadow-2xl backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="flex items-center gap-2 text-[11px] font-bold">
                   <Layers className="h-3.5 w-3.5 text-emerald-300" />
-                  Development context mode
+                  City context mode
                 </p>
                 <p className="mt-1 text-[10px] text-white/50">
-                  Plot and villa pins stay hidden. Toggle airport, industry,
+                  Property pins stay hidden. Toggle airport, industry,
                   SEZ, mall, metro, data centre, and power plant context.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setShowDevelopmentPanel(false)}
+                onClick={() => setShowContextPanel(false)}
                 className="rounded-full p-1 text-white/45 transition-colors hover:bg-white/10 hover:text-white"
-                aria-label="Hide development context panel"
+                aria-label="Hide city context panel"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
