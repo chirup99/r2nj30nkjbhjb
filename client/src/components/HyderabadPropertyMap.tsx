@@ -654,12 +654,44 @@ function Airport3DIllustration({ selected }: { selected: boolean }) {
   );
 }
 
+function MetroTrain3DIllustration({ selected }: { selected: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 84 62"
+      aria-hidden="true"
+      className={`h-[3.9rem] w-[5.25rem] overflow-visible transition-transform ${
+        selected ? "scale-110" : ""
+      }`}
+      style={{ filter: "drop-shadow(0 3px 2px rgba(0, 10, 20, 0.45))" }}
+    >
+      <ellipse cx="42" cy="55" rx="31" ry="4.5" fill="#020b13" opacity="0.38" />
+      <path d="m12 47 30-16 31 14-30 17Z" fill="#153b4b" />
+      <path d="m18 47 24-13 25 12-24 13Z" fill="#a8f2dd" opacity="0.8" />
+      <path d="m23 47 19-10M31 51l19-10M40 55l19-10" stroke="#f3fff9" strokeWidth="1" />
+      <path d="m20 29 25-13 28 13-27 15Z" fill="#f0fff8" />
+      <path d="m20 29v14l26 13V41Z" fill="#319f9b" />
+      <path d="m46 41 27-15v14L46 56Z" fill="#70d7b0" />
+      <path d="m24 29 21-11 23 11-22 12Z" fill="#58d99a" />
+      <path d="m27 30 18-9 20 10-19 10Z" fill="#18435a" />
+      <path d="m31 32v8M38 28v9M46 26v9M54 29v8" stroke="#d7fff1" strokeWidth="1.2" />
+      <path d="m59 35 10-5v8l-10 5Z" fill="#dffef1" />
+      <path d="m62 35 5-3v5l-5 3Z" fill="#4abfd0" />
+      <path d="m49 45 15-8" stroke="#f3fff9" strokeWidth="1" opacity="0.8" />
+      <path d="m25 26 4-2 4 2-4 2ZM35 21l4-2 4 2-4 2ZM46 17l4-2 4 2-4 2" fill="#dffff5" />
+      <circle cx="28" cy="47" r="2" fill="#101f2b" />
+      <circle cx="59" cy="46" r="2" fill="#101f2b" />
+      <circle cx="23" cy="39" r="1.4" fill="#ffdb75" />
+      <circle cx="69" cy="36" r="1.4" fill="#ffdb75" />
+    </svg>
+  );
+}
+
 function CityContext3DIllustration({
   category,
   variant,
   selected,
 }: {
-  category: Exclude<CityContextCategory, "airports">;
+  category: Exclude<CityContextCategory, "airports" | "metro">;
   variant?: "life-science";
   selected: boolean;
 }) {
@@ -673,9 +705,7 @@ function CityContext3DIllustration({
         ? "#a978e8"
         : category === "commercial"
           ? "#ef6ea9"
-          : category === "metro"
-            ? "#55d48b"
-            : category === "data-centers"
+          : category === "data-centers"
               ? "#36c9df"
               : "#e9c84e";
 
@@ -764,27 +794,6 @@ function CityContext3DIllustration({
         </g>
       )}
 
-      {category === "metro" && (
-        <g>
-          <path d="m19 45 23-13 29 13-23 13Z" fill="#183e4d" />
-          <path d="m25 44 17-9 23 10-17 9Z" fill="#a7f1db" opacity="0.78" />
-          <path d="m30 45 12-6M37 49l12-6M44 52l12-6" stroke="#f3fff9" strokeWidth="1" />
-          <path d="m26 34 21-12 22 10-21 12Z" fill="#57d998" />
-          <path d="m26 34v11l22 11V45Z" fill="#319f9b" />
-          <path d="m48 45 21-13v10L48 56Z" fill="#70d7b0" />
-          <path d="m30 32 17-9 18 8-17 9Z" fill="#e9fff7" />
-          <path d="m32 34 15-8 15 7-15 8Z" fill="#18435a" />
-          <path d="m35 35v7M42 31v8M49 29v8" stroke="#d7fff1" strokeWidth="1.2" />
-          <path d="m56 38 11-6v9l-11 6Z" fill="#dffef1" />
-          <path d="m59 38 5-3v5l-5 3Z" fill="#4abfd0" />
-          <path d="m49 47 15-8" stroke="#f3fff9" strokeWidth="1" opacity="0.8" />
-          <circle cx="34" cy="46" r="1.8" fill="#101f2b" />
-          <circle cx="59" cy="49" r="1.8" fill="#101f2b" />
-          <circle cx="31" cy="43" r="1.4" fill="#ffdb75" />
-          <circle cx="66" cy="41" r="1.4" fill="#ffdb75" />
-        </g>
-      )}
-
       {category === "data-centers" && (
         <g>
           <path d="m25 36 18-10 19 9-18 10Z" fill="#d8fbff" />
@@ -844,6 +853,8 @@ function CityContextPin({
       />
       {point.category === "airports" ? (
         <Airport3DIllustration selected={selected} />
+      ) : point.category === "metro" ? (
+        <MetroTrain3DIllustration selected={selected} />
       ) : (
         <CityContext3DIllustration
           category={point.category}
