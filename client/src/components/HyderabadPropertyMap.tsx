@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import type { MapLayerMouseEvent } from "maplibre-gl";
 import {
   BadgeCheck,
   Banknote,
@@ -24,6 +25,7 @@ import {
   Sun,
   Trees,
   X,
+  Waves,
 } from "lucide-react";
 import {
   Map as PropertyMap,
@@ -74,6 +76,18 @@ const SATELLITE_MAP_STYLE = {
 const PROJECTS: PropertyProject[] = PLOTSVIEW_PROJECTS;
 
 type MapCoordinate = [number, number];
+
+type LakeCheck = {
+  name: string;
+  description?: string;
+  longitude: number;
+  latitude: number;
+};
+
+const LAKES_TILE_URL =
+  typeof window === "undefined"
+    ? "/api/lakes/tiles/{z}/{x}/{y}.pbf"
+    : `${window.location.origin}/api/lakes/tiles/{z}/{x}/{y}.pbf`;
 
 function distanceInKilometers(
   from: MapCoordinate,
@@ -533,6 +547,163 @@ function RadiusFilterLayer({
       }}
     />
   );
+}
+
+function DigitizedLakesLayer({
+  visible,
+  checkedProject,
+  onLakeSelect,
+  onProjectCheck,
+}: {
+  visible: boolean;
+  checkedProject?: PropertyProject;
+  onLakeSelect: (lake: LakeCheck) => void;
+  onProjectCheck: (lake: LakeCheck | null) => void;
+}) {
+  const { map, isLoaded } = useMap();
+  const latestLakeSelect = useRef(onLakeSelect);
+  const latestProjectCheck = useRef(onProjectCheck);
+  latestLakeSelect.current = onLakeSelect;
+  latestProjectCheck.current = onProjectCheck;
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    const sourceId = "digitized-lakes-source";
+    const fillLayerId = "digitized-lakes-fill";
+    const lineLayerId = "digitized-lakes-line";
+
+    if (!map.getSource(sourceId)) {
+      map.addSource(sourceId, {
+        type: "vector",
+        tiles: [LAKES_TILE_URL],
+        minzoom: 5,
+        maxzoom: 16,
+        attribution: "Digitized lake data © 1acre.in",
+      });
+    }
+
+    if (!map.getLayer(fillLayerId)) {
+      map.addLayer({
+        id: fillLayerId,
+        type: "fill",
+        source: sourceId,
+        "source-layer": "lakes_map",
+        minzoom: 5,
+        maxzoom: 18,
+        paint: {
+          "fill-color": "#22d3ee",
+          "fill-opacity": 0.32,
+        },
+        layout: { visibility: "none" },
+      });
+    }
+
+    if (!map.getLayer(lineLayerId)) {
+      map.addLayer({
+        id: lineLayerId,
+        type: "line",
+        source: sourceId,
+        "source-layer": "lakes_map",
+        minzoom: 5,
+        maxzoom: 18,
+        paint: {
+          "line-color": "#0e7490",
+          "line-width": 2,
+          "line-opacity": 0.95,
+        },
+        layout: { visibility: "none" },
+      });
+    }
+
+    const handleLakeClick = (event: MapLayerMouseEvent) => {
+      const properties = event.features?.[0]?.properties ?? {};
+      latestLakeSelect.current({
+        name: String(properties.name || "Unnamed lake"),
+        description: properties.description
+          ? String(properties.description)
+          : undefined,
+        longitude: event.lngLat.lng,
+        latitude: event.lngLat.lat,
+      });
+    };
+    const handleLakeMouseEnter = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+    const handleLakeMouseLeave = () => {
+      map.getCanvas().style.cursor = "";
+    };
+
+    map.on("click", fillLayerId, handleLakeClick);
+    map.on("mouseenter", fillLayerId, handleLakeMouseEnter);
+    map.on("mouseleave", fillLayerId, handleLakeMouseLeave);
+
+    return () => {
+      map.off("click", fillLayerId, handleLakeClick);
+      map.off("mouseenter", fillLayerId, handleLakeMouseEnter);
+      map.off("mouseleave", fillLayerId, handleLakeMouseLeave);
+      if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId);
+      if (map.getLayer(fillLayerId)) map.removeLayer(fillLayerId);
+      if (map.getSource(sourceId)) map.removeSource(sourceId);
+    };
+  }, [isLoaded, map]);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    for (const layerId of ["digitized-lakes-fill", "digitized-lakes-line"]) {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
+      }
+    }
+  }, [isLoaded, map, visible]);
+
+  useEffect(() => {
+    if (!map || !isLoaded || !visible || !checkedProject) {
+      latestProjectCheck.current(null);
+      return;
+    }
+
+    const checkProject = () => {
+      if (!map.getLayer("digitized-lakes-fill")) return;
+      const point = map.project({
+        lng: checkedProject.longitude,
+        lat: checkedProject.latitude,
+      });
+      const features = map.queryRenderedFeatures(point, {
+        layers: ["digitized-lakes-fill"],
+      });
+      const properties = features[0]?.properties;
+      latestProjectCheck.current(
+        properties
+          ? {
+              name: String(properties.name || "Unnamed lake"),
+              description: properties.description
+                ? String(properties.description)
+                : undefined,
+              longitude: checkedProject.longitude,
+              latitude: checkedProject.latitude,
+            }
+          : null,
+      );
+    };
+
+    checkProject();
+    map.on("idle", checkProject);
+    map.on("moveend", checkProject);
+    return () => {
+      map.off("idle", checkProject);
+      map.off("moveend", checkProject);
+    };
+  }, [
+    checkedProject?.id,
+    checkedProject?.latitude,
+    checkedProject?.longitude,
+    isLoaded,
+    map,
+    visible,
+  ]);
+
+  return null;
 }
 
 function OuterRingRoadLayer() {
@@ -1182,6 +1353,11 @@ export function HyderabadPropertyMapOverlay({
   const [routeProgress, setRouteProgress] = useState(0);
   const [isDarkMap, setIsDarkMap] = useState(true);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
+  const [showLakes, setShowLakes] = useState(false);
+  const [selectedLake, setSelectedLake] = useState<LakeCheck | null>(null);
+  const [checkedProjectLake, setCheckedProjectLake] = useState<LakeCheck | null>(
+    null,
+  );
   const [showProjectList, setShowProjectList] = useState(false);
   const [listSort, setListSort] = useState<"price" | "rate" | "size">("price");
   const [isRadiusFilterOpen, setIsRadiusFilterOpen] = useState(false);
@@ -1368,6 +1544,15 @@ export function HyderabadPropertyMapOverlay({
         />
         <FitProjectPins projects={visibleProjects} />
         <FocusProjectPin project={initialProject} />
+        <DigitizedLakesLayer
+          visible={showLakes}
+          checkedProject={selectedPinProject}
+          onLakeSelect={(lake) => {
+            setSelectedLake(lake);
+            setCheckedProjectLake(null);
+          }}
+          onProjectCheck={setCheckedProjectLake}
+        />
         <OuterRingRoadLayer />
         {selectedIntent && selectedSubcategory && visibleProjects.length > 0 && (
           <MagicProjectRoute
@@ -1460,6 +1645,23 @@ export function HyderabadPropertyMapOverlay({
             </button>
             <button
               type="button"
+              onClick={() => {
+                setShowLakes((visible) => !visible);
+                setSelectedLake(null);
+                setCheckedProjectLake(null);
+              }}
+              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
+                showLakes
+                  ? "border-cyan-300/80 bg-cyan-950/90"
+                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+              }`}
+              aria-label={showLakes ? "Hide lakes and FTL layer" : "Show lakes and FTL layer"}
+              title={showLakes ? "Hide lakes and FTL layer" : "Show lakes and FTL layer"}
+            >
+              <Waves className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
               onClick={toggleRadiusFilter}
               className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
                 isRadiusFilterOpen
@@ -1497,6 +1699,58 @@ export function HyderabadPropertyMapOverlay({
           </div>
         </div>
       </div>
+
+      {showLakes && (
+        <div className="pointer-events-none absolute right-4 top-4 z-20 mt-[238px] w-[min(290px,calc(100vw-2rem))] sm:right-6">
+          <div className="pointer-events-auto rounded-2xl border border-cyan-200/40 bg-slate-950/90 px-3 py-2.5 text-white shadow-2xl backdrop-blur-xl">
+            <p className="flex items-center gap-2 text-[11px] font-bold">
+              <Waves className="h-3.5 w-3.5 text-cyan-300" />
+              Lakes / FTL check is on
+            </p>
+            <p className="mt-1 text-[10px] leading-4 text-white/60">
+              Click a highlighted lake for its name, or select a project pin to
+              check whether its map point falls inside the mapped FTL/buffer coverage.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {showLakes && (selectedLake || selectedPinProject) && (
+        <div className="pointer-events-none absolute bottom-[86px] right-4 z-30 w-[min(330px,calc(100vw-2rem))] sm:bottom-[82px] sm:right-6">
+          <div className="pointer-events-auto rounded-2xl border border-cyan-200/40 bg-slate-950/95 p-4 text-white shadow-2xl backdrop-blur-xl">
+            {selectedPinProject && (
+              <>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-300">
+                  FTL / lake point check
+                </p>
+                <p className="mt-1 text-sm font-bold">{selectedPinProject.name}</p>
+                <p className="mt-2 text-xs leading-5 text-white/75">
+                  {checkedProjectLake
+                    ? `This project point falls inside the mapped ${checkedProjectLake.name} FTL/buffer polygon.`
+                    : "This project point is outside the mapped lake/FTL polygons currently visible."}
+                </p>
+              </>
+            )}
+            {selectedLake && (
+              <div className={selectedPinProject ? "mt-3 border-t border-white/10 pt-3" : ""}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-300">
+                  Selected mapped water area
+                </p>
+                <p className="mt-1 text-sm font-bold">{selectedLake.name}</p>
+                {selectedLake.description && (
+                  <p className="mt-1 text-xs leading-5 text-white/65">
+                    {selectedLake.description}
+                  </p>
+                )}
+              </div>
+            )}
+            <p className="mt-3 text-[9px] leading-4 text-white/40">
+              Preliminary map overlay only; confirm official FTL and buffer
+              boundaries before making a purchase or title decision.
+            </p>
+          </div>
+        </div>
+      )}
 
       {showProjectList && (
         <div className="pointer-events-auto absolute right-4 top-28 z-30 max-h-[58vh] w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/20 bg-slate-950/90 text-white shadow-2xl backdrop-blur-xl sm:right-6">

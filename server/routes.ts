@@ -19,6 +19,39 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // The lake geometry matches the digitized FTL/buffer layer used by the
+  // reference map. Keep the provider token server-side and proxy only tiles
+  // needed by the MapLibre viewport.
+  app.get("/api/lakes/tiles/:z/:x/:y.pbf", async (req, res) => {
+    const { z, x, y } = req.params;
+    const tileUrl = new URL(
+      `https://a.tiles.mapbox.com/v4/av1acre.c140rt5n/${z}/${x}/${y}.vector.pbf`,
+    );
+    tileUrl.searchParams.set(
+      "access_token",
+      "pk.eyJ1IjoiYXYxYWNyZSIsImEiOiJjbTNvMjR5OGIxZmFpMmxwZXZqam5jZWkzIn0.E16ZeusP-JQe-hkleW3P-Q",
+    );
+
+    try {
+      const response = await fetch(tileUrl, {
+        headers: { Referer: "https://1acre.in/" },
+      });
+
+      if (!response.ok) {
+        return res.status(response.status).end();
+      }
+
+      const tile = Buffer.from(await response.arrayBuffer());
+      res
+        .status(200)
+        .type("application/x-protobuf")
+        .set("Cache-Control", "public, max-age=86400")
+        .send(tile);
+    } catch (error) {
+      console.error("Lake tile proxy error:", error);
+      res.status(502).end();
+    }
+  });
   
   app.post("/api/auth/verify-persona", async (req, res) => {
     try {
