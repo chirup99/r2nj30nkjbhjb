@@ -8,22 +8,28 @@ import {
   Check,
   ChevronRight,
   ExternalLink,
+  Factory,
   FileCheck2,
   FileText,
+  BriefcaseBusiness,
   House,
   Info,
+  Layers,
   Landmark,
   List,
   MapPin,
   Maximize2,
   Moon,
   Navigation,
+  Plane,
   Ruler,
   Search,
   Satellite,
   Sparkles,
   Sun,
+  Store,
   Trees,
+  Train,
   X,
   Waves,
 } from "lucide-react";
@@ -149,6 +155,595 @@ function createRadiusPolygon(
       coordinates: [coordinates],
     },
   };
+}
+
+type CityContextCategory =
+  | "airports"
+  | "industries"
+  | "sez"
+  | "commercial"
+  | "metro";
+
+type CityContextPoint = {
+  id: string;
+  name: string;
+  category: CityContextCategory;
+  detail: string;
+  longitude: number;
+  latitude: number;
+};
+
+type CityContextArea = {
+  id: string;
+  name: string;
+  category: Exclude<CityContextCategory, "metro">;
+  detail: string;
+  center: MapCoordinate;
+  radiusInKilometers: number;
+};
+
+const CITY_CONTEXT_CATEGORIES: Array<{
+  id: CityContextCategory;
+  label: string;
+  shortLabel: string;
+  color: string;
+}> = [
+  { id: "airports", label: "Airports", shortLabel: "Air", color: "#38bdf8" },
+  { id: "industries", label: "Industrial hubs", shortLabel: "Industry", color: "#fb923c" },
+  { id: "sez", label: "SEZ zones", shortLabel: "SEZ", color: "#c084fc" },
+  { id: "commercial", label: "Malls & commerce", shortLabel: "Commerce", color: "#f472b6" },
+  { id: "metro", label: "Metro network", shortLabel: "Metro", color: "#4ade80" },
+];
+
+const CITY_CONTEXT_POINTS: CityContextPoint[] = [
+  {
+    id: "rgia",
+    name: "Rajiv Gandhi International Airport",
+    category: "airports",
+    detail: "Shamshabad airport corridor",
+    longitude: 78.4294,
+    latitude: 17.2403,
+  },
+  {
+    id: "begumpet-airport",
+    name: "Begumpet Airport",
+    category: "airports",
+    detail: "Central Hyderabad aviation landmark",
+    longitude: 78.4676,
+    latitude: 17.4531,
+  },
+  {
+    id: "patancheru-industrial",
+    name: "Patancheru industrial belt",
+    category: "industries",
+    detail: "Manufacturing and logistics corridor",
+    longitude: 78.2674,
+    latitude: 17.5312,
+  },
+  {
+    id: "jeedimetla-industrial",
+    name: "Jeedimetla industrial estate",
+    category: "industries",
+    detail: "Established north-west industrial cluster",
+    longitude: 78.462,
+    latitude: 17.531,
+  },
+  {
+    id: "nacharam-industrial",
+    name: "Nacharam industrial area",
+    category: "industries",
+    detail: "East Hyderabad production corridor",
+    longitude: 78.577,
+    latitude: 17.429,
+  },
+  {
+    id: "cherlapally-industrial",
+    name: "Cherlapally industrial corridor",
+    category: "industries",
+    detail: "Warehousing and manufacturing belt",
+    longitude: 78.637,
+    latitude: 17.455,
+  },
+  {
+    id: "pharma-city",
+    name: "Hyderabad Pharma City",
+    category: "industries",
+    detail: "Large-scale life sciences growth zone",
+    longitude: 78.58,
+    latitude: 17.19,
+  },
+  {
+    id: "hitec-city",
+    name: "HITEC City",
+    category: "sez",
+    detail: "Technology and office district",
+    longitude: 78.377,
+    latitude: 17.449,
+  },
+  {
+    id: "mindspace-sez",
+    name: "Mindspace Madhapur",
+    category: "sez",
+    detail: "Established IT and office campus",
+    longitude: 78.381,
+    latitude: 17.436,
+  },
+  {
+    id: "genome-valley",
+    name: "Genome Valley",
+    category: "sez",
+    detail: "Life sciences and biotech cluster",
+    longitude: 78.559,
+    latitude: 17.59,
+  },
+  {
+    id: "fab-city",
+    name: "Fab City",
+    category: "sez",
+    detail: "South Hyderabad electronics corridor",
+    longitude: 78.534,
+    latitude: 17.248,
+  },
+  {
+    id: "adibatla-sez",
+    name: "Adibatla aerospace zone",
+    category: "sez",
+    detail: "Aerospace and defence development corridor",
+    longitude: 78.53,
+    latitude: 17.23,
+  },
+  {
+    id: "sarath-city",
+    name: "Sarath City Capital Mall",
+    category: "commercial",
+    detail: "Major retail and entertainment destination",
+    longitude: 78.357,
+    latitude: 17.456,
+  },
+  {
+    id: "inorbit-mall",
+    name: "Inorbit Mall",
+    category: "commercial",
+    detail: "Madhapur retail and dining hub",
+    longitude: 78.385,
+    latitude: 17.435,
+  },
+  {
+    id: "amb-cinemas",
+    name: "AMB Cinemas & Galleria",
+    category: "commercial",
+    detail: "Gachibowli entertainment hub",
+    longitude: 78.345,
+    latitude: 17.49,
+  },
+  {
+    id: "ikea-hyderabad",
+    name: "IKEA Hyderabad",
+    category: "commercial",
+    detail: "HITEC City retail anchor",
+    longitude: 78.381,
+    latitude: 17.441,
+  },
+  {
+    id: "forum-sujana",
+    name: "Forum Sujana Mall",
+    category: "commercial",
+    detail: "Kukatpally commercial anchor",
+    longitude: 78.364,
+    latitude: 17.47,
+  },
+  {
+    id: "gvk-one",
+    name: "GVK One Mall",
+    category: "commercial",
+    detail: "Banjara Hills retail destination",
+    longitude: 78.419,
+    latitude: 17.414,
+  },
+  {
+    id: "metro-miyapur",
+    name: "Miyapur Metro",
+    category: "metro",
+    detail: "Red Line north-west terminus",
+    longitude: 78.373,
+    latitude: 17.496,
+  },
+  {
+    id: "metro-ameerpet",
+    name: "Ameerpet Metro",
+    category: "metro",
+    detail: "Red and Blue Line interchange",
+    longitude: 78.448,
+    latitude: 17.437,
+  },
+  {
+    id: "metro-nagole",
+    name: "Nagole Metro",
+    category: "metro",
+    detail: "Red Line east terminus",
+    longitude: 78.557,
+    latitude: 17.39,
+  },
+  {
+    id: "metro-rg-ia",
+    name: "Airport Metro corridor",
+    category: "metro",
+    detail: "Proposed airport connectivity corridor",
+    longitude: 78.429,
+    latitude: 17.286,
+  },
+  {
+    id: "metro-raaidurg",
+    name: "Raidurg Metro",
+    category: "metro",
+    detail: "West Hyderabad business corridor",
+    longitude: 78.365,
+    latitude: 17.431,
+  },
+];
+
+const CITY_CONTEXT_AREAS: CityContextArea[] = [
+  {
+    id: "airport-zone",
+    name: "Airport influence zone",
+    category: "airports",
+    detail: "Approximate airport development catchment",
+    center: [78.4294, 17.2403],
+    radiusInKilometers: 4.5,
+  },
+  {
+    id: "patancheru-zone",
+    name: "Patancheru industrial zone",
+    category: "industries",
+    detail: "Approximate industrial and logistics catchment",
+    center: [78.2674, 17.5312],
+    radiusInKilometers: 3.2,
+  },
+  {
+    id: "jeedimetla-zone",
+    name: "Jeedimetla industrial zone",
+    category: "industries",
+    detail: "Approximate established industrial catchment",
+    center: [78.462, 17.531],
+    radiusInKilometers: 2.8,
+  },
+  {
+    id: "pharma-city-zone",
+    name: "Pharma City growth zone",
+    category: "industries",
+    detail: "Approximate life sciences growth catchment",
+    center: [78.58, 17.19],
+    radiusInKilometers: 4.2,
+  },
+  {
+    id: "hitec-zone",
+    name: "HITEC City / Madhapur zone",
+    category: "sez",
+    detail: "Approximate technology and office catchment",
+    center: [78.38, 17.443],
+    radiusInKilometers: 2.5,
+  },
+  {
+    id: "genome-zone",
+    name: "Genome Valley zone",
+    category: "sez",
+    detail: "Approximate biotech and life sciences catchment",
+    center: [78.559, 17.59],
+    radiusInKilometers: 3.8,
+  },
+  {
+    id: "adibatla-zone",
+    name: "Adibatla aerospace zone",
+    category: "sez",
+    detail: "Approximate aerospace development catchment",
+    center: [78.53, 17.23],
+    radiusInKilometers: 3.5,
+  },
+  {
+    id: "gachibowli-commerce",
+    name: "Gachibowli commercial zone",
+    category: "commercial",
+    detail: "Approximate office, retail and entertainment catchment",
+    center: [78.35, 17.474],
+    radiusInKilometers: 2.8,
+  },
+  {
+    id: "madhapur-commerce",
+    name: "Madhapur commercial zone",
+    category: "commercial",
+    detail: "Approximate retail and office catchment",
+    center: [78.382, 17.44],
+    radiusInKilometers: 1.8,
+  },
+];
+
+const METRO_LINES: GeoJSON.FeatureCollection<GeoJSON.LineString> = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: { name: "Hyderabad Metro Red Line" },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [78.373, 17.496],
+          [78.39, 17.475],
+          [78.414, 17.454],
+          [78.448, 17.437],
+          [78.468, 17.427],
+          [78.505, 17.404],
+          [78.539, 17.39],
+          [78.557, 17.39],
+        ],
+      },
+    },
+    {
+      type: "Feature",
+      properties: { name: "Hyderabad Metro Blue Line" },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [78.448, 17.437],
+          [78.421, 17.414],
+          [78.397, 17.407],
+          [78.376, 17.414],
+          [78.365, 17.431],
+          [78.345, 17.45],
+        ],
+      },
+    },
+    {
+      type: "Feature",
+      properties: { name: "Airport Metro corridor" },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [78.448, 17.437],
+          [78.448, 17.39],
+          [78.445, 17.34],
+          [78.438, 17.29],
+          [78.429, 17.24],
+        ],
+      },
+    },
+  ],
+};
+
+function contextCategoryColor(category: CityContextCategory) {
+  return (
+    CITY_CONTEXT_CATEGORIES.find((item) => item.id === category)?.color ??
+    "#94a3b8"
+  );
+}
+
+function ContextPointIcon({ category }: { category: CityContextCategory }) {
+  const iconClass = "h-3.5 w-3.5 text-white";
+  if (category === "airports") return <Plane className={iconClass} />;
+  if (category === "industries") return <Factory className={iconClass} />;
+  if (category === "sez") return <BriefcaseBusiness className={iconClass} />;
+  if (category === "commercial") return <Store className={iconClass} />;
+  return <Train className={iconClass} />;
+}
+
+function CityContextPin({
+  point,
+  selected,
+  onSelect,
+}: {
+  point: CityContextPoint;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const accent = contextCategoryColor(point.category);
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-white shadow-lg transition-transform ${
+        selected ? "scale-125" : "hover:scale-110"
+      }`}
+      style={{ backgroundColor: accent }}
+      aria-label={`Show ${point.name}`}
+    >
+      <span
+        className="absolute inset-0 rounded-full opacity-35"
+        style={{ boxShadow: `0 0 18px ${accent}` }}
+      />
+      <ContextPointIcon category={point.category} />
+    </button>
+  );
+}
+
+function CityContextLayers({
+  visibleCategories,
+  show3d,
+}: {
+  visibleCategories: Record<CityContextCategory, boolean>;
+  show3d: boolean;
+}) {
+  const { map, isLoaded } = useMap();
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    const areasSourceId = "city-context-areas";
+    const metroSourceId = "city-context-metro";
+    const categoryIds = CITY_CONTEXT_CATEGORIES
+      .filter((category) => category.id !== "metro")
+      .map((category) => category.id);
+
+    if (!map.getSource(areasSourceId)) {
+      map.addSource(areasSourceId, {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: CITY_CONTEXT_AREAS.map((area) => ({
+            ...createRadiusPolygon(area.center, area.radiusInKilometers),
+            properties: {
+              id: area.id,
+              name: area.name,
+              category: area.category,
+              detail: area.detail,
+            },
+          })),
+        },
+      });
+    }
+
+    if (!map.getSource(metroSourceId)) {
+      map.addSource(metroSourceId, {
+        type: "geojson",
+        data: METRO_LINES,
+      });
+    }
+
+    for (const categoryId of categoryIds) {
+      const fillLayerId = `city-context-${categoryId}-fill`;
+      const lineLayerId = `city-context-${categoryId}-line`;
+      const color = contextCategoryColor(categoryId);
+
+      if (!map.getLayer(fillLayerId)) {
+        map.addLayer({
+          id: fillLayerId,
+          type: "fill",
+          source: areasSourceId,
+          filter: ["==", ["get", "category"], categoryId],
+          paint: {
+            "fill-color": color,
+            "fill-opacity": 0.12,
+          },
+          layout: { visibility: "none" },
+        });
+      }
+
+      if (!map.getLayer(lineLayerId)) {
+        map.addLayer({
+          id: lineLayerId,
+          type: "line",
+          source: areasSourceId,
+          filter: ["==", ["get", "category"], categoryId],
+          paint: {
+            "line-color": color,
+            "line-width": 2,
+            "line-opacity": 0.62,
+            "line-dasharray": [2, 2],
+          },
+          layout: { visibility: "none" },
+        });
+      }
+    }
+
+    if (!map.getLayer("city-context-metro-line")) {
+      map.addLayer({
+        id: "city-context-metro-line",
+        type: "line",
+        source: metroSourceId,
+        paint: {
+          "line-color": "#4ade80",
+          "line-width": 3.5,
+          "line-opacity": 0.9,
+          "line-dasharray": [1, 1.4],
+        },
+        layout: {
+          visibility: "none",
+          "line-cap": "round",
+          "line-join": "round",
+        },
+      });
+    }
+
+    if (!map.getLayer("city-context-3d-buildings") && map.getSource("carto")) {
+      map.addLayer({
+        id: "city-context-3d-buildings",
+        type: "fill-extrusion",
+        source: "carto",
+        "source-layer": "building",
+        minzoom: 12,
+        paint: {
+          "fill-extrusion-color": "#7dd3fc",
+          "fill-extrusion-opacity": 0.64,
+          "fill-extrusion-height": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            12,
+            0,
+            15,
+            ["coalesce", ["get", "render_height"], ["get", "height"], 12],
+          ],
+          "fill-extrusion-base": [
+            "coalesce",
+            ["get", "render_min_height"],
+            ["get", "min_height"],
+            0,
+          ],
+        },
+        layout: { visibility: "none" },
+      });
+    }
+
+    return () => {
+      if (map.getLayer("city-context-3d-buildings")) {
+        map.removeLayer("city-context-3d-buildings");
+      }
+      if (map.getLayer("city-context-metro-line")) {
+        map.removeLayer("city-context-metro-line");
+      }
+      for (const categoryId of categoryIds) {
+        for (const suffix of ["fill", "line"]) {
+          const layerId = `city-context-${categoryId}-${suffix}`;
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
+        }
+      }
+      if (map.getSource(metroSourceId)) map.removeSource(metroSourceId);
+      if (map.getSource(areasSourceId)) map.removeSource(areasSourceId);
+    };
+  }, [isLoaded, map]);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    for (const category of CITY_CONTEXT_CATEGORIES) {
+      const layerIds =
+        category.id === "metro"
+          ? ["city-context-metro-line"]
+          : [
+              `city-context-${category.id}-fill`,
+              `city-context-${category.id}-line`,
+            ];
+
+      for (const layerId of layerIds) {
+        if (map.getLayer(layerId)) {
+          map.setLayoutProperty(
+            layerId,
+            "visibility",
+            visibleCategories[category.id] ? "visible" : "none",
+          );
+        }
+      }
+    }
+
+    if (map.getLayer("city-context-3d-buildings")) {
+      map.setLayoutProperty(
+        "city-context-3d-buildings",
+        "visibility",
+        show3d ? "visible" : "none",
+      );
+    }
+  }, [isLoaded, map, show3d, visibleCategories]);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    map.easeTo({
+      pitch: show3d ? 48 : 0,
+      bearing: show3d ? -16 : 0,
+      duration: 700,
+      essential: true,
+    });
+  }, [isLoaded, map, show3d]);
+
+  return null;
 }
 
 function getPricePerSquareYard(project: PropertyProject) {
@@ -1507,6 +2102,19 @@ export function HyderabadPropertyMapOverlay({
   const [isDarkMap, setIsDarkMap] = useState(true);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [showLakes, setShowLakes] = useState(false);
+  const [showCityLayers, setShowCityLayers] = useState(true);
+  const [show3dBuildings, setShow3dBuildings] = useState(false);
+  const [visibleContextCategories, setVisibleContextCategories] = useState<
+    Record<CityContextCategory, boolean>
+  >({
+    airports: true,
+    industries: true,
+    sez: true,
+    commercial: true,
+    metro: true,
+  });
+  const [selectedContextPoint, setSelectedContextPoint] =
+    useState<CityContextPoint | null>(null);
   const [showLakeHelp, setShowLakeHelp] = useState(false);
   const [selectedLake, setSelectedLake] = useState<LakeCheck | null>(null);
   const [checkedProjectLake, setCheckedProjectLake] = useState<LakeCheck | null>(
@@ -1573,6 +2181,15 @@ export function HyderabadPropertyMapOverlay({
   const routeProjectIds = visibleProjects.map((project) => project.id).join(",");
   const selectedPinProject = PROJECTS.find(
     (project) => project.id === selectedPinProjectId,
+  );
+  const visibleContextPoints = useMemo(
+    () =>
+      showCityLayers
+        ? CITY_CONTEXT_POINTS.filter(
+            (point) => visibleContextCategories[point.category],
+          )
+        : [],
+    [showCityLayers, visibleContextCategories],
   );
   const initialProject = PROJECTS.find(
     (project) => project.id === initialProjectId,
@@ -1714,6 +2331,20 @@ export function HyderabadPropertyMapOverlay({
           onMapTap={() => setShowLakeHelp(false)}
           onProjectCheck={setCheckedProjectLake}
         />
+        <CityContextLayers
+          visibleCategories={
+            showCityLayers
+              ? visibleContextCategories
+              : {
+                  airports: false,
+                  industries: false,
+                  sez: false,
+                  commercial: false,
+                  metro: false,
+                }
+          }
+          show3d={show3dBuildings}
+        />
         <OuterRingRoadLayer />
         <RegionalRingRoadLayer visible />
         {selectedIntent && selectedSubcategory && visibleProjects.length > 0 && (
@@ -1744,6 +2375,25 @@ export function HyderabadPropertyMapOverlay({
               />
             </MarkerContent>
             <MarkerTooltip>{project.name}</MarkerTooltip>
+          </MapMarker>
+        ))}
+        {visibleContextPoints.map((point) => (
+          <MapMarker
+            key={point.id}
+            longitude={point.longitude}
+            latitude={point.latitude}
+          >
+            <MarkerContent>
+              <CityContextPin
+                point={point}
+                selected={selectedContextPoint?.id === point.id}
+                onSelect={() => {
+                  setSelectedContextPoint(point);
+                  setSelectedPinProjectId(null);
+                }}
+              />
+            </MarkerContent>
+            <MarkerTooltip>{point.name}</MarkerTooltip>
           </MapMarker>
         ))}
       </PropertyMap>
@@ -1825,6 +2475,42 @@ export function HyderabadPropertyMapOverlay({
             </button>
             <button
               type="button"
+              onClick={() => setShowCityLayers((visible) => !visible)}
+              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
+                showCityLayers
+                  ? "border-emerald-300/80 bg-emerald-950/90"
+                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+              }`}
+              aria-label={
+                showCityLayers
+                  ? "Hide city development layers"
+                  : "Show city development layers"
+              }
+              title={
+                showCityLayers
+                  ? "Hide city development layers"
+                  : "Show city development layers"
+              }
+            >
+              <Layers className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShow3dBuildings((visible) => !visible)}
+              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
+                show3dBuildings
+                  ? "border-sky-300/80 bg-sky-950/90"
+                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+              }`}
+              aria-label={
+                show3dBuildings ? "Hide 3D buildings" : "Show 3D buildings"
+              }
+              title={show3dBuildings ? "Hide 3D buildings" : "Show 3D buildings"}
+            >
+              <Building2 className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
               onClick={toggleRadiusFilter}
               className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
                 isRadiusFilterOpen
@@ -1862,6 +2548,121 @@ export function HyderabadPropertyMapOverlay({
           </div>
         </div>
       </div>
+
+      {showCityLayers && (
+        <div className="pointer-events-auto absolute right-4 top-4 z-20 mt-[286px] w-[min(290px,calc(100vw-2rem))] sm:right-6">
+          <div className="rounded-2xl border border-emerald-200/25 bg-slate-950/92 p-3 text-white shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="flex items-center gap-2 text-[11px] font-bold">
+                  <Layers className="h-3.5 w-3.5 text-emerald-300" />
+                  City development layers
+                </p>
+                <p className="mt-1 text-[10px] text-white/50">
+                  Toggle the growth signals around each project.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCityLayers(false)}
+                className="rounded-full p-1 text-white/45 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Close city development layer panel"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-1.5">
+              {CITY_CONTEXT_CATEGORIES.map((category) => {
+                const isVisible = visibleContextCategories[category.id];
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => {
+                      setVisibleContextCategories((current) => ({
+                        ...current,
+                        [category.id]: !current[category.id],
+                      }));
+                      setSelectedContextPoint(null);
+                    }}
+                    className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors ${
+                      isVisible
+                        ? "border-white/20 bg-white/10 text-white"
+                        : "border-white/10 bg-white/[0.03] text-white/40"
+                    }`}
+                    aria-pressed={isVisible}
+                  >
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{
+                        backgroundColor: isVisible
+                          ? category.color
+                          : "rgba(255,255,255,0.25)",
+                      }}
+                    />
+                    <span className="truncate text-[10px] font-semibold">
+                      {category.shortLabel}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-3 border-t border-white/10 pt-2 text-[9px] leading-4 text-white/40">
+              Zones are approximate planning context, not official boundaries.
+              Verify airport, metro, SEZ, and industrial notifications before
+              making a purchase decision.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {selectedContextPoint && (
+        <div className="pointer-events-none absolute bottom-[86px] left-4 z-30 w-[min(300px,calc(100vw-2rem))] sm:bottom-[82px] sm:left-6">
+          <div
+            className="pointer-events-auto rounded-2xl border border-white/20 bg-slate-950/95 p-4 text-white shadow-2xl backdrop-blur-xl"
+            style={{
+              boxShadow: `0 18px 45px ${contextCategoryColor(
+                selectedContextPoint.category,
+              )}26`,
+            }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-[0.14em]"
+                  style={{
+                    color: contextCategoryColor(selectedContextPoint.category),
+                  }}
+                >
+                  {
+                    CITY_CONTEXT_CATEGORIES.find(
+                      (category) => category.id === selectedContextPoint.category,
+                    )?.label
+                  }
+                </p>
+                <p className="mt-1 text-sm font-bold">
+                  {selectedContextPoint.name}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedContextPoint(null)}
+                className="rounded-full p-1 text-white/45 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Close selected city layer detail"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-white/70">
+              {selectedContextPoint.detail}
+            </p>
+            <p className="mt-3 text-[9px] leading-4 text-white/40">
+              Map reference point only. Confirm current official project,
+              transport, and zoning information independently.
+            </p>
+          </div>
+        </div>
+      )}
 
       {showLakes && showLakeHelp && (
         <div className="pointer-events-none absolute right-4 top-4 z-20 mt-[238px] w-[min(290px,calc(100vw-2rem))] sm:right-6">
