@@ -39,11 +39,7 @@ import {
   MapGeoJSON,
 } from "@/components/ui/map";
 import { PLOTSVIEW_PROJECTS } from "@/data/plotsviewProjects";
-import {
-  RRR_ALIGNMENT_COORDINATES,
-  RRR_MAP_DETAILS,
-  RRR_SOURCES,
-} from "@/data/rrrAlignment";
+import { RRR_ALIGNMENT_COORDINATES } from "@/data/rrrAlignment";
 
 type PropertyProject = (typeof PLOTSVIEW_PROJECTS)[number];
 
@@ -1510,7 +1506,6 @@ export function HyderabadPropertyMapOverlay({
   const [routeProgress, setRouteProgress] = useState(0);
   const [isDarkMap, setIsDarkMap] = useState(true);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
-  const [showRrr, setShowRrr] = useState(false);
   const [showLakes, setShowLakes] = useState(false);
   const [showLakeHelp, setShowLakeHelp] = useState(false);
   const [selectedLake, setSelectedLake] = useState<LakeCheck | null>(null);
@@ -1720,7 +1715,7 @@ export function HyderabadPropertyMapOverlay({
           onProjectCheck={setCheckedProjectLake}
         />
         <OuterRingRoadLayer />
-        <RegionalRingRoadLayer visible={showRrr} />
+        <RegionalRingRoadLayer visible />
         {selectedIntent && selectedSubcategory && visibleProjects.length > 0 && (
           <MagicProjectRoute
             projects={visibleProjects}
@@ -1812,27 +1807,6 @@ export function HyderabadPropertyMapOverlay({
             </button>
             <button
               type="button"
-              onClick={() => setShowRrr((visible) => !visible)}
-              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
-                showRrr
-                  ? "border-fuchsia-300/80 bg-fuchsia-950/90"
-                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
-              }`}
-              aria-label={
-                showRrr
-                  ? "Hide proposed Regional Ring Road"
-                  : "Show proposed Regional Ring Road"
-              }
-              title={
-                showRrr
-                  ? "Hide proposed Regional Ring Road"
-                  : "Show proposed Regional Ring Road"
-              }
-            >
-              <Navigation className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
               onClick={() => {
                 setShowLakes((visible) => !visible);
                 setShowLakeHelp((visible) => !visible);
@@ -1888,72 +1862,6 @@ export function HyderabadPropertyMapOverlay({
           </div>
         </div>
       </div>
-
-      {showRrr && (
-        <div className="pointer-events-none absolute left-4 top-4 z-20 mt-[238px] w-[min(330px,calc(100vw-2rem))] sm:left-6">
-          <div className="pointer-events-auto rounded-2xl border border-fuchsia-300/30 bg-slate-950/92 p-4 text-white shadow-2xl backdrop-blur-xl">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-200">
-                  HMDA corridor overlay
-                </p>
-                <h2 className="mt-1 text-sm font-bold">
-                  Proposed Regional Ring Road (RRR)
-                </h2>
-              </div>
-              <span className="rounded-full border border-fuchsia-300/30 bg-fuchsia-300/10 px-2 py-1 text-[9px] font-bold text-fuchsia-100">
-                RRR
-              </span>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {RRR_MAP_DETAILS.slice(0, 4).map((detail) => (
-                <div
-                  key={detail.label}
-                  className="rounded-xl border border-white/10 bg-white/[0.06] px-2.5 py-2"
-                >
-                  <p className="text-[9px] uppercase tracking-[0.08em] text-white/40">
-                    {detail.label}
-                  </p>
-                  <p className="mt-1 text-[10px] font-semibold text-white/85">
-                    {detail.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-[10px] leading-4 text-white/55">
-              The line follows HMDA’s published centre-line coordinate list.
-              It is a planning overlay, not a legal boundary or construction
-              confirmation.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <a
-                href={RRR_SOURCES.alignment}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-lg border border-fuchsia-200/30 bg-fuchsia-300/10 px-2.5 py-2 text-[10px] font-semibold text-fuchsia-100 transition-colors hover:bg-fuchsia-300/20"
-              >
-                Alignment map
-              </a>
-              <a
-                href={RRR_SOURCES.coordinates}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-2 text-[10px] font-semibold text-white/75 transition-colors hover:bg-white/10"
-              >
-                Coordinates
-              </a>
-              <a
-                href={RRR_SOURCES.villages}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-2 text-[10px] font-semibold text-white/75 transition-colors hover:bg-white/10"
-              >
-                Villages / survey nos.
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showLakes && showLakeHelp && (
         <div className="pointer-events-none absolute right-4 top-4 z-20 mt-[238px] w-[min(290px,calc(100vw-2rem))] sm:right-6">
