@@ -766,21 +766,22 @@ function CityContext3DIllustration({
 
       {category === "metro" && (
         <g>
-          <path d="m21 43 21-12 27 12-21 12Z" fill="#183e4d" />
-          <path d="m25 42 17-9 23 10-17 9Z" fill="#a7f1db" opacity="0.78" />
-          <path d="m30 43 12-6M37 47l12-6M44 50l12-6" stroke="#f3fff9" strokeWidth="1" />
-          <path d="m25 33 23-13 23 11-23 13Z" fill="#dffff5" />
-          <path d="m25 33v11l23 11V44Z" fill="#319f9b" />
-          <path d="m48 44 23-13v11L48 55Z" fill="#70d7b0" />
-          <path d="m29 31 19-10 19 9-19 10Z" fill="#57d998" />
-          <path d="m31 33 17-9 17 8-17 9Z" fill="#18435a" />
-          <path d="m34 34v7M42 30v8M50 29v8M58 32v7" stroke="#d7fff1" strokeWidth="1.2" />
-          <path d="m48 45 15-8v8l-15 8Z" fill="#e9fff7" opacity="0.85" />
-          <path d="m51 45 4-2v6l-4 2ZM58 41l4-2v6l-4 2" fill="#4abfd0" />
-          <circle cx="32" cy="44" r="1.4" fill="#ffdb75" />
-          <circle cx="65" cy="43" r="1.4" fill="#ffdb75" />
-          <circle cx="36" cy="51" r="1.8" fill="#101f2b" />
-          <circle cx="59" cy="48" r="1.8" fill="#101f2b" />
+          <path d="m19 45 23-13 29 13-23 13Z" fill="#183e4d" />
+          <path d="m25 44 17-9 23 10-17 9Z" fill="#a7f1db" opacity="0.78" />
+          <path d="m30 45 12-6M37 49l12-6M44 52l12-6" stroke="#f3fff9" strokeWidth="1" />
+          <path d="m26 34 21-12 22 10-21 12Z" fill="#57d998" />
+          <path d="m26 34v11l22 11V45Z" fill="#319f9b" />
+          <path d="m48 45 21-13v10L48 56Z" fill="#70d7b0" />
+          <path d="m30 32 17-9 18 8-17 9Z" fill="#e9fff7" />
+          <path d="m32 34 15-8 15 7-15 8Z" fill="#18435a" />
+          <path d="m35 35v7M42 31v8M49 29v8" stroke="#d7fff1" strokeWidth="1.2" />
+          <path d="m56 38 11-6v9l-11 6Z" fill="#dffef1" />
+          <path d="m59 38 5-3v5l-5 3Z" fill="#4abfd0" />
+          <path d="m49 47 15-8" stroke="#f3fff9" strokeWidth="1" opacity="0.8" />
+          <circle cx="34" cy="46" r="1.8" fill="#101f2b" />
+          <circle cx="59" cy="49" r="1.8" fill="#101f2b" />
+          <circle cx="31" cy="43" r="1.4" fill="#ffdb75" />
+          <circle cx="66" cy="41" r="1.4" fill="#ffdb75" />
         </g>
       )}
 
