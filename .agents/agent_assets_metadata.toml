@@ -42,3 +42,17 @@ mtime_ms = 1790604849404
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:bc39eee7-77fa-4474-b8a0-5ea0e136857f/23edc7e3-cf59-48ce-983e-21aa0f8a8924/1a84c436-8ff8-4e77-ac6a-3c9a6fdba382"
 storage_version_token = "1790604891573805"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "d1lDojfuBE7mZQDHcysDp"
+uri = "file://persona-hub-eb-latest.zip"
+type = "unspecified"
+title = "persona-hub-eb-latest.zip"
+description = "Fresh AWS Elastic Beanstalk deployment package built from the latest workspace code. ZIP integrity, full extraction, forbidden-file checks, corrected metro-route bundle content, and extracted production startup were verified."
+logical_id = "bd77c837-e82d-4f7c-8533-7600128d3b61"
+content_hash = "sha256:5a3cfcc81914936fddef362ac948c356cbfac6a1b978cc3d453c8925aca063e8"
+size = 14086159
+mtime_ms = 1790686348740
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:c9b480a9-6f56-4215-983a-e2fe1d52a70a/bd77c837-e82d-4f7c-8533-7600128d3b61/7db15418-87a0-477d-a8d2-314363fce785"
+storage_version_token = "1790686399407946"
+content_type = "application/octet-stream"
