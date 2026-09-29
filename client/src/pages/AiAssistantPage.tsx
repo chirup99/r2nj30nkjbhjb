@@ -74,7 +74,6 @@ type LoanSettings = {
   downPayment: number;
   interestRate: number;
   tenure: number;
-  monthlyIncome: number;
 };
 
 const QUICK_ACTIONS = [
@@ -503,16 +502,6 @@ function getLoanPayment(settings: LoanSettings) {
   );
 }
 
-function getMaximumLoanForEmi(emi: number, interestRate: number, tenure: number) {
-  const monthlyRate = interestRate / 100 / 12;
-  const months = tenure * 12;
-  if (!monthlyRate) return emi * months;
-  return (
-    (emi * ((1 + monthlyRate) ** months - 1)) /
-    (monthlyRate * (1 + monthlyRate) ** months)
-  );
-}
-
 function LoanPlanner({
   settings,
   onChange,
@@ -538,7 +527,7 @@ function LoanPlanner({
             Loan fit
           </p>
           <h2 className="mt-1 text-sm font-semibold text-white">
-            Find a comfortable monthly EMI
+            Calculate your monthly EMI
           </h2>
         </div>
         <Landmark className="h-4 w-4 text-purple-200" />
@@ -554,15 +543,6 @@ function LoanPlanner({
             max: 20_000_000,
             step: 250_000,
             display: formatCurrency(settings.propertyValue),
-          },
-          {
-            key: "monthlyIncome" as const,
-            label: "Monthly income",
-            value: settings.monthlyIncome,
-            min: 30_000,
-            max: 500_000,
-            step: 10_000,
-            display: formatMonthlyCurrency(settings.monthlyIncome),
           },
           {
             key: "downPayment" as const,
@@ -615,7 +595,7 @@ function LoanPlanner({
       <div className="mt-4 grid grid-cols-2 gap-2">
         <div className="rounded-xl bg-white/[0.08] p-3">
           <p className="text-[10px] uppercase tracking-wider text-white/40">
-            Estimated EMI
+            Monthly EMI
           </p>
           <p className="mt-1 text-lg font-bold text-white">
             {formatMonthlyCurrency(emi)} / mo
@@ -631,7 +611,8 @@ function LoanPlanner({
         </div>
       </div>
       <p className="mt-3 text-[11px] leading-relaxed text-white/50">
-        We use up to 35% of your monthly income as a comfortable EMI estimate.
+        EMI is calculated from the loan amount, down payment, interest rate, and
+        tenure.
       </p>
       <button
         type="button"
@@ -1216,41 +1197,31 @@ export default function AiAssistantPage() {
     downPayment: 20,
     interestRate: 8.5,
     tenure: 20,
-    monthlyIncome: 150_000,
   });
 
   const loanEmi = useMemo(() => getLoanPayment(loanSettings), [loanSettings]);
 
   const saveLoanAndFindProperties = () => {
-    const comfortableEmi = loanSettings.monthlyIncome * 0.35;
-    const maximumLoan = getMaximumLoanForEmi(
-      comfortableEmi,
-      loanSettings.interestRate,
-      loanSettings.tenure,
-    );
-    const maximumPropertyValue =
-      maximumLoan / (1 - loanSettings.downPayment / 100);
+    const propertyEmi = getLoanPayment(loanSettings);
     const matches = getPropertyMatches({
       intent: "property",
-      maxBudget: maximumPropertyValue,
+      maxBudget: loanSettings.propertyValue,
     });
 
     if (matches.length === 0) {
       addAssistantMessage(
         `I couldn't find a map listing that fits your current eligibility up to ${formatCurrency(
-          maximumPropertyValue,
+          loanSettings.propertyValue,
         )}. Try a higher down payment, a longer tenure, or a wider property search.`,
       );
       return;
     }
 
     addAssistantMessage(
-      `Saved. Based on a ${formatMonthlyCurrency(
-        loanSettings.monthlyIncome,
-      )} monthly income, your comfortable EMI is about ${formatMonthlyCurrency(
-        comfortableEmi,
-      )}. I found ${matches.length} properties up to about ${formatCurrency(
-        maximumPropertyValue,
+      `Saved. Your estimated monthly EMI is ${formatMonthlyCurrency(
+        propertyEmi,
+      )} per month. I found ${matches.length} properties up to about ${formatCurrency(
+        loanSettings.propertyValue,
       )}.`,
       matches,
     );
