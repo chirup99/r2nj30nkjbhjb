@@ -8,10 +8,8 @@ import {
   Check,
   ChevronRight,
   ExternalLink,
-  Factory,
   FileCheck2,
   FileText,
-  BriefcaseBusiness,
   House,
   Info,
   Layers,
@@ -21,19 +19,14 @@ import {
   Maximize2,
   Moon,
   Navigation,
-  Plane,
   Ruler,
-  Server,
   Search,
   Satellite,
   Sparkles,
   Sun,
-  Store,
   Trees,
-  Train,
   X,
   Waves,
-  Zap,
 } from "lucide-react";
 import {
   Map as PropertyMap,
@@ -594,17 +587,6 @@ function contextCategoryColor(category: CityContextCategory) {
   );
 }
 
-function ContextPointIcon({ category }: { category: CityContextCategory }) {
-  const iconClass = "h-3.5 w-3.5 text-white";
-  if (category === "airports") return <Plane className={iconClass} />;
-  if (category === "industries") return <Factory className={iconClass} />;
-  if (category === "sez") return <BriefcaseBusiness className={iconClass} />;
-  if (category === "commercial") return <Store className={iconClass} />;
-  if (category === "data-centers") return <Server className={iconClass} />;
-  if (category === "power-plants") return <Zap className={iconClass} />;
-  return <Train className={iconClass} />;
-}
-
 function Airport3DIllustration({ selected }: { selected: boolean }) {
   return (
     <svg
@@ -672,6 +654,140 @@ function Airport3DIllustration({ selected }: { selected: boolean }) {
   );
 }
 
+function CityContext3DIllustration({
+  category,
+  selected,
+}: {
+  category: Exclude<CityContextCategory, "airports">;
+  selected: boolean;
+}) {
+  const baseColor =
+    category === "industries"
+      ? "#e98b43"
+      : category === "sez"
+        ? "#a978e8"
+        : category === "commercial"
+          ? "#ef6ea9"
+          : category === "metro"
+            ? "#55d48b"
+            : category === "data-centers"
+              ? "#36c9df"
+              : "#e9c84e";
+
+  return (
+    <svg
+      viewBox="0 0 84 62"
+      aria-hidden="true"
+      className={`h-[3.9rem] w-[5.25rem] overflow-visible transition-transform ${
+        selected ? "scale-110" : ""
+      }`}
+      style={{ filter: "drop-shadow(0 3px 2px rgba(0, 10, 20, 0.45))" }}
+    >
+      <ellipse cx="42" cy="55" rx="31" ry="4.5" fill="#020b13" opacity="0.38" />
+      <path
+        d="M8 42 42 24l34 15-34 18Z"
+        fill={`${baseColor}38`}
+        stroke={baseColor}
+        strokeOpacity="0.75"
+        strokeWidth="1"
+      />
+      <path d="m19 42 23-12 23 10-23 12Z" fill="#10283a" opacity="0.92" />
+
+      {category === "industries" && (
+        <g>
+          <path d="m25 36 18-10 18 8-18 10Z" fill="#ffe0ae" />
+          <path d="m25 36v10l18 9V44Z" fill="#a85a35" />
+          <path d="m43 44 18-10v10l-18 11Z" fill="#d77b43" />
+          <path d="m29 34 14-8 14 6-14 8Z" fill="#7b3f36" />
+          <path d="m31 37 4-2v11l-4-2Z" fill="#92e6e5" />
+          <path d="m38 33 4-2v11l-4-2Z" fill="#92e6e5" />
+          <path d="m51 25 5-2.5 4 2-5 2.8Z" fill="#ffe0ae" />
+          <path d="m51 25v12l4 2V27Z" fill="#9b5c43" />
+          <path d="m55 27 5-2.8v12l-5 2.8Z" fill="#ca7446" />
+          <path d="m54 22 1-6 2 5-2 4Z" fill="#d8eced" />
+          <path d="m31 47 4 2M38 44l4 2M48 43l5-3" stroke="#ffbd64" strokeWidth="1.1" />
+        </g>
+      )}
+
+      {category === "sez" && (
+        <g>
+          <path d="m25 35 13-7 13 6-13 8Z" fill="#e9ddff" />
+          <path d="m25 35v15l13 7V42Z" fill="#7955bc" />
+          <path d="m38 42 13-8v15L38 57Z" fill="#a47ae0" />
+          <path d="m31 31 13-8 13 6-13 8Z" fill="#f8f3ff" />
+          <path d="m31 31v15l13 7V37Z" fill="#6c91bd" />
+          <path d="m44 37 13-8v15l-13 8Z" fill="#b5c6e1" />
+          <path d="m32 35 9 5M32 40l9 5M45 32l9 5M45 37l9 5" stroke="#d9fbff" strokeWidth="1.1" />
+          <path d="m52 39 8-4 7 3-8 4Z" fill="#f5e6ff" />
+          <path d="m52 39v8l7 4v-9Z" fill="#a172d1" />
+          <path d="m59 42 8-4v8l-8 5Z" fill="#cc9ce9" />
+        </g>
+      )}
+
+      {category === "commercial" && (
+        <g>
+          <path d="m23 37 22-12 23 10-22 12Z" fill="#fff2f8" />
+          <path d="m23 37v12l23 11V47Z" fill="#b75483" />
+          <path d="m46 47 22-12v12L46 60Z" fill="#d977a2" />
+          <path d="m28 35 17-9 17 8-17 9Z" fill="#ffb4d2" />
+          <path d="m30 38 14-7 14 6-14 8Z" fill="#4cc9d9" />
+          <path d="m30 38v9l14 7v-9Z" fill="#6d9eb0" />
+          <path d="m44 45 14-8v9l-14 8Z" fill="#d8f8fa" />
+          <path d="M34 34h3v18h-3ZM42 30h3v23h-3ZM50 34h3v15h-3" fill="#ffffff" opacity="0.9" />
+          <path d="m27 48 5 2.5M55 49l7-4" stroke="#ffd1e5" strokeWidth="1" />
+        </g>
+      )}
+
+      {category === "metro" && (
+        <g>
+          <path d="m22 40 20-11 24 11-20 11Z" fill="#234c4d" />
+          <path d="m27 40 15-8 19 9-15 8Z" fill="#b7f4dc" opacity="0.78" />
+          <path d="m31 42 11-6M37 45l11-6M43 48l11-6" stroke="#f3fff9" strokeWidth="1" />
+          <path d="m28 34 18-10 18 8-18 10Z" fill="#e6fff5" />
+          <path d="m28 34v8l18 9v-9Z" fill="#6ca59c" />
+          <path d="m46 42 18-10v8L46 51Z" fill="#9ed4c5" />
+          <path d="m35 29 11-6 11 5-11 6Z" fill="#59d08a" />
+          <path d="m37 31 9-5 9 4-9 5Z" fill="#163b55" />
+          <path d="m39 32v5M44 30v6M49 29v6" stroke="#d6fff2" strokeWidth="1" />
+          <circle cx="36" cy="43" r="1.3" fill="#ffdb75" />
+          <circle cx="57" cy="42" r="1.3" fill="#ffdb75" />
+        </g>
+      )}
+
+      {category === "data-centers" && (
+        <g>
+          <path d="m25 36 18-10 19 9-18 10Z" fill="#d8fbff" />
+          <path d="m25 36v15l19 9V43Z" fill="#3a879e" />
+          <path d="m44 43 18-8v15L44 60Z" fill="#7bc5d2" />
+          <path d="m30 34 13-7 14 6-13 8Z" fill="#18394d" />
+          <path d="m31 38 12-6v4l-12 6ZM31 44l12-6v4l-12 6ZM31 50l12-6v4l-12 6Z" fill="#66e5e8" />
+          <path d="m46 43 11-5v4l-11 5ZM46 49l11-5v4l-11 5ZM46 55l11-5v4l-11 5Z" fill="#d8ffff" />
+          <path d="m27 30 4-2 4 2-4 2Z" fill="#9bf5ff" />
+          <path d="m58 31 4-2 4 2-4 2Z" fill="#9bf5ff" />
+        </g>
+      )}
+
+      {category === "power-plants" && (
+        <g>
+          <path d="m24 38 19-10 20 9-19 11Z" fill="#fff1a5" />
+          <path d="m24 38v11l20 10V48Z" fill="#b78e37" />
+          <path d="m44 48 19-11v11L44 59Z" fill="#e0bd54" />
+          <path d="m29 36 14-7 15 7-14 8Z" fill="#ffe98a" />
+          <path d="m31 39 9-5 9 4-9 5Z" fill="#4b5961" />
+          <path d="m34 40v7h10v-7Z" fill="#8fc5c7" />
+          <path d="m48 28 5-3 5 2.5-5 3Z" fill="#f5f0d1" />
+          <path d="m49 28-2 14 6 3 2-14Z" fill="#d4c078" />
+          <path d="m55 29 5-3v13l-5 3Z" fill="#f0dd94" />
+          <path d="m51 24 2-4 2 3-2 4Z" fill="#fff6bd" />
+          <path d="m60 39 9-5 5 2-9 5Z" fill="#fff4a8" />
+          <path d="m60 39v7l5 2v-7Z" fill="#a97d2c" />
+          <path d="m65 41 9-5v7l-9 5Z" fill="#d1a83e" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
 function CityContextPin({
   point,
   selected,
@@ -698,21 +814,10 @@ function CityContextPin({
       {point.category === "airports" ? (
         <Airport3DIllustration selected={selected} />
       ) : (
-        <>
-          <span
-            className="absolute bottom-1.5 left-1/2 h-6 w-8 -translate-x-1/2 rotate-45 rounded-[5px] border border-white/45 opacity-80"
-            style={{ backgroundColor: accent }}
-          />
-          <span
-            className="absolute bottom-3 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border-2 border-white shadow-[0_5px_10px_rgba(0,0,0,0.4)]"
-            style={{
-              background: `linear-gradient(145deg, ${accent}, ${accent}b8)`,
-              boxShadow: `0 0 18px ${accent}66`,
-            }}
-          >
-            <ContextPointIcon category={point.category} />
-          </span>
-        </>
+        <CityContext3DIllustration
+          category={point.category}
+          selected={selected}
+        />
       )}
       <span
         className="absolute bottom-0 left-1/2 h-1.5 w-6 -translate-x-1/2 rounded-full opacity-80"
