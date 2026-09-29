@@ -3275,14 +3275,6 @@ export function HyderabadPropertyMapOverlay({
                   <dd className="break-words text-white/75">
                     {selectedLake.type || "—"}
                   </dd>
-                  <dt className="text-white/45">Longitude</dt>
-                  <dd className="break-words text-white/75">
-                    {selectedLake.longitude.toFixed(6)}
-                  </dd>
-                  <dt className="text-white/45">Latitude</dt>
-                  <dd className="break-words text-white/75">
-                    {selectedLake.latitude.toFixed(6)}
-                  </dd>
                   <dt className="text-white/45">ID</dt>
                   <dd className="break-words text-white/75">
                     {selectedLake.id || "—"}
