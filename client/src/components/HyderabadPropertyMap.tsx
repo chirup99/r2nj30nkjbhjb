@@ -943,17 +943,30 @@ function CityContext3DIllustration({
 
       {category === "industries" && !isLifeScience && (
         <g>
-          <path d="m25 36 18-10 18 8-18 10Z" fill="#ffe0ae" />
-          <path d="m25 36v10l18 9V44Z" fill="#a85a35" />
-          <path d="m43 44 18-10v10l-18 11Z" fill="#d77b43" />
-          <path d="m29 34 14-8 14 6-14 8Z" fill="#7b3f36" />
-          <path d="m31 37 4-2v11l-4-2Z" fill="#92e6e5" />
-          <path d="m38 33 4-2v11l-4-2Z" fill="#92e6e5" />
-          <path d="m51 25 5-2.5 4 2-5 2.8Z" fill="#ffe0ae" />
-          <path d="m51 25v12l4 2V27Z" fill="#9b5c43" />
-          <path d="m55 27 5-2.8v12l-5 2.8Z" fill="#ca7446" />
-          <path d="m54 22 1-6 2 5-2 4Z" fill="#d8eced" />
-          <path d="m31 47 4 2M38 44l4 2M48 43l5-3" stroke="#ffbd64" strokeWidth="1.1" />
+          <path d="m22 43 21-11 23 10-22 12Z" fill="#ffe0ae" />
+          <path d="m22 43v8l22 11V54Z" fill="#a85a35" />
+          <path d="m44 54 22-12v9L44 63Z" fill="#d77b43" />
+          <path d="m27 41 16-8 17 8-16 9Z" fill="#7b3f36" />
+          <path d="m30 44 4-2v10l-4-2ZM38 40l4-2v10l-4-2ZM47 45l4-2v10l-4-2Z" fill="#92e6e5" />
+
+          <path
+            d="M46 43V16M49 43V16M47.5 16 68 16M47.5 19 68 19"
+            stroke="#ffd166"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path d="m48 18 9 25M48 18 39 43M58 17l-10 9M58 17l10 2" stroke="#f3a83b" strokeWidth="1" />
+          <path d="m47 14 4-2 4 2-4 2Z" fill="#ffe39a" stroke="#b66a2c" strokeWidth="0.7" />
+          <path d="m67 15 5 2.2-4 2.4-4-2Z" fill="#ef9d38" />
+          <path d="m67 17 5 .2v2l-5 .4Z" fill="#b96a2d" />
+
+          <path d="M64 19v10" stroke="#f8e2a5" strokeWidth="1" />
+          <path d="m61 29 3-2 4 2-3 2Z" fill="#ffe4a6" stroke="#c47a31" strokeWidth="0.7" />
+          <path d="m61 29v5l4 2v-5Z" fill="#d77b43" />
+          <path d="m65 31 3-2v5l-3 2Z" fill="#a85a35" />
+          <path d="m61 35 4-2 4 2-4 2Z" fill="#f7b84b" />
+
+          <path d="m28 52 5 2.5M37 48l5 2.5M48 53l5-3" stroke="#ffbd64" strokeWidth="1.1" />
         </g>
       )}
 
