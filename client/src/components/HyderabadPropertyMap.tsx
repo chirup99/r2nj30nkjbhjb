@@ -23,6 +23,7 @@ import {
   Navigation,
   Plane,
   Ruler,
+  Server,
   Search,
   Satellite,
   Sparkles,
@@ -32,6 +33,7 @@ import {
   Train,
   X,
   Waves,
+  Zap,
 } from "lucide-react";
 import {
   Map as PropertyMap,
@@ -162,7 +164,9 @@ type CityContextCategory =
   | "industries"
   | "sez"
   | "commercial"
-  | "metro";
+  | "metro"
+  | "data-centers"
+  | "power-plants";
 
 type CityContextPoint = {
   id: string;
@@ -193,6 +197,8 @@ const CITY_CONTEXT_CATEGORIES: Array<{
   { id: "sez", label: "SEZ zones", shortLabel: "SEZ", color: "#c084fc" },
   { id: "commercial", label: "Malls & commerce", shortLabel: "Commerce", color: "#f472b6" },
   { id: "metro", label: "Metro network", shortLabel: "Metro", color: "#4ade80" },
+  { id: "data-centers", label: "Data centers", shortLabel: "Data", color: "#22d3ee" },
+  { id: "power-plants", label: "Power plants", shortLabel: "Power", color: "#facc15" },
 ];
 
 const CITY_CONTEXT_POINTS: CityContextPoint[] = [
@@ -251,6 +257,54 @@ const CITY_CONTEXT_POINTS: CityContextPoint[] = [
     detail: "Large-scale life sciences growth zone",
     longitude: 78.58,
     latitude: 17.19,
+  },
+  {
+    id: "ctrls-hyderabad",
+    name: "CtrlS Hyderabad data centre corridor",
+    category: "data-centers",
+    detail: "Enterprise colocation and hyperscale infrastructure cluster",
+    longitude: 78.376,
+    latitude: 17.438,
+  },
+  {
+    id: "stt-gdc-hyderabad",
+    name: "STT GDC Hyderabad",
+    category: "data-centers",
+    detail: "Data centre and cloud connectivity corridor",
+    longitude: 78.347,
+    latitude: 17.442,
+  },
+  {
+    id: "sify-hyderabad",
+    name: "Sify Hyderabad data centre",
+    category: "data-centers",
+    detail: "Managed hosting and digital infrastructure cluster",
+    longitude: 78.354,
+    latitude: 17.455,
+  },
+  {
+    id: "yadadri-power",
+    name: "Yadadri Thermal Power Station",
+    category: "power-plants",
+    detail: "Large thermal power generation project near Damaracherla",
+    longitude: 79.171,
+    latitude: 17.19,
+  },
+  {
+    id: "kothagudem-power",
+    name: "Kothagudem Thermal Power Station",
+    category: "power-plants",
+    detail: "Thermal generation and energy infrastructure corridor",
+    longitude: 80.676,
+    latitude: 17.55,
+  },
+  {
+    id: "ramagundam-power",
+    name: "Ramagundam power corridor",
+    category: "power-plants",
+    detail: "NTPC and industrial energy infrastructure cluster",
+    longitude: 79.46,
+    latitude: 18.76,
   },
   {
     id: "hitec-city",
@@ -416,6 +470,30 @@ const CITY_CONTEXT_AREAS: CityContextArea[] = [
     radiusInKilometers: 4.2,
   },
   {
+    id: "hyderabad-data-centre-zone",
+    name: "Hyderabad data centre zone",
+    category: "data-centers",
+    detail: "Approximate digital infrastructure and connectivity catchment",
+    center: [78.36, 17.445],
+    radiusInKilometers: 3.5,
+  },
+  {
+    id: "yadadri-power-zone",
+    name: "Yadadri power infrastructure zone",
+    category: "power-plants",
+    detail: "Approximate generation and transmission catchment",
+    center: [79.171, 17.19],
+    radiusInKilometers: 5,
+  },
+  {
+    id: "kothagudem-power-zone",
+    name: "Kothagudem power infrastructure zone",
+    category: "power-plants",
+    detail: "Approximate thermal generation catchment",
+    center: [80.676, 17.55],
+    radiusInKilometers: 5,
+  },
+  {
     id: "hitec-zone",
     name: "HITEC City / Madhapur zone",
     category: "sez",
@@ -522,6 +600,8 @@ function ContextPointIcon({ category }: { category: CityContextCategory }) {
   if (category === "industries") return <Factory className={iconClass} />;
   if (category === "sez") return <BriefcaseBusiness className={iconClass} />;
   if (category === "commercial") return <Store className={iconClass} />;
+  if (category === "data-centers") return <Server className={iconClass} />;
+  if (category === "power-plants") return <Zap className={iconClass} />;
   return <Train className={iconClass} />;
 }
 
@@ -2123,6 +2203,7 @@ export function HyderabadPropertyMapOverlay({
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [showLakes, setShowLakes] = useState(false);
   const [showCityLayers, setShowCityLayers] = useState(true);
+  const [showDevelopmentPanel, setShowDevelopmentPanel] = useState(true);
   const [visibleContextCategories, setVisibleContextCategories] = useState<
     Record<CityContextCategory, boolean>
   >({
@@ -2131,6 +2212,8 @@ export function HyderabadPropertyMapOverlay({
     sez: true,
     commercial: true,
     metro: true,
+    "data-centers": true,
+    "power-plants": true,
   });
   const [selectedContextPoint, setSelectedContextPoint] =
     useState<CityContextPoint | null>(null);
@@ -2198,23 +2281,30 @@ export function HyderabadPropertyMapOverlay({
   }, [listSort, visibleProjects]);
 
   const visibleMapProjects = showCityLayers ? [] : visibleProjects;
-  const developmentContextCategories: Record<CityContextCategory, boolean> = {
-    airports: false,
-    industries: showCityLayers && visibleContextCategories.industries,
-    sez: false,
-    commercial: false,
-    metro: false,
-  };
+  const developmentContextCategories: Record<CityContextCategory, boolean> =
+    showCityLayers
+      ? visibleContextCategories
+      : {
+          airports: false,
+          industries: false,
+          sez: false,
+          commercial: false,
+          metro: false,
+          "data-centers": false,
+          "power-plants": false,
+        };
   const routeProjectIds = visibleMapProjects.map((project) => project.id).join(",");
   const selectedPinProject = PROJECTS.find(
     (project) => project.id === selectedPinProjectId,
   );
   const visibleContextPoints = useMemo(
     () =>
-      showCityLayers && visibleContextCategories.industries
-        ? CITY_CONTEXT_POINTS.filter((point) => point.category === "industries")
+      showCityLayers
+        ? CITY_CONTEXT_POINTS.filter(
+            (point) => visibleContextCategories[point.category],
+          )
         : [],
-    [showCityLayers, visibleContextCategories.industries],
+    [showCityLayers, visibleContextCategories],
   );
   const initialProject = PROJECTS.find(
     (project) => project.id === initialProjectId,
@@ -2367,7 +2457,10 @@ export function HyderabadPropertyMapOverlay({
             setShowLakeHelp(false);
             setCheckedProjectLake(null);
           }}
-          onMapTap={() => setShowLakeHelp(false)}
+          onMapTap={() => {
+            setShowLakeHelp(false);
+            setShowDevelopmentPanel(false);
+          }}
           onProjectCheck={setCheckedProjectLake}
         />
         <CityContextLayers
@@ -2437,11 +2530,11 @@ export function HyderabadPropertyMapOverlay({
               <div className="rounded-xl border border-emerald-200/60 bg-emerald-50 px-3 py-2">
                 <p className="flex items-center gap-2 text-xs font-bold text-emerald-900">
                   <Factory className="h-4 w-4" />
-                  Industrial development mode
+                  Development context mode
                 </p>
                 <p className="mt-1 text-[10px] leading-4 text-emerald-800/75">
-                  Plot and villa pins are hidden. Only industrial development
-                  context is shown.
+                  Plot and villa pins are hidden. Airports, industries, SEZs,
+                  malls, metro, data centres, and power plants are shown.
                 </p>
               </div>
             ) : (
@@ -2458,7 +2551,7 @@ export function HyderabadPropertyMapOverlay({
             )}
             <p className="mt-2 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
               {showCityLayers
-                ? `${visibleContextPoints.length} industrial development areas shown`
+                ? `${visibleContextPoints.length} development context markers shown`
                 : selectedIntent
                 ? `${visibleProjects.length} ${selectedIntent.label.toLowerCase()} shown`
                 : `${visibleProjects.length} of ${PROJECTS.length} projects pinned`}
@@ -2522,7 +2615,13 @@ export function HyderabadPropertyMapOverlay({
             </button>
             <button
               type="button"
-              onClick={() => setShowCityLayers((visible) => !visible)}
+              onClick={() =>
+                setShowCityLayers((visible) => {
+                  const nextVisible = !visible;
+                  setShowDevelopmentPanel(nextVisible);
+                  return nextVisible;
+                })
+              }
               className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
                 showCityLayers
                   ? "border-emerald-300/80 bg-emerald-950/90"
@@ -2530,13 +2629,13 @@ export function HyderabadPropertyMapOverlay({
               }`}
               aria-label={
                 showCityLayers
-                  ? "Exit industrial development mode"
-                  : "Show industrial development mode"
+                  ? "Exit development context mode"
+                  : "Show development context mode"
               }
               title={
                 showCityLayers
-                  ? "Exit industrial development mode"
-                  : "Show industrial development mode"
+                  ? "Exit development context mode"
+                  : "Show development context mode"
               }
             >
               <Layers className="h-4 w-4" />
@@ -2585,32 +2684,31 @@ export function HyderabadPropertyMapOverlay({
         </div>
       </div>
 
-      {showCityLayers && (
+      {showCityLayers && showDevelopmentPanel && (
         <div className="pointer-events-auto absolute right-4 top-4 z-20 mt-[286px] w-[min(290px,calc(100vw-2rem))] sm:right-6">
           <div className="rounded-2xl border border-emerald-200/25 bg-slate-950/92 p-3 text-white shadow-2xl backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="flex items-center gap-2 text-[11px] font-bold">
                   <Layers className="h-3.5 w-3.5 text-emerald-300" />
-                  Industrial development mode
+                  Development context mode
                 </p>
                 <p className="mt-1 text-[10px] text-white/50">
-                  Plot and villa pins stay hidden while this mode is active.
+                  Plot and villa pins stay hidden. Toggle airport, industry,
+                  SEZ, mall, metro, data centre, and power plant context.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setShowCityLayers(false)}
+                onClick={() => setShowDevelopmentPanel(false)}
                 className="rounded-full p-1 text-white/45 transition-colors hover:bg-white/10 hover:text-white"
-                aria-label="Close city development layer panel"
+                aria-label="Hide development context panel"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-1.5">
-              {CITY_CONTEXT_CATEGORIES.filter(
-                (category) => category.id === "industries",
-              ).map((category) => {
+              {CITY_CONTEXT_CATEGORIES.map((category) => {
                 const isVisible = visibleContextCategories[category.id];
                 return (
                   <button
@@ -2647,8 +2745,8 @@ export function HyderabadPropertyMapOverlay({
             </div>
             <p className="mt-3 border-t border-white/10 pt-2 text-[9px] leading-4 text-white/40">
               Zones are approximate planning context, not official boundaries.
-              Verify airport, metro, SEZ, and industrial notifications before
-              making a purchase decision.
+              Verify airport, metro, SEZ, industrial, data centre, and power
+              infrastructure notifications before making a purchase decision.
             </p>
           </div>
         </div>
