@@ -42,6 +42,45 @@ type PropertyProject = (typeof PLOTSVIEW_PROJECTS)[number];
 
 const HYDERABAD_CENTER: [number, number] = [78.385, 17.42];
 const MAGIC_ANCHOR: [number, number] = [78.386, 17.455];
+
+// Simplified centerline for Hyderabad's complete Outer Ring Road loop. The
+// closed line keeps the route visible when basemap road detail is sparse.
+const OUTER_RING_ROAD: GeoJSON.Feature<GeoJSON.LineString> = {
+  type: "Feature",
+  properties: {
+    name: "Outer Ring Road",
+  },
+  geometry: {
+    type: "LineString",
+    coordinates: [
+      [78.206, 17.567],
+      [78.219, 17.631],
+      [78.276, 17.684],
+      [78.354, 17.716],
+      [78.439, 17.727],
+      [78.522, 17.717],
+      [78.602, 17.692],
+      [78.672, 17.642],
+      [78.724, 17.574],
+      [78.755, 17.497],
+      [78.772, 17.416],
+      [78.763, 17.333],
+      [78.727, 17.258],
+      [78.676, 17.203],
+      [78.607, 17.166],
+      [78.529, 17.139],
+      [78.445, 17.126],
+      [78.360, 17.135],
+      [78.284, 17.166],
+      [78.225, 17.216],
+      [78.188, 17.286],
+      [78.170, 17.360],
+      [78.166, 17.438],
+      [78.175, 17.510],
+      [78.206, 17.567],
+    ],
+  },
+};
 const SATELLITE_MAP_STYLE = {
   version: 8 as const,
   sources: {
@@ -527,6 +566,34 @@ function RadiusFilterLayer({
         "line-dasharray": [2, 2],
       }}
     />
+  );
+}
+
+function OuterRingRoadLayer() {
+  return (
+    <>
+      <MapGeoJSON
+        id="outer-ring-road-casing"
+        data={OUTER_RING_ROAD}
+        fillPaint={false}
+        linePaint={{
+          "line-color": "#4a2b00",
+          "line-width": 8,
+          "line-opacity": 0.9,
+          "line-blur": 1,
+        }}
+      />
+      <MapGeoJSON
+        id="outer-ring-road-gold"
+        data={OUTER_RING_ROAD}
+        fillPaint={false}
+        linePaint={{
+          "line-color": "#f6bd45",
+          "line-width": 3.5,
+          "line-opacity": 1,
+        }}
+      />
+    </>
   );
 }
 
@@ -1262,6 +1329,7 @@ export function HyderabadPropertyMapOverlay({
         />
         <FitProjectPins projects={visibleProjects} />
         <FocusProjectPin project={initialProject} />
+        <OuterRingRoadLayer />
         {selectedIntent && selectedSubcategory && visibleProjects.length > 0 && (
           <MagicProjectRoute
             projects={visibleProjects}
