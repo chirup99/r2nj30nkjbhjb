@@ -53,6 +53,11 @@ const SATELLITE_MAP_STYLE = {
       tileSize: 256,
       attribution: "Tiles © Esri",
     },
+    carto: {
+      type: "vector" as const,
+      url: "https://tiles.basemaps.cartocdn.com/vector/carto.streets/v1/tiles.json",
+      attribution: "© CARTO, © OpenStreetMap contributors",
+    },
   },
   layers: [
     {
