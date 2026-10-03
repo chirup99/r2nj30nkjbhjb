@@ -2678,7 +2678,7 @@ export function HyderabadPropertyMapOverlay({
               )}
             </div>
             </div>
-            <div className="mt-2 inline-flex max-w-full items-center gap-0 rounded-md border border-slate-200/80 bg-white/90 px-0.5 py-0.5 shadow-sm">
+            <div className="mt-2 inline-flex max-w-full items-center gap-0.5 rounded-lg border border-white/15 bg-slate-950/80 px-1 py-1 shadow-md backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => {
@@ -2687,10 +2687,10 @@ export function HyderabadPropertyMapOverlay({
                   setSelectedLake(null);
                   setCheckedProjectLake(null);
                 }}
-                className={`flex shrink-0 items-center justify-center gap-1 rounded-sm px-2 py-0.5 text-[9px] font-semibold transition-colors ${
+                className={`flex shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950 ${
                   showLakes
-                    ? "border-cyan-600 bg-cyan-700 text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    ? "border-cyan-300/60 bg-cyan-500 text-slate-950"
+                    : "border-transparent text-white/75 hover:bg-white/10 hover:text-white"
                 }`}
                 aria-label={showLakes ? "Hide lakes and FTL layer" : "Show lakes and FTL layer"}
                 aria-pressed={showLakes}
@@ -2702,10 +2702,10 @@ export function HyderabadPropertyMapOverlay({
               <button
                 type="button"
                 onClick={() => setIsMasterPlanSelected((selected) => !selected)}
-                className={`flex shrink-0 items-center justify-center gap-1 rounded-sm px-2 py-0.5 text-[9px] font-semibold transition-colors ${
+                className={`flex shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950 ${
                   isMasterPlanSelected
-                    ? "border-violet-600 bg-violet-700 text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    ? "border-violet-300/60 bg-violet-500 text-white"
+                    : "border-transparent text-white/75 hover:bg-white/10 hover:text-white"
                 }`}
                 aria-label="Toggle Master Plan placeholder"
                 aria-pressed={isMasterPlanSelected}
@@ -2717,10 +2717,10 @@ export function HyderabadPropertyMapOverlay({
               <button
                 type="button"
                 onClick={() => setIsLuxurySelected((selected) => !selected)}
-                className={`flex shrink-0 items-center justify-center gap-1 rounded-sm px-2 py-0.5 text-[9px] font-semibold transition-colors ${
+                className={`flex shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950 ${
                   isLuxurySelected
-                    ? "border-fuchsia-600 bg-fuchsia-700 text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    ? "border-fuchsia-300/60 bg-fuchsia-500 text-white"
+                    : "border-transparent text-white/75 hover:bg-white/10 hover:text-white"
                 }`}
                 aria-label="Toggle Luxury placeholder"
                 aria-pressed={isLuxurySelected}
