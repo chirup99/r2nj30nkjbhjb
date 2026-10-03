@@ -39,6 +39,7 @@ import {
   useMap,
   MapGeoJSON,
 } from "@/components/ui/map";
+import { Switch } from "@/components/ui/switch";
 import { PLOTSVIEW_PROJECTS } from "@/data/plotsviewProjects";
 import { RRR_ALIGNMENT_COORDINATES } from "@/data/rrrAlignment";
 
@@ -2308,6 +2309,7 @@ export function HyderabadPropertyMapOverlay({
   const [isDarkMap, setIsDarkMap] = useState(true);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [showLakes, setShowLakes] = useState(false);
+  const [showProjectPins, setShowProjectPins] = useState(true);
   const [showCityLayers, setShowCityLayers] = useState(false);
   const [showContextPanel, setShowContextPanel] = useState(false);
   const [visibleContextCategories, setVisibleContextCategories] = useState<
@@ -2386,7 +2388,8 @@ export function HyderabadPropertyMapOverlay({
     });
   }, [listSort, visibleProjects]);
 
-  const visibleMapProjects = showCityLayers ? [] : visibleProjects;
+  const visibleMapProjects =
+    showCityLayers || !showProjectPins ? [] : visibleProjects;
   const contextCategoriesForMap: Record<CityContextCategory, boolean> =
     showCityLayers
       ? visibleContextCategories
@@ -2554,7 +2557,11 @@ export function HyderabadPropertyMapOverlay({
           className="!bottom-28"
         />
         <FitProjectPins projects={visibleMapProjects} />
-        <FocusProjectPin project={showCityLayers ? undefined : initialProject} />
+        <FocusProjectPin
+          project={
+            showCityLayers || !showProjectPins ? undefined : initialProject
+          }
+        />
         <DigitizedLakesLayer
           visible={showLakes}
           checkedProject={selectedPinProject}
@@ -2642,13 +2649,31 @@ export function HyderabadPropertyMapOverlay({
                 aria-label="Search PlotsView projects"
               />
             </label>
-            <p className="mt-2 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-              {showCityLayers
-                ? `${visibleContextPoints.length} city context markers shown`
-                : selectedIntent
-                ? `${visibleProjects.length} ${selectedIntent.label.toLowerCase()} shown`
-                : `${visibleProjects.length} of ${PROJECTS.length} projects pinned`}
-            </p>
+            <div className="mt-2 flex items-center justify-between gap-3 px-1">
+              <p className="min-w-0 text-[10px] font-semibold uppercase leading-4 tracking-[0.14em] text-slate-500">
+                {showCityLayers
+                  ? `${visibleContextPoints.length} city context markers shown`
+                  : selectedIntent
+                    ? `${visibleProjects.length} ${selectedIntent.label.toLowerCase()} ${showProjectPins ? "shown" : "found"}`
+                    : `${visibleProjects.length} of ${PROJECTS.length} projects ${showProjectPins ? "pinned" : "found"}`}
+              </p>
+              {!showCityLayers && (
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                    Pins
+                  </span>
+                  <Switch
+                    checked={showProjectPins}
+                    onCheckedChange={(show) => {
+                      setShowProjectPins(show);
+                      if (!show) setSelectedPinProjectId(null);
+                    }}
+                    aria-label="Show project pins on map"
+                    className="h-5 w-9 data-[state=checked]:bg-violet-600 data-[state=unchecked]:bg-slate-300 [&>span]:h-4 [&>span]:w-4 [&>span]:data-[state=checked]:translate-x-4"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="pointer-events-auto flex flex-col items-center gap-2">
