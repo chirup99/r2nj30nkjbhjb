@@ -475,14 +475,6 @@ const CITY_CONTEXT_POINTS: CityContextPoint[] = [
     latitude: 17.23,
   },
   {
-    id: "amb-cinemas",
-    name: "AMB Cinemas & Galleria",
-    category: "commercial",
-    detail: "Gachibowli entertainment hub",
-    longitude: 78.345,
-    latitude: 17.49,
-  },
-  {
     id: "ikea-hyderabad",
     name: "IKEA Hyderabad",
     category: "commercial",
