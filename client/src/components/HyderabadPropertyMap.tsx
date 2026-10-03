@@ -323,7 +323,7 @@ const CITY_CONTEXT_CATEGORIES: Array<{
   { id: "airports", label: "Airports", shortLabel: "Air", color: "#38bdf8" },
   { id: "industries", label: "Industrial hubs", shortLabel: "Industry", color: "#fb923c" },
   { id: "sez", label: "SEZ zones", shortLabel: "SEZ", color: "#c084fc" },
-  { id: "commercial", label: "Malls & commerce", shortLabel: "Commerce", color: "#f472b6" },
+  { id: "commercial", label: "Commercial", shortLabel: "Commerce", color: "#f472b6" },
   { id: "metro", label: "Metro network", shortLabel: "Metro", color: "#4ade80" },
   { id: "data-centers", label: "Data centers", shortLabel: "Data", color: "#22d3ee" },
   { id: "power-plants", label: "Power plants", shortLabel: "Power", color: "#facc15" },
@@ -475,22 +475,6 @@ const CITY_CONTEXT_POINTS: CityContextPoint[] = [
     latitude: 17.23,
   },
   {
-    id: "sarath-city",
-    name: "Sarath City Capital Mall",
-    category: "commercial",
-    detail: "Major retail and entertainment destination",
-    longitude: 78.357,
-    latitude: 17.456,
-  },
-  {
-    id: "inorbit-mall",
-    name: "Inorbit Mall",
-    category: "commercial",
-    detail: "Madhapur retail and dining hub",
-    longitude: 78.385,
-    latitude: 17.435,
-  },
-  {
     id: "amb-cinemas",
     name: "AMB Cinemas & Galleria",
     category: "commercial",
@@ -505,22 +489,6 @@ const CITY_CONTEXT_POINTS: CityContextPoint[] = [
     detail: "HITEC City retail anchor",
     longitude: 78.381,
     latitude: 17.441,
-  },
-  {
-    id: "forum-sujana",
-    name: "Forum Sujana Mall",
-    category: "commercial",
-    detail: "Kukatpally commercial anchor",
-    longitude: 78.364,
-    latitude: 17.47,
-  },
-  {
-    id: "gvk-one",
-    name: "GVK One Mall",
-    category: "commercial",
-    detail: "Banjara Hills retail destination",
-    longitude: 78.419,
-    latitude: 17.414,
   },
   {
     id: "metro-miyapur",
@@ -2883,7 +2851,7 @@ export function HyderabadPropertyMapOverlay({
                 </p>
                 <p className="mt-1 text-[10px] text-white/50">
                   Property pins stay hidden. Toggle airport, industry,
-                  SEZ, mall, metro, data centre, and power plant context.
+                  SEZ, commercial, metro, data centre, and power plant context.
                 </p>
               </div>
               <button
