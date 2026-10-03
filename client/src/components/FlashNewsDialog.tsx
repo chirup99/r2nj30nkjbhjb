@@ -4,6 +4,7 @@ import {
   AlertCircle,
   ArrowUpRight,
   Clock3,
+  Lightbulb,
   Newspaper,
   RefreshCw,
 } from "lucide-react";
@@ -13,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { FlashNewsInsightsView } from "@/components/FlashNewsInsightsView";
 
 type FlashNewsCategory = "hyderabad" | "hmda" | "india";
 type NewsFilter = "all" | FlashNewsCategory;
@@ -63,8 +65,12 @@ function formatUpdatedAt(value: string) {
 export function FlashNewsDialog() {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<NewsFilter>("all");
+  const [contentView, setContentView] = useState<"headlines" | "insights">(
+    "headlines",
+  );
   const [news, setNews] = useState<FlashNewsResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [insightsScanning, setInsightsScanning] = useState(false);
   const [error, setError] = useState("");
   const requestController = useRef<AbortController | null>(null);
 
@@ -109,6 +115,16 @@ export function FlashNewsDialog() {
       );
     } finally {
       if (!controller.signal.aborted) setLoading(false);
+    }
+  }
+
+  async function scanForInsights() {
+    setContentView("insights");
+    setInsightsScanning(true);
+    try {
+      await loadNews(true);
+    } finally {
+      setInsightsScanning(false);
     }
   }
 
@@ -161,44 +177,72 @@ export function FlashNewsDialog() {
                 Live
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => void loadNews(true)}
-              disabled={loading}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1.5 text-[10px] font-medium text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label="Refresh news"
-              title="Fetch the latest headlines now"
-            >
-              <RefreshCw
-                className={`h-3 w-3 text-violet-300 ${loading ? "animate-spin" : ""}`}
-              />
-              <span>Refresh</span>
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={() => void scanForInsights()}
+                disabled={loading || insightsScanning}
+                aria-pressed={contentView === "insights"}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-violet-300/15 bg-violet-400/[0.06] px-2 py-1.5 text-[10px] font-medium text-violet-100 transition hover:bg-violet-400/10 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Scan latest headlines for insights"
+                title="Refresh headlines and show local market signals"
+              >
+                {insightsScanning ? (
+                  <RefreshCw className="h-3 w-3 animate-spin text-violet-300" />
+                ) : (
+                  <Lightbulb className="h-3 w-3 text-violet-300" />
+                )}
+                <span className="hidden sm:inline">Insights</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => void loadNews(true)}
+                disabled={loading}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1.5 text-[10px] font-medium text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Refresh news"
+                title="Fetch the latest headlines now"
+              >
+                <RefreshCw
+                  className={`h-3 w-3 text-violet-300 ${loading ? "animate-spin" : ""}`}
+                />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+            </div>
           </div>
 
           <div className="mt-2.5 flex min-w-0 items-center justify-between gap-2">
-            <div
-              role="tablist"
-              aria-label="Filter news topics"
-              className="flex min-w-0 max-w-full gap-0.5 overflow-x-auto rounded-lg border border-white/10 bg-slate-950/80 p-0.5"
-            >
-              {FILTERS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={filter === item.id}
-                  onClick={() => setFilter(item.id)}
-                  className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-medium transition-colors sm:px-2.5 ${
-                    filter === item.id
-                      ? "border border-violet-300/20 bg-violet-500/15 text-violet-100"
-                      : "border border-transparent text-white/60 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            {contentView === "headlines" ? (
+              <div
+                role="tablist"
+                aria-label="Filter news topics"
+                className="flex min-w-0 max-w-full gap-0.5 overflow-x-auto rounded-lg border border-white/10 bg-slate-950/80 p-0.5"
+              >
+                {FILTERS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={filter === item.id}
+                    onClick={() => setFilter(item.id)}
+                    className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-medium transition-colors sm:px-2.5 ${
+                      filter === item.id
+                        ? "border border-violet-300/20 bg-violet-500/15 text-violet-100"
+                        : "border border-transparent text-white/60 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setContentView("headlines")}
+                className="rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+              >
+                Latest headlines
+              </button>
+            )}
             {news && (
               <p
                 className="hidden shrink-0 text-[9px] text-slate-500 sm:block"
@@ -223,9 +267,50 @@ export function FlashNewsDialog() {
 
         <div
           className="flash-news-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3.5 py-1.5 sm:px-5 sm:py-2"
-          aria-busy={loading}
+          aria-busy={loading || insightsScanning}
         >
-          {loading && !news ? (
+          {contentView === "insights" ? (
+            insightsScanning ? (
+              <div
+                className="flex min-h-48 flex-col items-center justify-center gap-2 text-center"
+                role="status"
+              >
+                <RefreshCw className="h-5 w-5 animate-spin text-violet-300" />
+                <p className="text-xs font-medium text-slate-200">
+                  Refreshing headlines for insights
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Checking recent Hyderabad and HMDA news
+                </p>
+              </div>
+            ) : news ? (
+              <FlashNewsInsightsView
+                items={news.items}
+                updatedAt={news.updatedAt}
+              />
+            ) : (
+              <div
+                role="alert"
+                className="flex min-h-40 flex-col items-center justify-center px-5 text-center"
+              >
+                <AlertCircle className="h-6 w-6 text-amber-300" />
+                <p className="mt-2 text-sm font-semibold text-white">
+                  Insights could not be loaded
+                </p>
+                <p className="mt-1 max-w-sm text-xs leading-5 text-slate-400">
+                  {error || "Refresh the news feed and try the scan again."}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void scanForInsights()}
+                  disabled={loading}
+                  className="mt-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white hover:bg-white/10 disabled:opacity-50"
+                >
+                  Try again
+                </button>
+              </div>
+            )
+          ) : loading && !news ? (
             <div className="space-y-2 py-1" aria-label="Loading news">
               {Array.from({ length: 4 }, (_, index) => (
                 <div

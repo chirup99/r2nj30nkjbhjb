@@ -29,9 +29,19 @@ const NEWS_FEEDS: {
     query: "Hyderabad real estate property housing Telangana when:30d",
   },
   {
+    category: "hyderabad",
+    query:
+      "Hyderabad real estate demand emerging localities housing registrations prices when:30d",
+  },
+  {
     category: "hmda",
     query:
       "HMDA Hyderabad Metropolitan Development Authority master plan development when:90d",
+  },
+  {
+    category: "hmda",
+    query:
+      "Hyderabad Telangana SEZ special economic zone industrial zone announcement new zones real estate when:90d",
   },
   {
     category: "india",
