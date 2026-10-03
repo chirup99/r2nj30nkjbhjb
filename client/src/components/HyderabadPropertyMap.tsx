@@ -983,9 +983,21 @@ function getMinimumPlotSize(project: PropertyProject) {
   return size ? Number(size[0].replace(/,/g, "")) : 0;
 }
 
+function getMaximumPlotSize(project: PropertyProject) {
+  const sizes = project.bedrooms.match(/[\d,]+/g);
+  const largestSize = sizes?.[sizes.length - 1];
+  return largestSize ? Number(largestSize.replace(/,/g, "")) : 0;
+}
+
 function getEstimatedMinimumPlotValue(project: PropertyProject) {
   return getPricePerSquareYard(project) * getMinimumPlotSize(project);
 }
+
+function getEstimatedMaximumPlotValue(project: PropertyProject) {
+  return getPricePerSquareYard(project) * getMaximumPlotSize(project);
+}
+
+const LUXURY_MIN_ESTIMATED_PLOT_VALUE = 30_000_000;
 
 type MagicSubcategory = {
   id: string;
@@ -2355,6 +2367,10 @@ export function HyderabadPropertyMapOverlay({
         !selectedIntent ||
         (selectedIntent.filter(project) &&
           (!selectedSubcategory || selectedSubcategory.filter(project)));
+      const matchesLuxuryFilter =
+        !isLuxurySelected ||
+        getEstimatedMaximumPlotValue(project) >=
+          LUXURY_MIN_ESTIMATED_PLOT_VALUE;
       const matchesQuery =
         !normalizedQuery ||
         `${project.name} ${project.locality} ${project.developer}`
@@ -2367,9 +2383,15 @@ export function HyderabadPropertyMapOverlay({
           project.longitude,
           project.latitude,
         ]) <= radiusInKilometers;
-      return matchesMagicFilter && matchesQuery && matchesRadius;
+      return (
+        matchesMagicFilter &&
+        matchesLuxuryFilter &&
+        matchesQuery &&
+        matchesRadius
+      );
     });
   }, [
+    isLuxurySelected,
     isRadiusFilterOpen,
     query,
     radiusInKilometers,
@@ -2408,6 +2430,16 @@ export function HyderabadPropertyMapOverlay({
   const selectedPinProject = PROJECTS.find(
     (project) => project.id === selectedPinProjectId,
   );
+
+  useEffect(() => {
+    if (
+      selectedPinProjectId &&
+      !visibleMapProjects.some((project) => project.id === selectedPinProjectId)
+    ) {
+      setSelectedPinProjectId(null);
+    }
+  }, [selectedPinProjectId, visibleMapProjects]);
+
   const visibleContextPoints = useMemo(
     () =>
       showCityLayers
@@ -2722,9 +2754,13 @@ export function HyderabadPropertyMapOverlay({
                     ? "border-fuchsia-300/60 bg-fuchsia-500 text-white"
                     : "border-transparent text-white/75 hover:bg-white/10 hover:text-white"
                 }`}
-                aria-label="Toggle Luxury placeholder"
+                aria-label={
+                  isLuxurySelected
+                    ? "Disable ₹3 crore and above luxury filter"
+                    : "Enable ₹3 crore and above luxury filter"
+                }
                 aria-pressed={isLuxurySelected}
-                title="Luxury layer placeholder"
+                title="Show projects whose largest listed plot is estimated at ₹3 crore or more"
               >
                 <Sparkles className="h-3 w-3 shrink-0" />
                 <span>Luxury</span>
