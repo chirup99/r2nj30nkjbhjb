@@ -3114,10 +3114,6 @@ export function HyderabadPropertyMapOverlay({
               </div>
 
               <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-4 py-3 text-[11px] text-slate-400">
-                <span>
-                  Static HMDA reference sheets are not aligned to the live map.
-                  Verify land use with HMDA before making decisions.
-                </span>
                 <a
                   href={
                     masterPlanMapGroup === "plan-2031"
