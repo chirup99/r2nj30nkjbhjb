@@ -2309,6 +2309,8 @@ export function HyderabadPropertyMapOverlay({
   const [isDarkMap, setIsDarkMap] = useState(true);
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [showLakes, setShowLakes] = useState(false);
+  const [isMasterPlanSelected, setIsMasterPlanSelected] = useState(false);
+  const [isLuxurySelected, setIsLuxurySelected] = useState(false);
   const [showProjectPins, setShowProjectPins] = useState(true);
   const [showCityLayers, setShowCityLayers] = useState(false);
   const [showContextPanel, setShowContextPanel] = useState(false);
@@ -2638,7 +2640,8 @@ export function HyderabadPropertyMapOverlay({
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-4 sm:p-6">
         <div className="flex items-start justify-between gap-3">
-          <div className="pointer-events-auto w-full max-w-[430px] rounded-2xl border border-white/60 bg-white/90 p-3 shadow-2xl backdrop-blur-xl sm:p-4">
+          <div className="pointer-events-auto w-full max-w-[430px]">
+            <div className="w-full rounded-2xl border border-white/60 bg-white/90 p-3 shadow-2xl backdrop-blur-xl sm:p-4">
             <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
               <Search className="h-4 w-4 text-slate-400" />
               <input
@@ -2673,6 +2676,59 @@ export function HyderabadPropertyMapOverlay({
                   />
                 </div>
               )}
+            </div>
+            </div>
+            <div className="mt-2 inline-flex max-w-full items-center gap-0 rounded-md border border-slate-200/80 bg-white/90 px-0.5 py-0.5 shadow-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLakes((visible) => !visible);
+                  setShowLakeHelp((visible) => !visible);
+                  setSelectedLake(null);
+                  setCheckedProjectLake(null);
+                }}
+                className={`flex shrink-0 items-center justify-center gap-1 rounded-sm px-2 py-0.5 text-[9px] font-semibold transition-colors ${
+                  showLakes
+                    ? "border-cyan-600 bg-cyan-700 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+                aria-label={showLakes ? "Hide lakes and FTL layer" : "Show lakes and FTL layer"}
+                aria-pressed={showLakes}
+                title={showLakes ? "Hide lakes and FTL layer" : "Show lakes and FTL layer"}
+              >
+                <Waves className="h-3 w-3 shrink-0" />
+                <span>Lakes</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMasterPlanSelected((selected) => !selected)}
+                className={`flex shrink-0 items-center justify-center gap-1 rounded-sm px-2 py-0.5 text-[9px] font-semibold transition-colors ${
+                  isMasterPlanSelected
+                    ? "border-violet-600 bg-violet-700 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+                aria-label="Toggle Master Plan placeholder"
+                aria-pressed={isMasterPlanSelected}
+                title="Master Plan layer placeholder"
+              >
+                <Layers className="h-3 w-3 shrink-0" />
+                <span>Master Plan</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsLuxurySelected((selected) => !selected)}
+                className={`flex shrink-0 items-center justify-center gap-1 rounded-sm px-2 py-0.5 text-[9px] font-semibold transition-colors ${
+                  isLuxurySelected
+                    ? "border-fuchsia-600 bg-fuchsia-700 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+                aria-label="Toggle Luxury placeholder"
+                aria-pressed={isLuxurySelected}
+                title="Luxury layer placeholder"
+              >
+                <Sparkles className="h-3 w-3 shrink-0" />
+                <span>Luxury</span>
+              </button>
             </div>
           </div>
 
@@ -2712,24 +2768,6 @@ export function HyderabadPropertyMapOverlay({
               title={isSatelliteMap ? "Use street map" : "Use satellite map"}
             >
               <Satellite className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowLakes((visible) => !visible);
-                setShowLakeHelp((visible) => !visible);
-                setSelectedLake(null);
-                setCheckedProjectLake(null);
-              }}
-              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
-                showLakes
-                  ? "border-cyan-300/80 bg-cyan-950/90"
-                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
-              }`}
-              aria-label={showLakes ? "Hide lakes and FTL layer" : "Show lakes and FTL layer"}
-              title={showLakes ? "Hide lakes and FTL layer" : "Show lakes and FTL layer"}
-            >
-              <Waves className="h-4 w-4" />
             </button>
             <button
               type="button"
