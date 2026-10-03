@@ -1865,7 +1865,7 @@ function RadiusArcControl({
         viewBox="0 0 280 150"
         className={`h-[124px] w-full touch-none select-none ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
-        }`}
+        } focus:outline-none focus-visible:outline-none`}
         role="slider"
         aria-label="Drag to adjust search radius"
         aria-valuemin={minimumRadius}
