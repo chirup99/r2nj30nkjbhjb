@@ -606,14 +606,6 @@ const CITY_CONTEXT_AREAS: CityContextArea[] = [
     radiusInKilometers: 3.5,
   },
   {
-    id: "gachibowli-commerce",
-    name: "Gachibowli commercial zone",
-    category: "commercial",
-    detail: "Approximate office, retail and entertainment catchment",
-    center: [78.35, 17.474],
-    radiusInKilometers: 2.8,
-  },
-  {
     id: "madhapur-commerce",
     name: "Madhapur commercial zone",
     category: "commercial",
