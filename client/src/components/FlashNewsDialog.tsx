@@ -4,14 +4,12 @@ import {
   AlertCircle,
   ArrowUpRight,
   Clock3,
-  LoaderCircle,
   Newspaper,
   RefreshCw,
 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -35,16 +33,16 @@ type FlashNewsResponse = {
 };
 
 const FILTERS: { id: NewsFilter; label: string }[] = [
-  { id: "all", label: "All news" },
+  { id: "all", label: "All" },
   { id: "hyderabad", label: "Hyderabad" },
-  { id: "hmda", label: "HMDA & planning" },
-  { id: "india", label: "India real estate" },
+  { id: "hmda", label: "HMDA" },
+  { id: "india", label: "India RE" },
 ];
 
 const CATEGORY_LABELS: Record<FlashNewsCategory, string> = {
   hyderabad: "Hyderabad",
-  hmda: "HMDA & planning",
-  india: "India real estate",
+  hmda: "HMDA",
+  india: "India RE",
 };
 
 function formatPublishedAt(value: string) {
@@ -133,11 +131,11 @@ export function FlashNewsDialog() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-transparent px-2.5 py-1 text-[10px] font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950"
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-transparent px-2.5 py-1 text-[10px] font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950"
           aria-label="Open latest real estate news"
           title="Latest real estate, HMDA, and Hyderabad development news"
         >
-          <Newspaper className="h-3 w-3 shrink-0 text-amber-300" />
+          <Newspaper className="h-3 w-3 shrink-0 text-violet-300" />
           <span>Flash News</span>
           <span className="relative ml-0.5 flex h-2 w-2" aria-hidden="true">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
@@ -147,47 +145,42 @@ export function FlashNewsDialog() {
       </DialogTrigger>
 
       <DialogContent
-        overlayClassName="z-[150] bg-slate-950/75 backdrop-blur-sm"
-        className="z-[151] top-[calc(50%_+_1.75rem)] flex max-h-[calc(100dvh_-_5.5rem)] w-[calc(100%_-_1rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl border-white/10 bg-slate-950 p-0 text-white shadow-2xl"
+        aria-describedby={undefined}
+        overlayClassName="z-[150] bg-slate-950/45 backdrop-blur-[1px]"
+        className="z-[151] bottom-0 left-1/2 top-auto flex h-[min(68dvh,560px)] max-h-[min(68dvh,560px)] w-[calc(100%_-_0.75rem)] max-w-3xl translate-x-[-50%] translate-y-0 flex-col gap-0 overflow-hidden rounded-t-2xl border border-white/15 bg-slate-950/95 p-0 text-white shadow-[0_-12px_36px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:bottom-4 sm:w-[calc(100%_-_2rem)] sm:rounded-2xl"
       >
-        <header className="shrink-0 border-b border-white/10 px-5 py-5 pr-14 sm:px-7 sm:py-6 sm:pr-16">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-                </span>
-                Live from Google News
-              </p>
-              <DialogTitle className="mt-1.5 text-xl font-semibold tracking-tight text-white sm:text-2xl">
+        <header className="shrink-0 border-b border-white/10 px-3.5 pb-3 pt-3 pr-12 sm:px-5 sm:pb-3.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <Newspaper className="h-4 w-4 shrink-0 text-violet-300" />
+              <DialogTitle className="truncate text-sm font-semibold tracking-tight text-white sm:text-base">
                 Flash News
               </DialogTitle>
-              <DialogDescription className="mt-1 max-w-xl text-xs leading-5 text-slate-400 sm:text-sm">
-                The latest property, HMDA master plan, and Hyderabad
-                development headlines with publisher timestamps.
-              </DialogDescription>
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-400/[0.07] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-emerald-300">
+                <span className="h-1 w-1 rounded-full bg-emerald-300" />
+                Live
+              </span>
             </div>
             <button
               type="button"
               onClick={() => void loadNews(true)}
               disabled={loading}
-              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1.5 text-[10px] font-medium text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Refresh news"
               title="Fetch the latest headlines now"
             >
               <RefreshCw
-                className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+                className={`h-3 w-3 text-violet-300 ${loading ? "animate-spin" : ""}`}
               />
-              <span className="hidden sm:inline">Refresh</span>
+              <span>Refresh</span>
             </button>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+          <div className="mt-2.5 flex min-w-0 items-center justify-between gap-2">
             <div
               role="tablist"
               aria-label="Filter news topics"
-              className="flex max-w-full gap-1 overflow-x-auto rounded-lg border border-white/10 bg-white/[0.03] p-1"
+              className="flex min-w-0 max-w-full gap-0.5 overflow-x-auto rounded-lg border border-white/10 bg-slate-950/80 p-0.5"
             >
               {FILTERS.map((item) => (
                 <button
@@ -196,10 +189,10 @@ export function FlashNewsDialog() {
                   role="tab"
                   aria-selected={filter === item.id}
                   onClick={() => setFilter(item.id)}
-                  className={`shrink-0 rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors sm:px-3 ${
+                  className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-medium transition-colors sm:px-2.5 ${
                     filter === item.id
-                      ? "bg-white/10 text-white"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                      ? "border border-violet-300/20 bg-violet-500/15 text-violet-100"
+                      : "border border-transparent text-white/60 hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   {item.label}
@@ -207,8 +200,11 @@ export function FlashNewsDialog() {
               ))}
             </div>
             {news && (
-              <p className="text-[10px] text-slate-500" title={news.updatedAt}>
-                {news.isStale ? "Last successful update" : "Updated"}{" "}
+              <p
+                className="hidden shrink-0 text-[9px] text-slate-500 sm:block"
+                title={news.updatedAt}
+              >
+                {news.isStale ? "Last update" : "Updated"}{" "}
                 {formatUpdatedAt(news.updatedAt)}
               </p>
             )}
@@ -218,37 +214,37 @@ export function FlashNewsDialog() {
         {news?.warning && (
           <div
             role="status"
-            className="mx-5 mt-3 flex items-start gap-2 rounded-lg border border-amber-300/20 bg-amber-300/[0.07] px-3 py-2 text-xs text-amber-100 sm:mx-7"
+            className="mx-3 mt-2 flex items-start gap-2 rounded-lg border border-amber-300/20 bg-amber-300/[0.07] px-2.5 py-1.5 text-[10px] text-amber-100 sm:mx-5"
           >
-            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
+            <AlertCircle className="mt-0.5 h-3 w-3 shrink-0 text-amber-300" />
             <span>{news.warning}</span>
           </div>
         )}
 
         <div
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-3 sm:px-7 sm:py-4"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3.5 py-1.5 sm:px-5 sm:py-2"
           aria-busy={loading}
         >
           {loading && !news ? (
-            <div className="space-y-3 py-1" aria-label="Loading news">
-              {Array.from({ length: 5 }, (_, index) => (
+            <div className="space-y-2 py-1" aria-label="Loading news">
+              {Array.from({ length: 4 }, (_, index) => (
                 <div
                   key={index}
-                  className="animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.025] p-4"
+                  className="animate-pulse rounded-lg border border-white/[0.06] bg-white/[0.025] p-3"
                 >
                   <div className="h-3 w-28 rounded bg-white/10" />
-                  <div className="mt-3 h-4 w-full rounded bg-white/10" />
-                  <div className="mt-2 h-3 w-2/3 rounded bg-white/10" />
+                  <div className="mt-2 h-3 w-full rounded bg-white/10" />
+                  <div className="mt-1.5 h-3 w-2/3 rounded bg-white/10" />
                 </div>
               ))}
             </div>
           ) : error && !news ? (
             <div
               role="alert"
-              className="flex min-h-56 flex-col items-center justify-center px-5 text-center"
+              className="flex min-h-40 flex-col items-center justify-center px-5 text-center"
             >
-              <AlertCircle className="h-8 w-8 text-amber-300" />
-              <p className="mt-3 text-sm font-semibold text-white">
+              <AlertCircle className="h-6 w-6 text-amber-300" />
+              <p className="mt-2 text-sm font-semibold text-white">
                 News could not be loaded
               </p>
               <p className="mt-1 max-w-sm text-xs leading-5 text-slate-400">
@@ -263,13 +259,13 @@ export function FlashNewsDialog() {
               </button>
             </div>
           ) : visibleItems.length === 0 ? (
-            <div className="flex min-h-56 flex-col items-center justify-center text-center">
-              <Newspaper className="h-8 w-8 text-slate-600" />
-              <p className="mt-3 text-sm font-medium text-slate-300">
+            <div className="flex min-h-40 flex-col items-center justify-center text-center">
+              <Newspaper className="h-6 w-6 text-slate-600" />
+              <p className="mt-2 text-sm font-medium text-slate-300">
                 No recent headlines in this topic
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                Try another topic or refresh the Google News feed.
+                Try another topic or refresh the feed.
               </p>
             </div>
           ) : (
@@ -277,9 +273,9 @@ export function FlashNewsDialog() {
               {visibleItems.map((item) => (
                 <article
                   key={`${item.title}-${item.publishedAt}`}
-                  className="group py-4 first:pt-2 last:pb-2"
+                  className="group py-2.5 first:pt-1 last:pb-1"
                 >
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[10px] text-slate-500">
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[9px] text-slate-500">
                     <span className="font-semibold text-slate-300">
                       {item.source}
                     </span>
@@ -297,7 +293,7 @@ export function FlashNewsDialog() {
                     {item.categories.map((category) => (
                       <span
                         key={category}
-                        className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] text-slate-400"
+                        className="rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[8px] text-slate-400"
                       >
                         {CATEGORY_LABELS[category]}
                       </span>
@@ -307,10 +303,10 @@ export function FlashNewsDialog() {
                     href={item.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1.5 flex items-start justify-between gap-3 text-sm font-semibold leading-5 text-white transition-colors group-hover:text-amber-100 sm:text-[15px]"
+                    className="mt-1 flex items-start justify-between gap-2 text-[13px] font-semibold leading-[1.2rem] text-white transition-colors group-hover:text-violet-100"
                   >
                     <span>{item.title}</span>
-                    <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-slate-500 transition-colors group-hover:text-amber-300" />
+                    <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500 transition-colors group-hover:text-violet-300" />
                   </a>
                 </article>
               ))}
@@ -318,26 +314,12 @@ export function FlashNewsDialog() {
           )}
 
           {error && news && (
-            <p role="status" className="mt-3 text-center text-[11px] text-amber-200">
+            <p role="status" className="mt-2 text-center text-[10px] text-amber-200">
               {error}
             </p>
           )}
         </div>
 
-        <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-white/10 px-5 py-3 text-[10px] text-slate-500 sm:px-7">
-          <span>
-            Headlines and publish times are supplied by Google News and the
-            original publishers.
-          </span>
-          <a
-            href="https://news.google.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-slate-400 underline decoration-white/20 underline-offset-2 hover:text-white"
-          >
-            Google News
-          </a>
-        </footer>
       </DialogContent>
     </Dialog>
   );
