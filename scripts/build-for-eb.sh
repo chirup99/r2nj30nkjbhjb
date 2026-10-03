@@ -28,12 +28,44 @@ fi
 
 echo "==> Staging Elastic Beanstalk bundle..."
 STAGING_DIR="$TEMP_DIR/staging"
-mkdir -p "$STAGING_DIR"
-cp -R dist package.json package-lock.json Procfile .ebextensions server shared tsconfig.json "$STAGING_DIR/"
+mkdir -p "$STAGING_DIR/.ebextensions"
+cp -R dist package.json package-lock.json Procfile server shared tsconfig.json "$STAGING_DIR/"
+cp .ebextensions/port.config "$STAGING_DIR/.ebextensions/"
 
-# The Replit .npmrc includes development dependencies; the deployed bundle needs
-# only runtime packages because dist/ already contains the compiled app.
-printf 'omit=dev\n' > "$STAGING_DIR/.npmrc"
+# Replit's lockfile can contain absolute tarball URLs for its private package
+# firewall. Elastic Beanstalk instances cannot resolve that host, so rewrite
+# only those deployment-copy URLs to the equivalent public npm registry paths.
+node --input-type=module - "$STAGING_DIR/package-lock.json" <<'NODE'
+import fs from "node:fs/promises";
+
+const lockPath = process.argv[2];
+const lock = JSON.parse(await fs.readFile(lockPath, "utf8"));
+let rewritten = 0;
+
+for (const [name, entry] of Object.entries(lock.packages ?? {})) {
+  if (!entry.resolved) continue;
+  const url = new URL(entry.resolved);
+  if (url.hostname === "package-firewall.replit.internal") {
+    if (!url.pathname.startsWith("/npm/")) {
+      throw new Error(`Unexpected Replit package URL path in ${name}`);
+    }
+    url.protocol = "https:";
+    url.hostname = "registry.npmjs.org";
+    url.port = "";
+    url.pathname = url.pathname.slice(4);
+    entry.resolved = url.toString();
+    rewritten++;
+  } else if (url.hostname.endsWith(".replit.internal")) {
+    throw new Error(`Unexpected Replit-internal package host in ${name}`);
+  }
+}
+
+await fs.writeFile(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
+console.log(`Normalized ${rewritten} deployment-copy package URLs.`);
+NODE
+
+# The built app needs no development dependencies on the EB instance.
+printf 'registry=https://registry.npmjs.org/\nomit=dev\n' > "$STAGING_DIR/.npmrc"
 
 TEMP_ZIP="$TEMP_DIR/$(basename "$OUTPUT_ZIP")"
 (
