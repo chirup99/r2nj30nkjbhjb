@@ -214,36 +214,46 @@ export function FlashNewsInsightsView({
           Policy and market coverage
         </h3>
         <div className="space-y-2">
-          {insights.signals.map((signal) => (
-            <article
-              key={signal.id}
-              className="rounded-lg border border-white/[0.08] bg-white/[0.025] px-3 py-2.5"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <h4 className="text-[11px] font-semibold text-slate-200">
-                  {signal.title}
-                </h4>
-                <span className="shrink-0 text-[9px] text-slate-500">
-                  {signal.articles.length}{" "}
-                  {signal.articles.length === 1 ? "story" : "stories"}
-                </span>
-              </div>
-              <p className="mt-1 text-[9px] leading-4 text-slate-500">
-                {signal.description}
-              </p>
-              {signal.articles.length > 0 ? (
-                <div className="mt-1 divide-y divide-white/[0.05]">
-                  {signal.articles.slice(0, 2).map((item) => (
-                    <ArticleLink key={`${item.link}-${item.title}`} item={item} />
-                  ))}
+          {insights.signals.map((signal, index) => {
+            const palette =
+              AREA_CARD_PALETTES[index % AREA_CARD_PALETTES.length];
+
+            return (
+              <article
+                key={signal.id}
+                className={`rounded-lg border px-3 py-2.5 ${palette.card}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className={`text-[11px] font-semibold ${palette.number}`}>
+                    {signal.title}
+                  </h4>
+                  <span
+                    className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[8px] ${palette.badge}`}
+                  >
+                    {signal.articles.length}{" "}
+                    {signal.articles.length === 1 ? "story" : "stories"}
+                  </span>
                 </div>
-              ) : (
-                <p className="mt-1.5 text-[9px] text-slate-500">
-                  No matching local headlines in this scan.
+                <p className="mt-1 text-[9px] leading-4 text-slate-300/75">
+                  {signal.description}
                 </p>
-              )}
-            </article>
-          ))}
+                {signal.articles.length > 0 ? (
+                  <div className="mt-1 divide-y divide-white/[0.05]">
+                    {signal.articles.slice(0, 2).map((item) => (
+                      <ArticleLink
+                        key={`${item.link}-${item.title}`}
+                        item={item}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-1.5 text-[9px] text-slate-300/55">
+                    No matching local headlines in this scan.
+                  </p>
+                )}
+              </article>
+            );
+          })}
         </div>
       </section>
 
