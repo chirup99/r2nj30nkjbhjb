@@ -18,6 +18,57 @@ const SIGNAL_LABELS: Record<MarketSignalId, string> = {
   infrastructure: "Transport & major projects",
 };
 
+const AREA_CARD_PALETTES = [
+  {
+    card: "border-purple-300/25 bg-gradient-to-br from-slate-900 via-purple-950 to-slate-950",
+    number: "text-purple-200",
+    count: "text-purple-100/65",
+    badge: "border-purple-300/20 bg-purple-400/10 text-purple-100",
+  },
+  {
+    card: "border-emerald-300/25 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-950",
+    number: "text-emerald-200",
+    count: "text-emerald-100/65",
+    badge: "border-teal-300/20 bg-teal-400/10 text-teal-100",
+  },
+  {
+    card: "border-blue-300/25 bg-gradient-to-br from-blue-950 via-indigo-900 to-slate-950",
+    number: "text-blue-200",
+    count: "text-blue-100/65",
+    badge: "border-indigo-300/20 bg-indigo-400/10 text-indigo-100",
+  },
+  {
+    card: "border-amber-300/25 bg-gradient-to-br from-amber-950 via-orange-900 to-slate-950",
+    number: "text-amber-200",
+    count: "text-amber-100/65",
+    badge: "border-orange-300/20 bg-orange-400/10 text-orange-100",
+  },
+  {
+    card: "border-rose-300/25 bg-gradient-to-br from-rose-950 via-fuchsia-900 to-slate-950",
+    number: "text-rose-200",
+    count: "text-rose-100/65",
+    badge: "border-fuchsia-300/20 bg-fuchsia-400/10 text-fuchsia-100",
+  },
+  {
+    card: "border-cyan-300/25 bg-gradient-to-br from-cyan-950 via-sky-900 to-slate-950",
+    number: "text-cyan-200",
+    count: "text-cyan-100/65",
+    badge: "border-sky-300/20 bg-sky-400/10 text-sky-100",
+  },
+  {
+    card: "border-violet-300/25 bg-gradient-to-br from-violet-950 via-indigo-900 to-slate-950",
+    number: "text-violet-200",
+    count: "text-violet-100/65",
+    badge: "border-indigo-300/20 bg-indigo-400/10 text-indigo-100",
+  },
+  {
+    card: "border-lime-300/25 bg-gradient-to-br from-lime-950 via-green-900 to-slate-950",
+    number: "text-lime-200",
+    count: "text-lime-100/65",
+    badge: "border-green-300/20 bg-green-400/10 text-green-100",
+  },
+] as const;
+
 function formatPublishedAt(value: string) {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return "Time unavailable";
@@ -109,18 +160,22 @@ export function FlashNewsInsightsView({
             {insights.areas.map((insight, index) => (
               <article
                 key={insight.area}
-                className="rounded-lg border border-white/[0.08] bg-white/[0.025] px-3 py-2.5"
+                className={`rounded-lg border px-3 py-2.5 transition-colors ${AREA_CARD_PALETTES[index % AREA_CARD_PALETTES.length].card}`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="text-[9px] font-semibold tabular-nums text-violet-300">
+                    <span
+                      className={`text-[9px] font-semibold tabular-nums ${AREA_CARD_PALETTES[index % AREA_CARD_PALETTES.length].number}`}
+                    >
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     <h4 className="truncate text-xs font-semibold text-white">
                       {insight.area}
                     </h4>
                   </div>
-                  <span className="text-[9px] text-slate-500">
+                  <span
+                    className={`text-[9px] ${AREA_CARD_PALETTES[index % AREA_CARD_PALETTES.length].count}`}
+                  >
                     {insight.articles.length}{" "}
                     {insight.articles.length === 1 ? "headline" : "headlines"}
                   </span>
@@ -129,7 +184,7 @@ export function FlashNewsInsightsView({
                   {insight.signals.map((signal) => (
                     <span
                       key={signal}
-                      className="rounded-full border border-violet-300/15 bg-violet-400/[0.06] px-1.5 py-0.5 text-[8px] text-violet-200"
+                      className={`rounded-full border px-1.5 py-0.5 text-[8px] ${AREA_CARD_PALETTES[index % AREA_CARD_PALETTES.length].badge}`}
                     >
                       {SIGNAL_LABELS[signal]}
                     </span>
