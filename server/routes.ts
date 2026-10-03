@@ -8,6 +8,7 @@ import bcrypt from "bcrypt";
 import { Readable } from "stream";
 import sharp from "sharp";
 import { HMDA_MASTER_PLAN_MAPS } from "../client/src/data/hmdaMasterPlanMaps";
+import { getFlashNews } from "./flashNews";
 
 import { AccessToken } from "livekit-server-sdk";
 
@@ -77,6 +78,22 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  app.get("/api/news/flash", async (req, res) => {
+    try {
+      const news = await getFlashNews(req.query.refresh === "true");
+      return res
+        .status(200)
+        .set("Cache-Control", "no-store")
+        .json(news);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Google News could not be reached. Please try again shortly.";
+      return res.status(502).set("Cache-Control", "no-store").json({ message });
+    }
+  });
+
   app.get("/api/master-plan/maps/:mapId/preview.webp", async (req, res) => {
     const mapId = req.params.mapId;
     if (!HMDA_MASTER_PLAN_MAPS.some((map) => map.id === mapId)) {
