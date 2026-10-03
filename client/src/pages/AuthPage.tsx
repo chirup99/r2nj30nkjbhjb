@@ -3839,7 +3839,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   </div>
                 </div>
 
-                  <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4">
+                  <div className="flash-news-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4">
                    <div className="mb-3 flex items-center justify-between gap-3">
                      <div>
                        <h4 className="text-sm font-bold tracking-tight text-white">
