@@ -2972,7 +2972,7 @@ export function HyderabadPropertyMapOverlay({
                   <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                     {visibleMasterPlanMaps.length} area maps
                   </p>
-                  <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-2">
+                  <div className="flash-news-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-2">
                     {visibleMasterPlanMaps.map((mapSheet) => (
                       <button
                         key={mapSheet.id}
