@@ -3323,7 +3323,7 @@ export function HyderabadPropertyMapOverlay({
               </button>
             </div>
           </div>
-          <div className="max-h-[calc(58vh-64px)] overflow-y-auto p-2">
+          <div className="flash-news-scrollbar max-h-[calc(58vh-64px)] overflow-y-auto p-2">
             {visibleProjects.length > 0 ? (
               sortedVisibleProjects.map((project) => (
                 <button
