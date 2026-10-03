@@ -65,17 +65,26 @@ export function FlashNewsInsightsView({
 
   return (
     <div className="space-y-4 py-1">
-      <div className="rounded-xl border border-violet-300/15 bg-violet-400/[0.05] p-3">
-        <div className="flex items-center gap-2">
-          <Lightbulb className="h-4 w-4 shrink-0 text-violet-300" />
-          <div>
-            <p className="text-xs font-semibold text-white">
-              Headline-based market signals
-            </p>
-            <p className="mt-0.5 text-[9px] text-slate-400">
-              Feed updated {formatUpdatedAt(updatedAt)}
-            </p>
+      <div className="sticky top-0 z-10 rounded-xl border border-violet-300/20 bg-slate-950 p-3 shadow-[0_8px_20px_rgba(2,6,23,0.65)]">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <Lightbulb className="h-4 w-4 shrink-0 text-violet-300" />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-white">
+                Headline-based market signals
+              </p>
+              <p className="mt-0.5 text-[9px] text-slate-400">
+                Feed updated {formatUpdatedAt(updatedAt)}
+              </p>
+            </div>
           </div>
+          <span
+            aria-label="Insights from current headlines"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-violet-300/20 bg-violet-400/10 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.12em] text-violet-200"
+          >
+            <Lightbulb className="h-2.5 w-2.5" />
+            Insights
+          </span>
         </div>
         <p className="mt-2 text-[10px] leading-4 text-slate-400">
           This scan groups current Hyderabad and HMDA headlines by named areas
