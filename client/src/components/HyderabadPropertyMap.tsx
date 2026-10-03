@@ -7,12 +7,14 @@ import {
   Building2,
   Check,
   ChevronRight,
+  Download,
   ExternalLink,
   FileCheck2,
   House,
   Info,
   Layers,
   Landmark,
+  Loader2,
   List,
   MapPin,
   MapPinned,
@@ -2332,6 +2334,7 @@ export function HyderabadPropertyMapOverlay({
   const [selectedMasterPlanMapId, setSelectedMasterPlanMapId] = useState(
     HMDA_MASTER_PLAN_MAPS[0].id,
   );
+  const [masterPlanImageLoading, setMasterPlanImageLoading] = useState(true);
   const [masterPlanImageFailed, setMasterPlanImageFailed] = useState(false);
   const [isLuxurySelected, setIsLuxurySelected] = useState(false);
   const [showProjectPins, setShowProjectPins] = useState(true);
@@ -2551,6 +2554,7 @@ export function HyderabadPropertyMapOverlay({
   const selectMasterPlanGroup = (group: HmdaMasterPlanGroup) => {
     setMasterPlanMapGroup(group);
     setMasterPlanSearch("");
+    setMasterPlanImageLoading(true);
     setMasterPlanImageFailed(false);
     const firstMap = HMDA_MASTER_PLAN_MAPS.find(
       (mapSheet) => mapSheet.group === group,
@@ -2570,6 +2574,7 @@ export function HyderabadPropertyMapOverlay({
     );
     if (firstMatch) {
       setSelectedMasterPlanMapId(firstMatch.id);
+      setMasterPlanImageLoading(true);
       setMasterPlanImageFailed(false);
     }
   };
@@ -2944,7 +2949,7 @@ export function HyderabadPropertyMapOverlay({
                     Master plan area maps
                   </h2>
                   <p className="mt-1 text-xs text-slate-400">
-                    Official map sheets loaded directly from HMDA.
+                    Optimized previews; open full-size sheets from HMDA.
                   </p>
                 </div>
                 <button
@@ -3010,6 +3015,7 @@ export function HyderabadPropertyMapOverlay({
                         type="button"
                         onClick={() => {
                           setSelectedMasterPlanMapId(mapSheet.id);
+                          setMasterPlanImageLoading(true);
                           setMasterPlanImageFailed(false);
                         }}
                         aria-pressed={selectedMasterPlanMap?.id === mapSheet.id}
@@ -3046,11 +3052,32 @@ export function HyderabadPropertyMapOverlay({
                           Open full-size sheet
                           <ExternalLink className="h-3 w-3" />
                         </a>
+                        <a
+                          href={`/api/master-plan/maps/${encodeURIComponent(selectedMasterPlanMap.id)}/download`}
+                          download={`hmda-${selectedMasterPlanMap.id}.jpg`}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-white/15 px-2.5 py-1.5 text-[11px] font-medium text-violet-200 hover:bg-white/10"
+                        >
+                          Download sheet
+                          <Download className="h-3 w-3" />
+                        </a>
                       </div>
-                      <div className="min-h-0 flex-1 overflow-auto bg-slate-900 p-2">
+                      <div
+                        className="relative min-h-0 flex-1 overflow-auto overscroll-contain bg-slate-900 p-2"
+                        aria-busy={masterPlanImageLoading}
+                      >
+                        {masterPlanImageLoading && !masterPlanImageFailed && (
+                          <div
+                            className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-slate-900/80 text-xs text-slate-300"
+                            role="status"
+                            aria-live="polite"
+                          >
+                            <Loader2 className="h-5 w-5 animate-spin text-violet-300" />
+                            <span>Preparing map preview…</span>
+                          </div>
+                        )}
                         {masterPlanImageFailed ? (
                           <div className="flex h-full min-h-32 flex-col items-center justify-center gap-3 text-center text-sm text-slate-300">
-                            <p>The official image could not be loaded here.</p>
+                            <p>The preview could not be prepared.</p>
                             <a
                               href={selectedMasterPlanMap.imageUrl}
                               target="_blank"
@@ -3063,11 +3090,16 @@ export function HyderabadPropertyMapOverlay({
                         ) : (
                           <img
                             key={selectedMasterPlanMap.id}
-                            src={selectedMasterPlanMap.imageUrl}
+                            src={`/api/master-plan/maps/${encodeURIComponent(selectedMasterPlanMap.id)}/preview.webp`}
                             alt={`HMDA master plan map for ${selectedMasterPlanMap.area}`}
-                            loading="lazy"
+                            loading="eager"
+                            decoding="async"
                             referrerPolicy="no-referrer"
-                            onError={() => setMasterPlanImageFailed(true)}
+                            onLoad={() => setMasterPlanImageLoading(false)}
+                            onError={() => {
+                              setMasterPlanImageLoading(false);
+                              setMasterPlanImageFailed(true);
+                            }}
                             className="mx-auto h-auto max-w-full object-contain"
                           />
                         )}

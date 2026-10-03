@@ -47,7 +47,7 @@ A React + Express (TypeScript) property discovery concept branded as RCiQ-AI. Th
 - The main entry point is branded **RCiQ-AI** and positioned as Hyderabad Property Discovery.
 - The floating property map opens on the public PlotsView catalog, using each venture's published latitude and longitude. City context layers are optional: they hide property pins and show airport, industrial, SEZ, commercial, metro, data-centre, and power-plant context. City context locations use category-colored circular markers; exiting city context restores the property pins.
 - The map fits its initial viewport to every visible project pin, supports searching the full catalog, and links each popup back to its PlotsView venture page. The imported catalog is a snapshot and should be refreshed when listings change.
-- The Master Plan viewer loads HMDA's official Master Plan 2031 district sheets and revised HUDA zone sheets directly from the government source pages. These are static reference maps, not georeferenced overlays on the live basemap.
+- The Master Plan viewer serves cached, resized WebP previews of HMDA's official Master Plan 2031 district sheets and revised HUDA zone sheets; the full-size links still open the original government images. These are static reference maps, not georeferenced overlays on the live basemap.
 
 ## Port Configuration
 

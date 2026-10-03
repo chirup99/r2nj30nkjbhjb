@@ -6,19 +6,126 @@ import { insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import { Readable } from "stream";
+import sharp from "sharp";
+import { HMDA_MASTER_PLAN_MAPS } from "../client/src/data/hmdaMasterPlanMaps";
 
 import { AccessToken } from "livekit-server-sdk";
 
 const SALT_ROUNDS = 12;
+const MASTER_PLAN_PREVIEW_CACHE_LIMIT = 8;
+const masterPlanPreviewCache = new Map<string, Buffer>();
+const masterPlanPreviewRequests = new Map<string, Promise<Buffer>>();
 const propertyEventRegistrations = new Map<
   string,
   Map<string, { name: string; phone: string; userId?: string; registeredAt: string }>
 >();
 
+async function getMasterPlanPreview(mapId: string): Promise<Buffer> {
+  const cachedPreview = masterPlanPreviewCache.get(mapId);
+  if (cachedPreview) {
+    masterPlanPreviewCache.delete(mapId);
+    masterPlanPreviewCache.set(mapId, cachedPreview);
+    return cachedPreview;
+  }
+
+  const pendingRequest = masterPlanPreviewRequests.get(mapId);
+  if (pendingRequest) return pendingRequest;
+
+  const mapSheet = HMDA_MASTER_PLAN_MAPS.find((map) => map.id === mapId);
+  if (!mapSheet) throw new Error("Unknown HMDA map sheet");
+
+  const request = (async () => {
+    const response = await fetch(mapSheet.imageUrl, {
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!response.ok) {
+      throw new Error(`HMDA image request failed with status ${response.status}`);
+    }
+
+    const sourceImage = Buffer.from(await response.arrayBuffer());
+    if (sourceImage.byteLength > 50 * 1024 * 1024) {
+      throw new Error("HMDA image is larger than the supported preview limit");
+    }
+
+    return sharp(sourceImage, { limitInputPixels: 250_000_000 })
+      .resize({
+        width: 2400,
+        height: 2400,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 82, effort: 4 })
+      .toBuffer();
+  })();
+
+  masterPlanPreviewRequests.set(mapId, request);
+  try {
+    const preview = await request;
+    masterPlanPreviewCache.set(mapId, preview);
+    while (masterPlanPreviewCache.size > MASTER_PLAN_PREVIEW_CACHE_LIMIT) {
+      const oldestMapId = masterPlanPreviewCache.keys().next().value;
+      if (!oldestMapId) break;
+      masterPlanPreviewCache.delete(oldestMapId);
+    }
+    return preview;
+  } finally {
+    masterPlanPreviewRequests.delete(mapId);
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  app.get("/api/master-plan/maps/:mapId/preview.webp", async (req, res) => {
+    const mapId = req.params.mapId;
+    if (!HMDA_MASTER_PLAN_MAPS.some((map) => map.id === mapId)) {
+      return res.status(404).end();
+    }
+
+    try {
+      const preview = await getMasterPlanPreview(mapId);
+      return res
+        .status(200)
+        .type("image/webp")
+        .set("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400")
+        .send(preview);
+    } catch (error) {
+      console.error(`HMDA map preview error for ${mapId}:`, error);
+      return res.status(502).end();
+    }
+  });
+
+  app.get("/api/master-plan/maps/:mapId/download", async (req, res) => {
+    const mapSheet = HMDA_MASTER_PLAN_MAPS.find(
+      (map) => map.id === req.params.mapId,
+    );
+    if (!mapSheet) return res.status(404).end();
+
+    try {
+      const response = await fetch(mapSheet.imageUrl, {
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!response.ok || !response.body) {
+        return res.status(502).end();
+      }
+
+      res.status(200);
+      res.setHeader("Content-Type", "image/jpeg");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="hmda-${mapSheet.id}.jpg"`,
+      );
+      res.setHeader("Cache-Control", "no-store");
+      const contentLength = response.headers.get("content-length");
+      if (contentLength) res.setHeader("Content-Length", contentLength);
+      return Readable.fromWeb(response.body as any).pipe(res);
+    } catch (error) {
+      console.error(`HMDA map download error for ${mapSheet.id}:`, error);
+      return res.status(502).end();
+    }
+  });
+
   // The lake geometry matches the digitized FTL/buffer layer used by the
   // reference map. Keep the provider token server-side and proxy only tiles
   // needed by the MapLibre viewport.
