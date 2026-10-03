@@ -149,7 +149,7 @@ export function FlashNewsDialog() {
         overlayClassName="z-[150] bg-slate-950/45 backdrop-blur-[1px]"
         className="z-[151] bottom-0 left-1/2 top-auto flex h-[min(68dvh,560px)] max-h-[min(68dvh,560px)] w-[calc(100%_-_0.75rem)] max-w-3xl translate-x-[-50%] translate-y-0 flex-col gap-0 overflow-hidden rounded-t-2xl border border-white/15 bg-slate-950/95 p-0 text-white shadow-[0_-12px_36px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:bottom-4 sm:w-[calc(100%_-_2rem)] sm:rounded-2xl"
       >
-        <header className="shrink-0 border-b border-white/10 px-3.5 pb-3 pt-3 pr-12 sm:px-5 sm:pb-3.5">
+        <header className="shrink-0 border-b border-white/10 px-3.5 pb-3 pt-3 pr-12 sm:pl-5 sm:pr-16 sm:pb-3.5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <Newspaper className="h-4 w-4 shrink-0 text-violet-300" />
