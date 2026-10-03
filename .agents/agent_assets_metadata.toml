@@ -70,3 +70,17 @@ mtime_ms = 1791026158824
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:dd7d3d6f-b131-431c-b86a-edaedb07763d/b6cd0cf9-cdd8-4e74-8f0e-b427df21e87d/4cd030b5-b61d-4796-8aa6-880468d2e347"
 storage_version_token = "1791026172741774"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "ry1bhENKzfN9OeP4rpXE4"
+uri = "file://persona-hub-eb-new-fixed-2026-10-03.zip"
+type = "unspecified"
+title = "Refreshed Elastic Beanstalk ZIP"
+description = "Built from the current source with the updated reproducible build script. Passed ZIP integrity, production-only npm install, and a production startup smoke test returning HTTP 200 on port 8080. Includes current EB configs and package lock; excludes secrets and node_modules."
+logical_id = "2c93f6dd-3ddc-44c5-bab4-b1725add6a4f"
+content_hash = "sha256:d340fdbe949bd6c2efff7a9d91c7e9b0008e0999b580a448fa3510d8991bf3de"
+size = 6088059
+mtime_ms = 1791026519229
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:dd7d3d6f-b131-431c-b86a-edaedb07763d/2c93f6dd-3ddc-44c5-bab4-b1725add6a4f/173d7d54-1a53-4289-95a2-7c2d93347e41"
+storage_version_token = "1791026570487342"
+content_type = "application/octet-stream"
