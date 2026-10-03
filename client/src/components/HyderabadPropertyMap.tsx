@@ -9,7 +9,6 @@ import {
   ChevronRight,
   ExternalLink,
   FileCheck2,
-  FileText,
   House,
   Info,
   Layers,
@@ -2284,26 +2283,6 @@ function ProjectDetailSheet({
           </section>
         </div>
 
-        <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
-          <a
-            href={project.sourceUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-slate-800"
-          >
-            <FileText className="h-4 w-4" />
-            View full listing
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex items-center justify-center rounded-xl border border-slate-200 px-4 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900"
-            aria-label="Close project details"
-          >
-            <ChevronRight className="h-5 w-5 rotate-90" />
-          </button>
-        </div>
       </div>
     </motion.section>
   );
