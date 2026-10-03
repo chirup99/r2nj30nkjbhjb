@@ -45,7 +45,7 @@ A React + Express (TypeScript) property discovery concept branded as RCiQ-AI. Th
 ## Current Product Direction
 
 - The main entry point is branded **RCiQ-AI** and positioned as Hyderabad Property Discovery.
-- The floating property map opens on the public PlotsView catalog, using each venture's published latitude and longitude. City context layers are optional: they hide property pins and show airport, industrial, SEZ, commercial mall, metro, data-centre, and power-plant context. All city context points use small isometric 3D illustrations; exiting city context restores the property pins.
+- The floating property map opens on the public PlotsView catalog, using each venture's published latitude and longitude. City context layers are optional: they hide property pins and show airport, industrial, SEZ, commercial mall, metro, data-centre, and power-plant context. City context locations use category-colored circular markers; exiting city context restores the property pins.
 - The map fits its initial viewport to every visible project pin, supports searching the full catalog, and links each popup back to its PlotsView venture page. The imported catalog is a snapshot and should be refreshed when listings change.
 
 ## Port Configuration
