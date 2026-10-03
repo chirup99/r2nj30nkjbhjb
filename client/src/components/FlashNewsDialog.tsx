@@ -222,7 +222,7 @@ export function FlashNewsDialog() {
         )}
 
         <div
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3.5 py-1.5 sm:px-5 sm:py-2"
+          className="flash-news-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3.5 py-1.5 sm:px-5 sm:py-2"
           aria-busy={loading}
         >
           {loading && !news ? (

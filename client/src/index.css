@@ -78,3 +78,25 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+.flash-news-scrollbar {
+  scrollbar-color: rgba(139, 92, 246, 0.48) transparent;
+  scrollbar-width: thin;
+}
+
+.flash-news-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.flash-news-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.flash-news-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.42);
+}
+
+.flash-news-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.68);
+}
