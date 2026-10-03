@@ -16,6 +16,7 @@ import {
   Landmark,
   List,
   MapPin,
+  MapPinned,
   Maximize2,
   Moon,
   Navigation,
@@ -2751,7 +2752,7 @@ export function HyderabadPropertyMapOverlay({
                   : "Show city context mode"
               }
             >
-              <Layers className="h-5 w-5" />
+              <MapPinned className="h-5 w-5" />
             </button>
             {!showCityLayers && (
               <>
