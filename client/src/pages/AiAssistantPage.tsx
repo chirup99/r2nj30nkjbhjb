@@ -586,7 +586,7 @@ function LoanPlanner({
               onChange={(event) =>
                 update(field.key, Number(event.target.value))
               }
-              className="h-1.5 w-full accent-purple-300"
+              className="h-1.5 w-full accent-purple-300 focus:outline-none focus-visible:outline-none"
             />
           </label>
         ))}
@@ -696,7 +696,7 @@ function PropertySearchPlanner({
               maxBudget: Number(event.target.value),
             })
           }
-          className="h-1.5 w-full accent-purple-300"
+          className="h-1.5 w-full accent-purple-300 focus:outline-none focus-visible:outline-none"
           aria-label="Maximum property budget"
         />
         <span className="mt-1 flex justify-between text-[10px] text-white/35">
