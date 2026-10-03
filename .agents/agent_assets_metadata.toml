@@ -56,3 +56,17 @@ mtime_ms = 1790686348740
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:c9b480a9-6f56-4215-983a-e2fe1d52a70a/bd77c837-e82d-4f7c-8533-7600128d3b61/7db15418-87a0-477d-a8d2-314363fce785"
 storage_version_token = "1790686399407946"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "d_YImoFyS5AH7yEEo07G8"
+uri = "file://persona-hub-eb-latest-2026-10-03.zip"
+type = "unspecified"
+title = "Latest AWS Elastic Beanstalk ZIP"
+description = "Fresh 5.79 MB deployment bundle built from the current project source. Includes dist, package manifests, Procfile, and both current Elastic Beanstalk configs. Verified archive integrity; excludes environment files/secrets, node_modules, Git data, and removed videos. Set required credentials in Elastic Beanstalk environment configuration before deployment."
+logical_id = "b6cd0cf9-cdd8-4e74-8f0e-b427df21e87d"
+content_hash = "sha256:508e34edd80cad176a9d5f323cbefce74c0fbf5da92b9f6f1e7ee4faa1b504c4"
+size = 6073917
+mtime_ms = 1791026158824
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:dd7d3d6f-b131-431c-b86a-edaedb07763d/b6cd0cf9-cdd8-4e74-8f0e-b427df21e87d/4cd030b5-b61d-4796-8aa6-880468d2e347"
+storage_version_token = "1791026172741774"
+content_type = "application/octet-stream"
