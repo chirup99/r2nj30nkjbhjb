@@ -40,6 +40,10 @@ import {
   MapGeoJSON,
 } from "@/components/ui/map";
 import { Switch } from "@/components/ui/switch";
+import {
+  HMDA_MASTER_PLAN_MAPS,
+  type HmdaMasterPlanGroup,
+} from "@/data/hmdaMasterPlanMaps";
 import { PLOTSVIEW_PROJECTS } from "@/data/plotsviewProjects";
 import { RRR_ALIGNMENT_COORDINATES } from "@/data/rrrAlignment";
 
@@ -2322,6 +2326,13 @@ export function HyderabadPropertyMapOverlay({
   const [isSatelliteMap, setIsSatelliteMap] = useState(false);
   const [showLakes, setShowLakes] = useState(false);
   const [isMasterPlanSelected, setIsMasterPlanSelected] = useState(false);
+  const [masterPlanMapGroup, setMasterPlanMapGroup] =
+    useState<HmdaMasterPlanGroup>("plan-2031");
+  const [masterPlanSearch, setMasterPlanSearch] = useState("");
+  const [selectedMasterPlanMapId, setSelectedMasterPlanMapId] = useState(
+    HMDA_MASTER_PLAN_MAPS[0].id,
+  );
+  const [masterPlanImageFailed, setMasterPlanImageFailed] = useState(false);
   const [isLuxurySelected, setIsLuxurySelected] = useState(false);
   const [showProjectPins, setShowProjectPins] = useState(true);
   const [showCityLayers, setShowCityLayers] = useState(false);
@@ -2359,6 +2370,19 @@ export function HyderabadPropertyMapOverlay({
   const selectedSubcategory = selectedIntent?.subcategories.find(
     (subcategory) => subcategory.id === selectedSubcategoryId,
   );
+  const visibleMasterPlanMaps = useMemo(() => {
+    const normalizedSearch = masterPlanSearch.trim().toLowerCase();
+    return HMDA_MASTER_PLAN_MAPS.filter(
+      (mapSheet) =>
+        mapSheet.group === masterPlanMapGroup &&
+        (!normalizedSearch ||
+          mapSheet.area.toLowerCase().includes(normalizedSearch)),
+    );
+  }, [masterPlanMapGroup, masterPlanSearch]);
+  const selectedMasterPlanMap =
+    visibleMasterPlanMaps.find(
+      (mapSheet) => mapSheet.id === selectedMasterPlanMapId,
+    ) ?? visibleMasterPlanMaps[0];
 
   const visibleProjects = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -2524,6 +2548,32 @@ export function HyderabadPropertyMapOverlay({
     setSelectedSubcategoryId(null);
   };
 
+  const selectMasterPlanGroup = (group: HmdaMasterPlanGroup) => {
+    setMasterPlanMapGroup(group);
+    setMasterPlanSearch("");
+    setMasterPlanImageFailed(false);
+    const firstMap = HMDA_MASTER_PLAN_MAPS.find(
+      (mapSheet) => mapSheet.group === group,
+    );
+    if (firstMap) setSelectedMasterPlanMapId(firstMap.id);
+  };
+
+  const searchMasterPlanMaps = (value: string) => {
+    setMasterPlanSearch(value);
+    const normalizedSearch = value.trim().toLowerCase();
+    if (!normalizedSearch) return;
+
+    const firstMatch = HMDA_MASTER_PLAN_MAPS.find(
+      (mapSheet) =>
+        mapSheet.group === masterPlanMapGroup &&
+        mapSheet.area.toLowerCase().includes(normalizedSearch),
+    );
+    if (firstMatch) {
+      setSelectedMasterPlanMapId(firstMatch.id);
+      setMasterPlanImageFailed(false);
+    }
+  };
+
   useEffect(() => {
     if (!isRadiusFilterOpen || locationStatus !== "idle") return;
 
@@ -2670,7 +2720,7 @@ export function HyderabadPropertyMapOverlay({
         ))}
       </PropertyMap>
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-4 sm:p-6">
+      <div className="pointer-events-none absolute inset-0 z-20 p-4 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="pointer-events-auto w-full max-w-[430px]">
             <div className="w-full rounded-2xl border border-white/60 bg-white/90 p-3 shadow-2xl backdrop-blur-xl sm:p-4">
@@ -2739,9 +2789,13 @@ export function HyderabadPropertyMapOverlay({
                     ? "border-violet-300/60 bg-violet-500 text-white"
                     : "border-transparent text-white/75 hover:bg-white/10 hover:text-white"
                 }`}
-                aria-label="Toggle Master Plan placeholder"
+                aria-label={
+                  isMasterPlanSelected
+                    ? "Close HMDA master plan map viewer"
+                    : "Open official HMDA master plan area maps"
+                }
                 aria-pressed={isMasterPlanSelected}
-                title="Master Plan layer placeholder"
+                title="Browse official HMDA master plan maps"
               >
                 <Layers className="h-3 w-3 shrink-0" />
                 <span>Master Plan</span>
@@ -2874,6 +2928,180 @@ export function HyderabadPropertyMapOverlay({
             )}
           </div>
         </div>
+
+        {isMasterPlanSelected && (
+          <div className="pointer-events-auto absolute inset-0 z-30 flex items-center justify-center bg-slate-950/70 p-2 backdrop-blur-sm sm:p-5">
+            <section
+              className="flex h-full max-h-[900px] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-slate-950 text-white shadow-2xl"
+              aria-label="HMDA official master plan maps"
+            >
+              <header className="flex items-start justify-between gap-4 border-b border-white/10 p-4 sm:p-5">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-300">
+                    Hyderabad Metropolitan Development Authority
+                  </p>
+                  <h2 className="mt-1 text-lg font-semibold sm:text-xl">
+                    Master plan area maps
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Official map sheets loaded directly from HMDA.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMasterPlanSelected(false)}
+                  className="rounded-full border border-white/20 p-2 text-white transition-colors hover:bg-white/10"
+                  aria-label="Close master plan map viewer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </header>
+
+              <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3 sm:px-5">
+                <div className="flex rounded-lg border border-white/10 bg-white/5 p-1">
+                  <button
+                    type="button"
+                    onClick={() => selectMasterPlanGroup("plan-2031")}
+                    aria-pressed={masterPlanMapGroup === "plan-2031"}
+                    className={`rounded-md px-3 py-2 text-xs font-medium transition-colors ${
+                      masterPlanMapGroup === "plan-2031"
+                        ? "bg-violet-500 text-white"
+                        : "text-slate-300 hover:bg-white/10"
+                    }`}
+                  >
+                    Master Plan 2031
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => selectMasterPlanGroup("revised-huda")}
+                    aria-pressed={masterPlanMapGroup === "revised-huda"}
+                    className={`rounded-md px-3 py-2 text-xs font-medium transition-colors ${
+                      masterPlanMapGroup === "revised-huda"
+                        ? "bg-violet-500 text-white"
+                        : "text-slate-300 hover:bg-white/10"
+                    }`}
+                  >
+                    Revised HUDA zones
+                  </button>
+                </div>
+                <label className="flex min-w-[180px] flex-1 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                  <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                  <input
+                    value={masterPlanSearch}
+                    onChange={(event) =>
+                      searchMasterPlanMaps(event.target.value)
+                    }
+                    placeholder="Find a district or zone"
+                    className="min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
+                    aria-label="Search HMDA master plan areas"
+                  />
+                </label>
+              </div>
+
+              <div className="grid min-h-0 flex-1 grid-rows-[minmax(105px,0.38fr)_minmax(0,1fr)] gap-3 p-3 sm:p-4 md:grid-cols-[250px_minmax(0,1fr)] md:grid-rows-1">
+                <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+                  <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                    {visibleMasterPlanMaps.length} area maps
+                  </p>
+                  <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-2">
+                    {visibleMasterPlanMaps.map((mapSheet) => (
+                      <button
+                        key={mapSheet.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedMasterPlanMapId(mapSheet.id);
+                          setMasterPlanImageFailed(false);
+                        }}
+                        aria-pressed={selectedMasterPlanMap?.id === mapSheet.id}
+                        className={`w-full rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
+                          selectedMasterPlanMap?.id === mapSheet.id
+                            ? "border-violet-300/60 bg-violet-500/15 text-white"
+                            : "border-transparent text-slate-300 hover:bg-white/5"
+                        }`}
+                      >
+                        {mapSheet.area}
+                      </button>
+                    ))}
+                    {visibleMasterPlanMaps.length === 0 && (
+                      <p className="px-3 py-4 text-xs text-slate-400">
+                        No districts or zones match that search.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-900/70">
+                  {selectedMasterPlanMap ? (
+                    <>
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-3 py-2.5 sm:px-4">
+                        <h3 className="text-sm font-semibold">
+                          {selectedMasterPlanMap.area}
+                        </h3>
+                        <a
+                          href={selectedMasterPlanMap.imageUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-md border border-white/15 px-2.5 py-1.5 text-[11px] font-medium text-violet-200 hover:bg-white/10"
+                        >
+                          Open full-size sheet
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                      <div className="min-h-0 flex-1 overflow-auto bg-slate-900 p-2">
+                        {masterPlanImageFailed ? (
+                          <div className="flex h-full min-h-32 flex-col items-center justify-center gap-3 text-center text-sm text-slate-300">
+                            <p>The official image could not be loaded here.</p>
+                            <a
+                              href={selectedMasterPlanMap.imageUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-violet-300 underline underline-offset-4"
+                            >
+                              Open the HMDA map sheet
+                            </a>
+                          </div>
+                        ) : (
+                          <img
+                            key={selectedMasterPlanMap.id}
+                            src={selectedMasterPlanMap.imageUrl}
+                            alt={`HMDA master plan map for ${selectedMasterPlanMap.area}`}
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            onError={() => setMasterPlanImageFailed(true)}
+                            className="mx-auto h-auto max-w-full object-contain"
+                          />
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="m-auto px-4 text-center text-sm text-slate-400">
+                      Select a district or zone to view its official plan sheet.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-4 py-3 text-[11px] text-slate-400">
+                <span>
+                  Static HMDA reference sheets are not aligned to the live map.
+                  Verify land use with HMDA before making decisions.
+                </span>
+                <a
+                  href={
+                    masterPlanMapGroup === "plan-2031"
+                      ? "https://www.hmda.gov.in/master-planning-2031/"
+                      : "https://www.hmda.gov.in/masterplan-huda/"
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="shrink-0 text-violet-300 underline underline-offset-4"
+                >
+                  HMDA source page
+                </a>
+              </footer>
+            </section>
+          </div>
+        )}
       </div>
 
       {showCityLayers && showContextPanel && (
