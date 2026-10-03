@@ -3026,7 +3026,7 @@ export function HyderabadPropertyMapOverlay({
                         </a>
                       </div>
                       <div
-                        className="relative min-h-0 flex-1 overflow-auto overscroll-contain bg-slate-900 p-2"
+                        className="flash-news-scrollbar relative min-h-0 flex-1 overflow-auto overscroll-contain bg-slate-900 p-2"
                         aria-busy={masterPlanImageLoading}
                       >
                         {masterPlanImageLoading && !masterPlanImageFailed && (
