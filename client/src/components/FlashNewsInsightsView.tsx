@@ -116,7 +116,7 @@ export function FlashNewsInsightsView({
 
   return (
     <div className="space-y-4 py-1">
-      <div className="sticky top-0 z-10 rounded-xl border border-violet-300/20 bg-slate-950 p-3 shadow-[0_8px_20px_rgba(2,6,23,0.65)]">
+      <div className="rounded-xl border border-violet-300/20 bg-slate-950 p-3 shadow-[0_8px_20px_rgba(2,6,23,0.65)]">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <Lightbulb className="h-4 w-4 shrink-0 text-violet-300" />
