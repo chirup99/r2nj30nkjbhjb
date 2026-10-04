@@ -18,6 +18,73 @@ type OpenExchangeRateResponse = {
 
 const RATES_URL = "https://open.er-api.com/v6/latest/INR";
 const CACHE_KEY = "rciq-inr-exchange-rates-v1";
+const US_TIME_ZONES = new Set([
+  "America/Adak",
+  "America/Anchorage",
+  "America/Boise",
+  "America/Chicago",
+  "America/Denver",
+  "America/Detroit",
+  "America/Indiana/Indianapolis",
+  "America/Indiana/Knox",
+  "America/Indiana/Marengo",
+  "America/Indiana/Petersburg",
+  "America/Indiana/Tell_City",
+  "America/Indiana/Vevay",
+  "America/Indiana/Vincennes",
+  "America/Indiana/Winamac",
+  "America/Juneau",
+  "America/Kentucky/Louisville",
+  "America/Kentucky/Monticello",
+  "America/Los_Angeles",
+  "America/Menominee",
+  "America/Metlakatla",
+  "America/New_York",
+  "America/Nome",
+  "America/North_Dakota/Beulah",
+  "America/North_Dakota/Center",
+  "America/North_Dakota/New_Salem",
+  "America/Phoenix",
+  "America/Sitka",
+  "America/Yakutat",
+  "Pacific/Honolulu",
+]);
+
+export function detectDefaultDisplayCurrency(): DisplayCurrency {
+  let timeZone = "";
+  try {
+    timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    // Use locale detection when the browser does not expose a time zone.
+  }
+
+  if (timeZone === "Asia/Dubai") return "AED";
+  if (timeZone === "Asia/Kolkata" || timeZone === "Asia/Calcutta") {
+    return "INR";
+  }
+  if (US_TIME_ZONES.has(timeZone)) return "USD";
+
+  const languages =
+    typeof navigator === "undefined"
+      ? []
+      : navigator.languages?.length
+        ? navigator.languages
+        : [navigator.language];
+  const country = languages
+    .map((language) =>
+      language
+        .replace(/_/g, "-")
+        .split("-")
+        .slice(1)
+        .find((part) => /^[a-z]{2}$/i.test(part))
+        ?.toUpperCase(),
+    )
+    .find((code) => code === "US" || code === "AE" || code === "IN");
+
+  if (country === "US") return "USD";
+  if (country === "AE") return "AED";
+  return "INR";
+}
 
 function isExchangeRateSnapshot(value: unknown): value is DailyInrExchangeRates {
   if (!value || typeof value !== "object") return false;

@@ -49,6 +49,7 @@ import {
   type HmdaMasterPlanGroup,
 } from "@/data/hmdaMasterPlanMaps";
 import {
+  detectDefaultDisplayCurrency,
   formatAmountFromInr,
   formatProjectPrice,
   formatStartingPrice,
@@ -2393,7 +2394,7 @@ export function HyderabadPropertyMapOverlay({
   const [showProjectList, setShowProjectList] = useState(false);
   const [listSort, setListSort] = useState<"price" | "rate" | "size">("price");
   const [displayCurrency, setDisplayCurrency] =
-    useState<DisplayCurrency>("INR");
+    useState<DisplayCurrency>(() => detectDefaultDisplayCurrency());
   const [currencyOptionsOpen, setCurrencyOptionsOpen] = useState(false);
   const [exchangeRates, setExchangeRates] =
     useState<DailyInrExchangeRates | null>(null);
