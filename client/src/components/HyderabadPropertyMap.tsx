@@ -110,6 +110,9 @@ const SATELLITE_MAP_STYLE = {
 
 // Snapshot of every venture currently returned by PlotsView's public catalog.
 const PROJECTS: PropertyProject[] = PLOTSVIEW_PROJECTS;
+const DUBAI_DEVELOPERS = Array.from(
+  new Set(DUBAI_PROPERTY_PROJECTS.map((project) => project.developer)),
+).sort((first, second) => first.localeCompare(second));
 
 type MapCoordinate = [number, number];
 
@@ -2483,6 +2486,9 @@ export function HyderabadPropertyMapOverlay({
   const [activeCity, setActiveCity] = useState<"hyderabad" | "dubai">(
     "hyderabad",
   );
+  const [selectedDubaiDeveloper, setSelectedDubaiDeveloper] = useState<
+    string | null
+  >(null);
   const [query, setQuery] = useState("");
   const [showMapInfo, setShowMapInfo] = useState(false);
   const [selectedIntentId, setSelectedIntentId] = useState<string | null>(null);
@@ -2643,6 +2649,9 @@ export function HyderabadPropertyMapOverlay({
   const visibleDubaiProjects = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return DUBAI_PROPERTY_PROJECTS.filter((project) => {
+      const matchesDeveloper =
+        !selectedDubaiDeveloper ||
+        project.developer === selectedDubaiDeveloper;
       const matchesQuery =
         !normalizedQuery ||
         `${project.name} ${project.locality} ${project.developer} ${project.note ?? ""}`
@@ -2655,9 +2664,15 @@ export function HyderabadPropertyMapOverlay({
           project.longitude,
           project.latitude,
         ]) <= radiusInKilometers;
-      return matchesQuery && matchesRadius;
+      return matchesDeveloper && matchesQuery && matchesRadius;
     });
-  }, [isRadiusFilterOpen, query, radiusCenter, radiusInKilometers]);
+  }, [
+    isRadiusFilterOpen,
+    query,
+    radiusCenter,
+    radiusInKilometers,
+    selectedDubaiDeveloper,
+  ]);
 
   const sortedVisibleProjects = useMemo(() => {
     return [...visibleProjects].sort((a, b) => {
@@ -2910,6 +2925,7 @@ export function HyderabadPropertyMapOverlay({
   const selectCity = (city: "hyderabad" | "dubai") => {
     if (city === activeCity) return;
     setActiveCity(city);
+    setSelectedDubaiDeveloper(null);
     setQuery("");
     setSelectedIntentId(null);
     setSelectedSubcategoryId(null);
@@ -3957,12 +3973,13 @@ export function HyderabadPropertyMapOverlay({
                       max={MAGIC_BUDGET_MAX}
                       step={MAGIC_BUDGET_STEP}
                       value={magicPropertyFilters.maxBudget}
-                      onChange={(event) =>
+                      onChange={(event) => {
+                        const maxBudget = Number(event.currentTarget.value);
                         setMagicPropertyFilters((filters) => ({
                           ...filters,
-                          maxBudget: Number(event.currentTarget.value),
-                        }))
-                      }
+                          maxBudget,
+                        }));
+                      }}
                       aria-label="Maximum estimated starting plot budget"
                       aria-valuetext={
                         magicPropertyFilters.maxBudget >= MAGIC_BUDGET_MAX
@@ -4007,12 +4024,15 @@ export function HyderabadPropertyMapOverlay({
                       max={MAGIC_PLOT_SIZE_MAX}
                       step={25}
                       value={magicPropertyFilters.minimumPlotSize}
-                      onChange={(event) =>
+                      onChange={(event) => {
+                        const minimumPlotSize = Number(
+                          event.currentTarget.value,
+                        );
                         setMagicPropertyFilters((filters) => ({
                           ...filters,
-                          minimumPlotSize: Number(event.currentTarget.value),
-                        }))
-                      }
+                          minimumPlotSize,
+                        }));
+                      }}
                       aria-label="Minimum starting plot size"
                       aria-valuetext={
                         magicPropertyFilters.minimumPlotSize <= 0
@@ -4036,12 +4056,14 @@ export function HyderabadPropertyMapOverlay({
                     </span>
                     <select
                       value={magicPropertyFilters.approval}
-                      onChange={(event) =>
+                      onChange={(event) => {
+                        const approval = event.currentTarget
+                          .value as MagicApprovalFilter;
                         setMagicPropertyFilters((filters) => ({
                           ...filters,
-                          approval: event.target.value as MagicApprovalFilter,
-                        }))
-                      }
+                          approval,
+                        }));
+                      }}
                       aria-label="Filter by approval type"
                       className="mt-2 w-full rounded-lg border border-white/10 bg-slate-900 px-2.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
                     >
@@ -4184,6 +4206,90 @@ export function HyderabadPropertyMapOverlay({
               )}
             </div>
           </div>
+          )}
+          {activeCity === "dubai" && (
+            <section
+              className="pointer-events-auto rounded-2xl border border-white/20 bg-slate-950/90 p-2 text-white shadow-2xl backdrop-blur-xl"
+              aria-label="Dubai developers and projects"
+            >
+              <div className="mb-1.5 flex items-center justify-between gap-3 px-1">
+                <p className="flex min-w-0 items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/70">
+                  <Building2
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 shrink-0 text-violet-300"
+                  />
+                  <span className="truncate">
+                    {selectedDubaiDeveloper ?? "Dubai developers"}
+                  </span>
+                </p>
+                {selectedDubaiDeveloper && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedDubaiDeveloper(null);
+                      setSelectedPinProjectId(null);
+                    }}
+                    className="shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold text-violet-200 transition-colors hover:bg-white/10 hover:text-white"
+                    aria-label="Show all Dubai developers"
+                  >
+                    All developers
+                  </button>
+                )}
+              </div>
+              <div
+                className="flex min-w-0 gap-1.5 overflow-x-auto scrollbar-hide"
+                aria-label={
+                  selectedDubaiDeveloper
+                    ? `${selectedDubaiDeveloper} projects`
+                    : "Dubai developers"
+                }
+              >
+                {selectedDubaiDeveloper
+                  ? visibleDubaiProjects.map((project) => (
+                      <button
+                        key={project.id}
+                        type="button"
+                        onClick={() => selectProjectPin(project.id)}
+                        className={`shrink-0 rounded-full border px-3 py-2 text-left text-[10px] font-semibold transition-colors ${
+                          selectedPinProjectId === project.id
+                            ? "border-violet-300/70 bg-violet-300/20 text-violet-100"
+                            : "border-white/10 bg-white/5 text-white/80 hover:border-violet-300/50 hover:bg-white/10 hover:text-white"
+                        }`}
+                        aria-pressed={selectedPinProjectId === project.id}
+                        title={`${project.name} · ${project.locality}`}
+                      >
+                        {project.name}
+                      </button>
+                    ))
+                  : DUBAI_DEVELOPERS.map((developer) => {
+                      const projectCount = DUBAI_PROPERTY_PROJECTS.filter(
+                        (project) => project.developer === developer,
+                      ).length;
+                      return (
+                        <button
+                          key={developer}
+                          type="button"
+                          onClick={() => {
+                            setSelectedDubaiDeveloper(developer);
+                            setSelectedPinProjectId(null);
+                          }}
+                          className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-left text-[10px] font-semibold text-white/80 transition-colors hover:border-violet-300/50 hover:bg-white/10 hover:text-white"
+                          aria-label={`${developer}, ${projectCount} projects`}
+                        >
+                          {developer}
+                          <span className="ml-1.5 text-white/45">
+                            {projectCount}
+                          </span>
+                        </button>
+                      );
+                    })}
+                {selectedDubaiDeveloper && visibleDubaiProjects.length === 0 && (
+                  <p className="px-2 py-2 text-[10px] text-white/55">
+                    No projects match the current search.
+                  </p>
+                )}
+              </div>
+            </section>
           )}
 
           <button
