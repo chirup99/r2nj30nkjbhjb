@@ -2717,7 +2717,7 @@ export function HyderabadPropertyMapOverlay({
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search any PlotsView project or locality"
+                  placeholder="Search projects or localities"
                   className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
                   aria-label="Search PlotsView projects"
                 />
