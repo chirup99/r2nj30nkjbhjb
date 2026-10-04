@@ -1159,7 +1159,7 @@ const MAGIC_INTENTS = [
 const CURRENCY_OPTIONS: { currency: DisplayCurrency; symbol: string }[] = [
   { currency: "INR", symbol: "₹" },
   { currency: "USD", symbol: "$" },
-  { currency: "AED", symbol: "د.إ" },
+  { currency: "AED", symbol: "\u20C3" },
 ];
 
 function getSubcategoryDisplayLabel(

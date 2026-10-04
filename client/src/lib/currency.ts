@@ -228,7 +228,7 @@ export function formatAmountFromInr(
 
   if (currency === "INR") return `₹${formatted}`;
   if (currency === "USD") return `$${formatted}`;
-  return `د.إ ${formatted}`;
+  return `\u20C3 ${formatted}`;
 }
 
 export function formatProjectPrice(
