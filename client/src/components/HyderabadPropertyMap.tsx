@@ -12,6 +12,7 @@ import {
   Download,
   ExternalLink,
   FileCheck2,
+  Filter,
   House,
   Info,
   Layers,
@@ -1018,6 +1019,24 @@ function getMinimumPlotSize(project: PropertyProject) {
 function getEstimatedMinimumPlotValue(project: PropertyProject) {
   return getPricePerSquareYard(project) * getMinimumPlotSize(project);
 }
+
+type MagicBudgetFilter = "any" | "under-30-lakh" | "30-to-50-lakh" | "50-lakh-plus";
+type MagicPlotSizeFilter = "any" | "under-150" | "150-to-200" | "200-plus";
+type MagicApprovalFilter = "any" | "HMDA" | "DTCP" | "other";
+
+type MagicPropertyFilters = {
+  budget: MagicBudgetFilter;
+  plotSize: MagicPlotSizeFilter;
+  approval: MagicApprovalFilter;
+  activeOnly: boolean;
+};
+
+const DEFAULT_MAGIC_PROPERTY_FILTERS: MagicPropertyFilters = {
+  budget: "any",
+  plotSize: "any",
+  approval: "any",
+  activeOnly: false,
+};
 
 type MagicSubcategory = {
   id: string;
@@ -2461,6 +2480,9 @@ export function HyderabadPropertyMapOverlay({
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<
     string | null
   >(null);
+  const [magicPropertyFilters, setMagicPropertyFilters] =
+    useState<MagicPropertyFilters>(DEFAULT_MAGIC_PROPERTY_FILTERS);
+  const [isMagicFiltersOpen, setIsMagicFiltersOpen] = useState(false);
   const [selectedPinProjectId, setSelectedPinProjectId] = useState<string | null>(
     null,
   );
@@ -2520,6 +2542,13 @@ export function HyderabadPropertyMapOverlay({
   const selectedSubcategory = selectedIntent?.subcategories.find(
     (subcategory) => subcategory.id === selectedSubcategoryId,
   );
+  const activeMagicFilterCount =
+    Number(magicPropertyFilters.budget !== "any") +
+    Number(magicPropertyFilters.plotSize !== "any") +
+    Number(magicPropertyFilters.approval !== "any") +
+    Number(magicPropertyFilters.activeOnly) +
+    Number(Boolean(selectedIntent)) +
+    Number(Boolean(selectedSubcategory));
   const visibleMasterPlanMaps = useMemo(() => {
     const normalizedSearch = masterPlanSearch.trim().toLowerCase();
     return HMDA_MASTER_PLAN_MAPS.filter(
@@ -2546,6 +2575,35 @@ export function HyderabadPropertyMapOverlay({
         `${project.name} ${project.locality} ${project.developer}`
           .toLowerCase()
           .includes(normalizedQuery);
+      const estimatedBudget = getEstimatedMinimumPlotValue(project);
+      const startingPlotSize = getMinimumPlotSize(project);
+      const matchesBudget =
+        magicPropertyFilters.budget === "any" ||
+        (magicPropertyFilters.budget === "under-30-lakh" &&
+          estimatedBudget < 3_000_000) ||
+        (magicPropertyFilters.budget === "30-to-50-lakh" &&
+          estimatedBudget >= 3_000_000 &&
+          estimatedBudget < 5_000_000) ||
+        (magicPropertyFilters.budget === "50-lakh-plus" &&
+          estimatedBudget >= 5_000_000);
+      const matchesPlotSize =
+        magicPropertyFilters.plotSize === "any" ||
+        (magicPropertyFilters.plotSize === "under-150" &&
+          startingPlotSize < 150) ||
+        (magicPropertyFilters.plotSize === "150-to-200" &&
+          startingPlotSize >= 150 &&
+          startingPlotSize < 200) ||
+        (magicPropertyFilters.plotSize === "200-plus" &&
+          startingPlotSize >= 200);
+      const matchesApproval =
+        magicPropertyFilters.approval === "any" ||
+        project.approvalType === magicPropertyFilters.approval ||
+        (magicPropertyFilters.approval === "other" &&
+          project.approvalType !== "HMDA" &&
+          project.approvalType !== "DTCP");
+      const matchesListingStatus =
+        !magicPropertyFilters.activeOnly ||
+        project.status.toLowerCase().includes("active");
       const matchesRadius =
         !isRadiusFilterOpen ||
         !userLocation ||
@@ -2556,11 +2614,16 @@ export function HyderabadPropertyMapOverlay({
       return (
         matchesMagicFilter &&
         matchesQuery &&
+        matchesBudget &&
+        matchesPlotSize &&
+        matchesApproval &&
+        matchesListingStatus &&
         matchesRadius
       );
     });
   }, [
     isRadiusFilterOpen,
+    magicPropertyFilters,
     query,
     radiusInKilometers,
     selectedIntent,
@@ -2728,6 +2791,7 @@ export function HyderabadPropertyMapOverlay({
   const resetMagicFilters = () => {
     setSelectedIntentId(null);
     setSelectedSubcategoryId(null);
+    setMagicPropertyFilters(DEFAULT_MAGIC_PROPERTY_FILTERS);
   };
 
   const selectMasterPlanGroup = (group: HmdaMasterPlanGroup) => {
@@ -2984,13 +3048,13 @@ export function HyderabadPropertyMapOverlay({
                   placeholder={
                     activeCity === "dubai"
                       ? "Search Dubai projects, developers or areas"
-                      : "Search projects or localities"
+                      : "Search projects, areas or developers"
                   }
                   className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
                   aria-label={
                     activeCity === "dubai"
                       ? "Search Dubai projects, developers or areas"
-                      : "Search Hyderabad properties"
+                      : "Search projects, areas or developers"
                   }
                 />
               </label>
@@ -3827,11 +3891,174 @@ export function HyderabadPropertyMapOverlay({
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-10 pt-3 sm:px-5 sm:pb-8 sm:pt-5">
         <div className="relative mx-auto w-full max-w-[680px]">
+          {isMagicFiltersOpen &&
+            activeCity === "hyderabad" &&
+            !showCityLayers &&
+            !isMasterPlanSelected && (
+              <section
+                id="magic-property-filters"
+                aria-label="Property filters"
+                className="pointer-events-auto absolute bottom-full left-0 right-0 z-40 mb-2 max-h-[min(55vh,460px)] overflow-y-auto rounded-2xl border border-white/15 bg-slate-950/95 p-4 text-white shadow-2xl backdrop-blur-xl"
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold">Refine properties</p>
+                    <p
+                      className="mt-1 text-[10px] text-white/55"
+                      aria-live="polite"
+                    >
+                      {visibleProjects.length} of {PROJECTS.length} projects
+                      match
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={resetMagicFilters}
+                    className="shrink-0 rounded-lg border border-white/15 px-3 py-2 text-[10px] font-semibold text-white/75 transition-colors hover:border-white/35 hover:bg-white/10 hover:text-white"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <label className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+                    <span className="block text-[10px] font-semibold text-white/80">
+                      Starting plot budget
+                    </span>
+                    <select
+                      value={magicPropertyFilters.budget}
+                      onChange={(event) =>
+                        setMagicPropertyFilters((filters) => ({
+                          ...filters,
+                          budget: event.target.value as MagicBudgetFilter,
+                        }))
+                      }
+                      aria-label="Filter by estimated starting plot budget"
+                      className="mt-2 w-full rounded-lg border border-white/10 bg-slate-900 px-2.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
+                    >
+                      <option value="any">Any budget</option>
+                      <option value="under-30-lakh">Under ₹30L</option>
+                      <option value="30-to-50-lakh">₹30L–₹50L</option>
+                      <option value="50-lakh-plus">₹50L+</option>
+                    </select>
+                    <span className="mt-1.5 block text-[9px] leading-4 text-white/45">
+                      Estimate from listed rate × smallest plot size
+                    </span>
+                  </label>
+
+                  <label className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+                    <span className="block text-[10px] font-semibold text-white/80">
+                      Starting plot size
+                    </span>
+                    <select
+                      value={magicPropertyFilters.plotSize}
+                      onChange={(event) =>
+                        setMagicPropertyFilters((filters) => ({
+                          ...filters,
+                          plotSize: event.target.value as MagicPlotSizeFilter,
+                        }))
+                      }
+                      aria-label="Filter by starting plot size"
+                      className="mt-2 w-full rounded-lg border border-white/10 bg-slate-900 px-2.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
+                    >
+                      <option value="any">Any size</option>
+                      <option value="under-150">Under 150 sq yd</option>
+                      <option value="150-to-200">150–199 sq yd</option>
+                      <option value="200-plus">200+ sq yd</option>
+                    </select>
+                    <span className="mt-1.5 block text-[9px] leading-4 text-white/45">
+                      Based on each project’s smallest listed plot
+                    </span>
+                  </label>
+
+                  <label className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+                    <span className="block text-[10px] font-semibold text-white/80">
+                      Approval type
+                    </span>
+                    <select
+                      value={magicPropertyFilters.approval}
+                      onChange={(event) =>
+                        setMagicPropertyFilters((filters) => ({
+                          ...filters,
+                          approval: event.target.value as MagicApprovalFilter,
+                        }))
+                      }
+                      aria-label="Filter by approval type"
+                      className="mt-2 w-full rounded-lg border border-white/10 bg-slate-900 px-2.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
+                    >
+                      <option value="any">Any approval</option>
+                      <option value="HMDA">HMDA approved</option>
+                      <option value="DTCP">DTCP approved</option>
+                      <option value="other">Other approval types</option>
+                    </select>
+                    <span className="mt-1.5 block text-[9px] leading-4 text-white/45">
+                      Choose an approval listed for the project
+                    </span>
+                  </label>
+                </div>
+
+                <button
+                  type="button"
+                  aria-pressed={magicPropertyFilters.activeOnly}
+                  onClick={() =>
+                    setMagicPropertyFilters((filters) => ({
+                      ...filters,
+                      activeOnly: !filters.activeOnly,
+                    }))
+                  }
+                  className={`mt-2 flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-[11px] font-semibold transition-colors ${
+                    magicPropertyFilters.activeOnly
+                      ? "border-cyan-300/45 bg-cyan-300/10 text-cyan-100"
+                      : "border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08]"
+                  }`}
+                >
+                  <span
+                    className={`flex h-4 w-4 items-center justify-center rounded border ${
+                      magicPropertyFilters.activeOnly
+                        ? "border-cyan-300 bg-cyan-300 text-slate-950"
+                        : "border-white/30"
+                    }`}
+                  >
+                    {magicPropertyFilters.activeOnly && (
+                      <Check aria-hidden="true" className="h-3 w-3" />
+                    )}
+                  </span>
+                  Show active listings only
+                </button>
+              </section>
+            )}
           {activeCity === "hyderabad" &&
             !showCityLayers &&
             !isMasterPlanSelected && (
             <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
             <Sparkles className="ml-1.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
+            <button
+              type="button"
+              onClick={() => setIsMagicFiltersOpen((open) => !open)}
+              aria-expanded={isMagicFiltersOpen}
+              aria-controls={
+                isMagicFiltersOpen ? "magic-property-filters" : undefined
+              }
+              className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-left transition-colors ${
+                isMagicFiltersOpen || activeMagicFilterCount > 0
+                  ? "border-cyan-300/50 bg-cyan-300/10 text-cyan-100"
+                  : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
+              }`}
+            >
+              <Filter aria-hidden="true" className="h-3 w-3" />
+              <span className="text-[10px] font-bold">Filters</span>
+              {activeMagicFilterCount > 0 && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-300 px-1 text-[9px] font-bold text-slate-950">
+                  {activeMagicFilterCount}
+                </span>
+              )}
+              <ChevronDown
+                aria-hidden="true"
+                className={`h-3 w-3 transition-transform ${
+                  isMagicFiltersOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
             <div className="flex min-w-max gap-1.5">
               {selectedIntent ? (
                 <>
@@ -3839,7 +4066,7 @@ export function HyderabadPropertyMapOverlay({
                     type="button"
                     onClick={resetMagicFilters}
                     className="shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-left text-white/70 transition-all hover:border-white/40 hover:bg-white/10 hover:text-white"
-                    aria-label="Show all projects"
+                    aria-label="Clear property filters"
                   >
                     <span className="block text-[10px] font-bold">All</span>
                   </button>
