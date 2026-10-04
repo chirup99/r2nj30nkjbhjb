@@ -4237,7 +4237,7 @@ export function HyderabadPropertyMapOverlay({
           {activeCity === "hyderabad" &&
             !showCityLayers &&
             !isMasterPlanSelected && (
-            <div className="pointer-events-auto flex max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
+            <div className="pointer-events-auto flex max-w-full items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
             <button
               type="button"
               onClick={() => setIsMagicFiltersOpen((open) => !open)}
