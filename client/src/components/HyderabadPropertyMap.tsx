@@ -1338,6 +1338,79 @@ function MagicProjectRoute({
   );
 }
 
+function DubaiDeveloperProjectRoute({
+  project,
+  progress,
+}: {
+  project: DubaiPropertyProject;
+  progress: number;
+}) {
+  const { map, isLoaded } = useMap();
+  const [routeStart, setRouteStart] =
+    useState<[number, number]>(DUBAI_MAP_CENTER);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    const updateRouteStart = () => {
+      const button = document.querySelector<HTMLElement>(
+        `[data-dubai-project="${project.id}"]`,
+      );
+      const container = map.getContainer();
+      if (!button || !container) return;
+
+      const buttonBounds = button.getBoundingClientRect();
+      const mapBounds = container.getBoundingClientRect();
+      const startPoint: [number, number] = [
+        buttonBounds.left + buttonBounds.width / 2 - mapBounds.left,
+        buttonBounds.top - mapBounds.top,
+      ];
+      const start = map.unproject(startPoint);
+      setRouteStart([start.lng, start.lat]);
+    };
+
+    updateRouteStart();
+    const frame = requestAnimationFrame(updateRouteStart);
+    window.addEventListener("resize", updateRouteStart);
+    map.on("move", updateRouteStart);
+    map.on("resize", updateRouteStart);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updateRouteStart);
+      map.off("move", updateRouteStart);
+      map.off("resize", updateRouteStart);
+    };
+  }, [isLoaded, map, project.id]);
+
+  return (
+    <MapRoute
+      id={`dubai-developer-route-${project.id}`}
+      coordinates={createCurvedRoute(routeStart, [
+        project.longitude,
+        project.latitude,
+      ])}
+      color="#f9a8d4"
+      width={2}
+      opacity={0.45}
+      dashArray={[2, 2]}
+      active
+      activeColor={project.accent}
+      activeWidth={4}
+      activeOpacity={0.95}
+      activeDashArray={[1.5, 1.5]}
+      progress={progress}
+    >
+      <RouteProgress
+        color="#fff7ed"
+        width={5}
+        opacity={0.9}
+        dashArray={[1, 1]}
+      />
+    </MapRoute>
+  );
+}
+
 function PropertyPin({
   accent,
   projectName,
@@ -2489,6 +2562,9 @@ export function HyderabadPropertyMapOverlay({
   const [selectedDubaiDeveloper, setSelectedDubaiDeveloper] = useState<
     string | null
   >(null);
+  const [selectedDubaiRouteProjectId, setSelectedDubaiRouteProjectId] =
+    useState<string | null>(null);
+  const [dubaiRouteProgress, setDubaiRouteProgress] = useState(0);
   const [query, setQuery] = useState("");
   const [showMapInfo, setShowMapInfo] = useState(false);
   const [selectedIntentId, setSelectedIntentId] = useState<string | null>(null);
@@ -2723,6 +2799,12 @@ export function HyderabadPropertyMapOverlay({
           (project) => project.id === selectedPinProjectId,
         )
       : undefined;
+  const selectedDubaiRouteProject =
+    activeCity === "dubai"
+      ? visibleDubaiProjects.find(
+          (project) => project.id === selectedDubaiRouteProjectId,
+        )
+      : undefined;
 
   useEffect(() => {
     if (
@@ -2732,6 +2814,17 @@ export function HyderabadPropertyMapOverlay({
       setSelectedPinProjectId(null);
     }
   }, [selectedPinProjectId, visibleMapProjects]);
+
+  useEffect(() => {
+    if (
+      selectedDubaiRouteProjectId &&
+      !visibleDubaiProjects.some(
+        (project) => project.id === selectedDubaiRouteProjectId,
+      )
+    ) {
+      setSelectedDubaiRouteProjectId(null);
+    }
+  }, [selectedDubaiRouteProjectId, visibleDubaiProjects]);
 
   const visibleContextPoints = useMemo(
     () =>
@@ -2791,6 +2884,28 @@ export function HyderabadPropertyMapOverlay({
     showCityLayers,
     visibleMapProjects.length,
   ]);
+
+  useEffect(() => {
+    if (
+      activeCity !== "dubai" ||
+      !selectedDubaiRouteProject ||
+      !showProjectPins
+    ) {
+      setDubaiRouteProgress(0);
+      return;
+    }
+
+    setDubaiRouteProgress(0);
+    const startedAt = performance.now();
+    let frame = 0;
+    const animateRoute = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / 850);
+      setDubaiRouteProgress(progress);
+      if (progress < 1) frame = requestAnimationFrame(animateRoute);
+    };
+    frame = requestAnimationFrame(animateRoute);
+    return () => cancelAnimationFrame(frame);
+  }, [activeCity, selectedDubaiRouteProject?.id, showProjectPins]);
 
   const chooseMagicIntent = (intentId: string) => {
     const intent = MAGIC_INTENTS.find((item) => item.id === intentId);
@@ -2918,6 +3033,7 @@ export function HyderabadPropertyMapOverlay({
   }, []);
 
   const selectProjectPin = (projectId: string) => {
+    if (activeCity === "dubai") setSelectedDubaiRouteProjectId(null);
     setSelectedPinProjectId(projectId);
     setShowLakeHelp(false);
   };
@@ -2926,6 +3042,7 @@ export function HyderabadPropertyMapOverlay({
     if (city === activeCity) return;
     setActiveCity(city);
     setSelectedDubaiDeveloper(null);
+    setSelectedDubaiRouteProjectId(null);
     setQuery("");
     setSelectedIntentId(null);
     setSelectedSubcategoryId(null);
@@ -3012,6 +3129,14 @@ export function HyderabadPropertyMapOverlay({
               progress={routeProgress}
             />
           )}
+        {activeCity === "dubai" &&
+          showProjectPins &&
+          selectedDubaiRouteProject && (
+            <DubaiDeveloperProjectRoute
+              project={selectedDubaiRouteProject}
+              progress={dubaiRouteProgress}
+            />
+          )}
         {isRadiusFilterOpen && radiusCenter && (
           <RadiusFilterLayer
             center={radiusCenter}
@@ -3030,7 +3155,8 @@ export function HyderabadPropertyMapOverlay({
                 projectName={project.name}
                 selected={
                   activeCity === "dubai"
-                    ? project.id === selectedDubaiProject?.id
+                    ? project.id === selectedDubaiProject?.id ||
+                      project.id === selectedDubaiRouteProjectId
                     : project.id === selectedPinProject?.id
                 }
                 onSelect={() => selectProjectPin(project.id)}
@@ -4228,6 +4354,7 @@ export function HyderabadPropertyMapOverlay({
                     onClick={() => {
                       setSelectedDubaiDeveloper(null);
                       setSelectedPinProjectId(null);
+                      setSelectedDubaiRouteProjectId(null);
                     }}
                     className="shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold text-violet-200 transition-colors hover:bg-white/10 hover:text-white"
                     aria-label="Show all Dubai developers"
@@ -4249,13 +4376,21 @@ export function HyderabadPropertyMapOverlay({
                       <button
                         key={project.id}
                         type="button"
-                        onClick={() => selectProjectPin(project.id)}
+                        data-dubai-project={project.id}
+                        onClick={() => {
+                          setSelectedPinProjectId(null);
+                          setSelectedDubaiRouteProjectId(project.id);
+                        }}
                         className={`shrink-0 rounded-full border px-3 py-2 text-left text-[10px] font-semibold transition-colors ${
-                          selectedPinProjectId === project.id
+                          selectedPinProjectId === project.id ||
+                          selectedDubaiRouteProjectId === project.id
                             ? "border-violet-300/70 bg-violet-300/20 text-violet-100"
                             : "border-white/10 bg-white/5 text-white/80 hover:border-violet-300/50 hover:bg-white/10 hover:text-white"
                         }`}
-                        aria-pressed={selectedPinProjectId === project.id}
+                        aria-pressed={
+                          selectedPinProjectId === project.id ||
+                          selectedDubaiRouteProjectId === project.id
+                        }
                         title={`${project.name} · ${project.locality}`}
                       >
                         {project.name}
@@ -4272,6 +4407,7 @@ export function HyderabadPropertyMapOverlay({
                           onClick={() => {
                             setSelectedDubaiDeveloper(developer);
                             setSelectedPinProjectId(null);
+                            setSelectedDubaiRouteProjectId(null);
                           }}
                           className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-left text-[10px] font-semibold text-white/80 transition-colors hover:border-violet-300/50 hover:bg-white/10 hover:text-white"
                           aria-label={`${developer}, ${projectCount} projects`}
