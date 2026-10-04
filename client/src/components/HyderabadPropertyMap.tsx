@@ -2724,7 +2724,7 @@ export function HyderabadPropertyMapOverlay({
               </label>
               <button
                 type="button"
-                className="flex shrink-0 items-center gap-1.5 rounded-xl border border-violet-200 bg-white px-2.5 py-2 text-[10px] font-semibold text-violet-700 shadow-sm transition-colors hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
+                className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-xl border border-violet-500/70 bg-gradient-to-br from-violet-600 via-violet-700 to-indigo-700 px-3 text-[11px] font-bold tracking-wide text-white shadow-md shadow-violet-500/25 transition duration-200 hover:-translate-y-0.5 hover:from-violet-500 hover:to-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               >
                 <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Dubai</span>
