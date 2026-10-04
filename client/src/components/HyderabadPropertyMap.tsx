@@ -4297,8 +4297,8 @@ export function HyderabadPropertyMapOverlay({
                         onClick={() => chooseMagicSubcategory(subcategory.id)}
                         className={`shrink-0 rounded-full border px-3 py-2 text-left transition-all ${
                           isSelected
-                            ? "border-cyan-300/70 bg-cyan-300/15 text-cyan-100 shadow-lg"
-                            : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
+                            ? "border-cyan-200/80 bg-cyan-300/20 text-cyan-50 shadow-[0_0_12px_rgba(34,211,238,0.2)]"
+                            : "border-cyan-300/25 bg-cyan-400/[0.06] text-cyan-100/80 hover:border-cyan-200/60 hover:bg-cyan-400/[0.12]"
                         }`}
                         title={subcategory.detail}
                       >
