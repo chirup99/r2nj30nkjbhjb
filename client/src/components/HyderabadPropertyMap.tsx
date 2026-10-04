@@ -47,6 +47,14 @@ import {
   HMDA_MASTER_PLAN_MAPS,
   type HmdaMasterPlanGroup,
 } from "@/data/hmdaMasterPlanMaps";
+import {
+  formatAmountFromInr,
+  formatProjectPrice,
+  formatStartingPrice,
+  loadDailyInrExchangeRates,
+  type DailyInrExchangeRates,
+  type DisplayCurrency,
+} from "@/lib/currency";
 import { PLOTSVIEW_PROJECTS } from "@/data/plotsviewProjects";
 import { RRR_ALIGNMENT_COORDINATES } from "@/data/rrrAlignment";
 
@@ -1146,6 +1154,33 @@ const MAGIC_INTENTS = [
   },
 ] satisfies readonly MagicIntent[];
 
+const CURRENCY_OPTIONS: { currency: DisplayCurrency; symbol: string }[] = [
+  { currency: "INR", symbol: "₹" },
+  { currency: "USD", symbol: "$" },
+  { currency: "AED", symbol: "د.إ" },
+];
+
+function getSubcategoryDisplayLabel(
+  subcategory: MagicSubcategory,
+  currency: DisplayCurrency,
+  rates: DailyInrExchangeRates | null,
+) {
+  if (currency === "INR") return subcategory.label;
+
+  switch (subcategory.id) {
+    case "two-crore-plus":
+      return `${formatAmountFromInr(20_000_000, currency, rates)}+`;
+    case "forty-thousand-plus":
+      return `${formatAmountFromInr(40_000, currency, rates)}+ / sq yd`;
+    case "under-two-crore":
+      return `Under ${formatAmountFromInr(20_000_000, currency, rates)}`;
+    case "entry-price":
+      return `Under ${formatAmountFromInr(30_000, currency, rates)} / sq yd`;
+    default:
+      return subcategory.label;
+  }
+}
+
 function createCurvedRoute(
   start: [number, number],
   end: [number, number],
@@ -2094,9 +2129,13 @@ function DetailValue({
 function ProjectDetailSheet({
   project,
   onClose,
+  currency,
+  rates,
 }: {
   project: PropertyProject;
   onClose: () => void;
+  currency: DisplayCurrency;
+  rates: DailyInrExchangeRates | null;
 }) {
   const details = getProjectListingDetails(project);
   const mapLink = `https://www.google.com/maps/search/?api=1&query=${project.latitude},${project.longitude}`;
@@ -2162,7 +2201,11 @@ function ProjectDetailSheet({
         </div>
 
         <div className="mb-4 grid grid-cols-2 gap-2">
-          <DetailValue label="Price" value={project.price} icon={Banknote} />
+          <DetailValue
+            label="Price"
+            value={formatProjectPrice(project.price, currency, rates)}
+            icon={Banknote}
+          />
           <DetailValue label="Plot sizes" value={project.bedrooms} icon={Ruler} />
           <DetailValue
             label="Total plots"
@@ -2177,7 +2220,7 @@ function ProjectDetailSheet({
           {details.startingPrice && (
             <DetailValue
               label="Starting from"
-              value={details.startingPrice}
+              value={formatStartingPrice(details.startingPrice, currency, rates)}
               icon={Banknote}
             />
           )}
@@ -2348,6 +2391,13 @@ export function HyderabadPropertyMapOverlay({
   );
   const [showProjectList, setShowProjectList] = useState(false);
   const [listSort, setListSort] = useState<"price" | "rate" | "size">("price");
+  const [displayCurrency, setDisplayCurrency] =
+    useState<DisplayCurrency>("INR");
+  const [exchangeRates, setExchangeRates] =
+    useState<DailyInrExchangeRates | null>(null);
+  const [exchangeRateStatus, setExchangeRateStatus] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
   const [isRadiusFilterOpen, setIsRadiusFilterOpen] = useState(false);
   const [radiusInKilometers, setRadiusInKilometers] = useState(25);
   const [userLocation, setUserLocation] = useState<MapCoordinate | null>(null);
@@ -2594,10 +2644,51 @@ export function HyderabadPropertyMapOverlay({
     });
   };
 
+  useEffect(() => {
+    let isActive = true;
+    let controller: AbortController | null = null;
+
+    const refreshRates = async () => {
+      controller?.abort();
+      const requestController = new AbortController();
+      controller = requestController;
+
+      try {
+        const rates = await loadDailyInrExchangeRates(requestController.signal);
+        if (!isActive) return;
+        setExchangeRates(rates);
+        setExchangeRateStatus("ready");
+      } catch {
+        if (!isActive || requestController.signal.aborted) return;
+        setExchangeRateStatus("error");
+      }
+    };
+
+    void refreshRates();
+    const refreshInterval = window.setInterval(
+      () => void refreshRates(),
+      6 * 60 * 60 * 1000,
+    );
+
+    return () => {
+      isActive = false;
+      controller?.abort();
+      window.clearInterval(refreshInterval);
+    };
+  }, []);
+
   const selectProjectPin = (projectId: string) => {
     setSelectedPinProjectId(projectId);
     setShowLakeHelp(false);
   };
+
+  const exchangeRateUpdatedLabel = exchangeRates
+    ? new Intl.DateTimeFormat("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(new Date(exchangeRates.updatedAt))
+    : null;
 
   return (
     <motion.div
@@ -2797,6 +2888,64 @@ export function HyderabadPropertyMapOverlay({
                 <span>Master Plan</span>
               </button>
               <FlashNewsDialog />
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <div
+                role="group"
+                aria-label="Display project prices in"
+                className="inline-flex items-center gap-0.5 rounded-lg border border-white/15 bg-slate-950/80 p-1 shadow-md backdrop-blur-md"
+              >
+                {CURRENCY_OPTIONS.map((option) => {
+                  const isSelected = displayCurrency === option.currency;
+                  const isUnavailable =
+                    option.currency !== "INR" && !exchangeRates;
+                  return (
+                    <button
+                      key={option.currency}
+                      type="button"
+                      onClick={() => setDisplayCurrency(option.currency)}
+                      disabled={isUnavailable}
+                      aria-pressed={isSelected}
+                      aria-label={`Show project prices in ${option.currency}`}
+                      title={
+                        isUnavailable
+                          ? "Daily exchange rates are unavailable"
+                          : `Show prices in ${option.currency}`
+                      }
+                      className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-40 ${
+                        isSelected
+                          ? "bg-violet-500 text-white shadow-sm"
+                          : "text-white/70 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      <span dir="ltr">{option.symbol}</span>
+                      <span>{option.currency}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p
+                className="text-[9px] leading-4 text-white/55"
+                aria-live="polite"
+              >
+                {exchangeRateStatus === "loading" && "Loading daily rates…"}
+                {exchangeRateStatus === "error" && "Exchange rates unavailable"}
+                {exchangeRateStatus === "ready" && exchangeRates && (
+                  <>
+                    {exchangeRates.isStale ? "Saved rates · " : "Rates as of "}
+                    {exchangeRateUpdatedLabel}
+                  </>
+                )}
+                {" · "}
+                <a
+                  href="https://www.exchangerate-api.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-white/30 underline-offset-2 hover:text-white"
+                >
+                  Rates By Exchange Rate API
+                </a>
+              </p>
             </div>
           </div>
 
@@ -3355,7 +3504,11 @@ export function HyderabadPropertyMapOverlay({
                       </p>
                     </div>
                     <span className="shrink-0 text-[10px] font-bold text-cyan-200">
-                      {project.price}
+                      {formatProjectPrice(
+                        project.price,
+                        displayCurrency,
+                        exchangeRates,
+                      )}
                     </span>
                   </div>
                   <p className="mt-2 text-[10px] text-white/45">
@@ -3427,7 +3580,11 @@ export function HyderabadPropertyMapOverlay({
                         title={subcategory.detail}
                       >
                         <span className="block text-[10px] font-bold">
-                          {subcategory.label}
+                          {getSubcategoryDisplayLabel(
+                            subcategory,
+                            displayCurrency,
+                            exchangeRates,
+                          )}
                         </span>
                       </button>
                     );
@@ -3474,6 +3631,8 @@ export function HyderabadPropertyMapOverlay({
         <ProjectDetailSheet
           project={selectedPinProject}
           onClose={() => setSelectedPinProjectId(null)}
+          currency={displayCurrency}
+          rates={exchangeRates}
         />
       )}
     </motion.div>
