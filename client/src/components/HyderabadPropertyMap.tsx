@@ -1202,6 +1202,33 @@ const MAGIC_INTENTS = [
   },
 ] satisfies readonly MagicIntent[];
 
+const MAGIC_SUBCATEGORY_PALETTES = [
+  {
+    idle:
+      "border-purple-300/30 bg-purple-400/10 text-purple-100 hover:border-purple-200/70 hover:bg-purple-400/20",
+    selected:
+      "border-purple-200/85 bg-purple-400/25 text-white shadow-[0_0_12px_rgba(192,132,252,0.2)]",
+  },
+  {
+    idle:
+      "border-emerald-300/30 bg-teal-400/10 text-teal-100 hover:border-teal-200/70 hover:bg-teal-400/20",
+    selected:
+      "border-teal-200/85 bg-teal-400/25 text-white shadow-[0_0_12px_rgba(45,212,191,0.2)]",
+  },
+  {
+    idle:
+      "border-blue-300/30 bg-indigo-400/10 text-blue-100 hover:border-indigo-200/70 hover:bg-indigo-400/20",
+    selected:
+      "border-indigo-200/85 bg-indigo-400/25 text-white shadow-[0_0_12px_rgba(129,140,248,0.2)]",
+  },
+  {
+    idle:
+      "border-amber-300/30 bg-orange-400/10 text-orange-100 hover:border-orange-200/70 hover:bg-orange-400/20",
+    selected:
+      "border-orange-200/85 bg-orange-400/25 text-white shadow-[0_0_12px_rgba(251,146,60,0.2)]",
+  },
+] as const;
+
 const CURRENCY_OPTIONS: { currency: DisplayCurrency; symbol: string }[] = [
   { currency: "INR", symbol: "₹" },
   { currency: "USD", symbol: "$" },
@@ -4286,9 +4313,13 @@ export function HyderabadPropertyMapOverlay({
                       {selectedIntent.label}
                     </span>
                   </button>
-                  {selectedIntent.subcategories.map((subcategory) => {
+                  {selectedIntent.subcategories.map((subcategory, index) => {
                     const isSelected =
                       selectedSubcategoryId === subcategory.id;
+                    const palette =
+                      MAGIC_SUBCATEGORY_PALETTES[
+                        index % MAGIC_SUBCATEGORY_PALETTES.length
+                      ];
                     return (
                       <button
                         key={subcategory.id}
@@ -4296,9 +4327,7 @@ export function HyderabadPropertyMapOverlay({
                         data-magic-subcategory={subcategory.id}
                         onClick={() => chooseMagicSubcategory(subcategory.id)}
                         className={`shrink-0 rounded-full border px-3 py-2 text-left transition-all ${
-                          isSelected
-                            ? "border-cyan-200/80 bg-cyan-300/20 text-cyan-50 shadow-[0_0_12px_rgba(34,211,238,0.2)]"
-                            : "border-cyan-300/25 bg-cyan-400/[0.06] text-cyan-100/80 hover:border-cyan-200/60 hover:bg-cyan-400/[0.12]"
+                          isSelected ? palette.selected : palette.idle
                         }`}
                         title={subcategory.detail}
                       >
