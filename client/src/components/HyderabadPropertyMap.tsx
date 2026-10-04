@@ -2982,35 +2982,31 @@ export function HyderabadPropertyMapOverlay({
                   }
                 />
               </label>
-              <div
-                role="group"
-                aria-label="Choose map city"
-                className="flex shrink-0 items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5"
+              <button
+                type="button"
+                onClick={() =>
+                  selectCity(activeCity === "dubai" ? "hyderabad" : "dubai")
+                }
+                aria-pressed={activeCity === "dubai"}
+                aria-label={
+                  activeCity === "dubai"
+                    ? "Dubai map is active; switch back to the India map"
+                    : "Switch to the Dubai map"
+                }
+                title={
+                  activeCity === "dubai"
+                    ? "Dubai map active · click to return to India"
+                    : "Switch to Dubai"
+                }
+                className={`flex h-8 shrink-0 items-center gap-1 rounded-lg border px-2.5 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                  activeCity === "dubai"
+                    ? "border-violet-600 bg-violet-700 text-white shadow-sm"
+                    : "border-slate-200 bg-slate-100 text-slate-600 hover:bg-white hover:text-slate-950"
+                }`}
               >
-                {(
-                  [
-                    ["hyderabad", "Hyderabad"],
-                    ["dubai", "Dubai"],
-                  ] as const
-                ).map(([city, label]) => (
-                  <button
-                    key={city}
-                    type="button"
-                    onClick={() => selectCity(city)}
-                    aria-pressed={activeCity === city}
-                    className={`flex h-7 items-center gap-1 rounded-md px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 ${
-                      activeCity === city
-                        ? "bg-violet-700 text-white shadow-sm"
-                        : "text-slate-600 hover:bg-white hover:text-slate-950"
-                    }`}
-                  >
-                    {city === activeCity && (
-                      <MapPin className="h-3 w-3" aria-hidden="true" />
-                    )}
-                    <span>{label}</span>
-                  </button>
-                ))}
-              </div>
+                <MapPin className="h-3 w-3" aria-hidden="true" />
+                <span>Dubai</span>
+              </button>
             </div>
             <div className="mt-2 flex items-center justify-between gap-3 px-1">
               <p className="min-w-0 text-[10px] font-semibold uppercase leading-4 tracking-[0.14em] text-slate-500">
