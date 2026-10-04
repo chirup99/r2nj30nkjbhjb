@@ -3080,8 +3080,7 @@ export function HyderabadPropertyMapOverlay({
                 region={activeCity === "dubai" ? "dubai" : "india"}
               />
               </div>
-            {activeCity === "hyderabad" && (
-              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
               <div
                 className="inline-flex items-center gap-1"
                 onKeyDown={(event) => {
@@ -3174,8 +3173,7 @@ export function HyderabadPropertyMapOverlay({
                   )}
                 </>
               </div>
-              </div>
-            )}
+            </div>
           </div>
 
           <div className="pointer-events-auto flex flex-col items-center gap-2">
