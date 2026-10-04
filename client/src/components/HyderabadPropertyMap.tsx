@@ -6,6 +6,7 @@ import {
   Banknote,
   Building2,
   Check,
+  ChevronDown,
   ChevronRight,
   Download,
   ExternalLink,
@@ -2393,6 +2394,7 @@ export function HyderabadPropertyMapOverlay({
   const [listSort, setListSort] = useState<"price" | "rate" | "size">("price");
   const [displayCurrency, setDisplayCurrency] =
     useState<DisplayCurrency>("INR");
+  const [currencyOptionsOpen, setCurrencyOptionsOpen] = useState(false);
   const [exchangeRates, setExchangeRates] =
     useState<DailyInrExchangeRates | null>(null);
   const [exchangeRateStatus, setExchangeRateStatus] = useState<
@@ -2891,38 +2893,86 @@ export function HyderabadPropertyMapOverlay({
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
               <div
-                role="group"
-                aria-label="Display project prices in"
-                className="inline-flex items-center gap-0.5 rounded-lg border border-white/15 bg-slate-950/80 p-1 shadow-md backdrop-blur-md"
+                className="inline-flex items-center gap-1"
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setCurrencyOptionsOpen(false);
+                }}
               >
-                {CURRENCY_OPTIONS.map((option) => {
-                  const isSelected = displayCurrency === option.currency;
-                  const isUnavailable =
-                    option.currency !== "INR" && !exchangeRates;
-                  return (
-                    <button
-                      key={option.currency}
-                      type="button"
-                      onClick={() => setDisplayCurrency(option.currency)}
-                      disabled={isUnavailable}
-                      aria-pressed={isSelected}
-                      aria-label={`Show project prices in ${option.currency}`}
-                      title={
-                        isUnavailable
-                          ? "Daily exchange rates are unavailable"
-                          : `Show prices in ${option.currency}`
-                      }
-                      className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-40 ${
-                        isSelected
-                          ? "bg-violet-500 text-white shadow-sm"
-                          : "text-white/70 hover:bg-white/10 hover:text-white"
-                      }`}
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrencyOptionsOpen((isOpen) => !isOpen)
+                    }
+                    aria-expanded={currencyOptionsOpen}
+                    aria-controls="map-currency-options"
+                    aria-label={
+                      currencyOptionsOpen
+                        ? "Close currency options"
+                        : `Change price currency; current selection ${displayCurrency}`
+                    }
+                    title={
+                      currencyOptionsOpen
+                        ? "Close currency options"
+                        : "Change display currency"
+                    }
+                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/15 bg-slate-950/80 px-2 text-[10px] font-semibold text-white/85 shadow-md backdrop-blur-md transition-colors hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
+                  >
+                    {currencyOptionsOpen ? (
+                      <X className="h-3 w-3" />
+                    ) : (
+                      <>
+                        <span dir="ltr">
+                          {CURRENCY_OPTIONS.find(
+                            (option) => option.currency === displayCurrency,
+                          )?.symbol ?? "₹"}
+                        </span>
+                        <span>{displayCurrency}</span>
+                        <ChevronDown className="h-3 w-3 text-white/55" />
+                      </>
+                    )}
+                  </button>
+                  {currencyOptionsOpen && (
+                    <div
+                      id="map-currency-options"
+                      role="group"
+                      aria-label="Select project display currency"
+                      className="inline-flex items-center gap-0.5 rounded-lg border border-white/15 bg-slate-950/80 p-1 shadow-md backdrop-blur-md"
                     >
-                      <span dir="ltr">{option.symbol}</span>
-                      <span>{option.currency}</span>
-                    </button>
-                  );
-                })}
+                    {CURRENCY_OPTIONS.map((option) => {
+                      const isSelected = displayCurrency === option.currency;
+                      const isUnavailable =
+                        option.currency !== "INR" && !exchangeRates;
+                      return (
+                        <button
+                          key={option.currency}
+                          type="button"
+                          onClick={() => {
+                            setDisplayCurrency(option.currency);
+                            setCurrencyOptionsOpen(false);
+                          }}
+                          disabled={isUnavailable}
+                          aria-pressed={isSelected}
+                          aria-label={`Show project prices in ${option.currency}`}
+                          title={
+                            isUnavailable
+                              ? "Daily exchange rates are unavailable"
+                              : `Show prices in ${option.currency}`
+                          }
+                          className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 disabled:cursor-not-allowed disabled:opacity-40 ${
+                            isSelected
+                              ? "bg-violet-500 text-white shadow-sm"
+                              : "text-white/70 hover:bg-white/10 hover:text-white"
+                          }`}
+                        >
+                          <span dir="ltr">{option.symbol}</span>
+                          <span>{option.currency}</span>
+                        </button>
+                      );
+                    })}
+                    </div>
+                  )}
+                </>
               </div>
               <p
                 className="text-[9px] leading-4 text-white/55"
