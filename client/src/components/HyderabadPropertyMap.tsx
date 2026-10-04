@@ -64,9 +64,18 @@ import {
   type DisplayCurrency,
 } from "@/lib/currency";
 import { PLOTSVIEW_PROJECTS } from "@/data/plotsviewProjects";
+import {
+  DUBAI_MAP_CENTER,
+  DUBAI_PROPERTY_PROJECTS,
+  type DubaiPropertyProject,
+} from "@/data/dubaiProjects";
 import { RRR_ALIGNMENT_COORDINATES } from "@/data/rrrAlignment";
 
 type PropertyProject = (typeof PLOTSVIEW_PROJECTS)[number];
+type MapPinProject = Pick<
+  DubaiPropertyProject,
+  "id" | "name" | "longitude" | "latitude" | "accent"
+>;
 
 const HYDERABAD_CENTER: [number, number] = [78.385, 17.42];
 const MAGIC_ANCHOR: [number, number] = [78.386, 17.455];
@@ -1300,10 +1309,12 @@ function MagicProjectRoute({
 
 function PropertyPin({
   accent,
+  projectName,
   selected = false,
   onSelect,
 }: {
   accent: string;
+  projectName: string;
   selected?: boolean;
   onSelect: () => void;
 }) {
@@ -1311,7 +1322,7 @@ function PropertyPin({
     <button
       type="button"
       onClick={onSelect}
-      aria-label="View project details"
+      aria-label={`View ${projectName} project details`}
       className={`relative h-10 w-10 transition-transform ${
         selected ? "scale-125" : ""
       }`}
@@ -1336,7 +1347,7 @@ function PropertyPin({
   );
 }
 
-function FitProjectPins({ projects }: { projects: PropertyProject[] }) {
+function FitProjectPins({ projects }: { projects: MapPinProject[] }) {
   const { map, isLoaded } = useMap();
 
   useEffect(() => {
@@ -2359,6 +2370,85 @@ function ProjectDetailSheet({
   );
 }
 
+function DubaiProjectDetailSheet({
+  project,
+  onClose,
+}: {
+  project: DubaiPropertyProject;
+  onClose: () => void;
+}) {
+  const mapSearch = encodeURIComponent(
+    `${project.locality}, Dubai, United Arab Emirates`,
+  );
+
+  return (
+    <motion.section
+      initial={{ y: "100%", opacity: 0.8 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: "100%", opacity: 0 }}
+      transition={{ type: "spring", damping: 30, stiffness: 280 }}
+      className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 mx-auto max-h-[75vh] w-full max-w-[560px] overflow-y-auto rounded-t-[28px] bg-white p-5 text-slate-900 shadow-[0_-18px_60px_rgba(15,23,42,0.28)]"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${project.name} Dubai project details`}
+    >
+      <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-300" />
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-violet-700">
+            {project.developer}
+          </p>
+          <h2 className="mt-1 text-xl font-bold tracking-tight">
+            {project.name}
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900"
+          aria-label="Close project details"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <p className="mt-3 flex items-start gap-2 text-sm leading-6 text-slate-600">
+        <MapPin className="mt-1 h-4 w-4 shrink-0 text-violet-600" />
+        {project.locality}, Dubai
+      </p>
+      {project.note && (
+        <p className="mt-3 rounded-xl bg-violet-50 p-3 text-sm leading-6 text-violet-950">
+          {project.note}
+        </p>
+      )}
+      <p className="mt-3 text-xs leading-5 text-slate-500">
+        Map pin shows the approximate community location, not a verified
+        building or plot boundary.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${mapSearch}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-3 py-2.5 text-xs font-bold text-white transition-colors hover:bg-violet-600"
+        >
+          <Navigation className="h-3.5 w-3.5" />
+          Open community in Maps
+          <ExternalLink className="h-3 w-3" />
+        </a>
+        <a
+          href={project.developerUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+        >
+          Developer website
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      </div>
+    </motion.section>
+  );
+}
+
 export function HyderabadPropertyMapOverlay({
   onClose,
   initialProjectId = null,
@@ -2366,6 +2456,9 @@ export function HyderabadPropertyMapOverlay({
   onClose: () => void;
   initialProjectId?: string | null;
 }) {
+  const [activeCity, setActiveCity] = useState<"hyderabad" | "dubai">(
+    "hyderabad",
+  );
   const [query, setQuery] = useState("");
   const [showMapInfo, setShowMapInfo] = useState(false);
   const [selectedIntentId, setSelectedIntentId] = useState<string | null>(null);
@@ -2477,6 +2570,17 @@ export function HyderabadPropertyMapOverlay({
     userLocation,
   ]);
 
+  const visibleDubaiProjects = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return DUBAI_PROPERTY_PROJECTS.filter(
+      (project) =>
+        !normalizedQuery ||
+        `${project.name} ${project.locality} ${project.developer} ${project.note ?? ""}`
+          .toLowerCase()
+          .includes(normalizedQuery),
+    );
+  }, [query]);
+
   const sortedVisibleProjects = useMemo(() => {
     return [...visibleProjects].sort((a, b) => {
       if (listSort === "rate") {
@@ -2489,8 +2593,18 @@ export function HyderabadPropertyMapOverlay({
     });
   }, [listSort, visibleProjects]);
 
-  const visibleMapProjects =
-    showCityLayers || !showProjectPins ? [] : visibleProjects;
+  const visibleHyderabadMapProjects =
+    activeCity === "hyderabad" && !showCityLayers && showProjectPins
+      ? visibleProjects
+      : [];
+  const visibleMapProjects: MapPinProject[] =
+    activeCity === "dubai"
+      ? showProjectPins
+        ? visibleDubaiProjects
+        : []
+      : visibleHyderabadMapProjects;
+  const visibleProjectCount =
+    activeCity === "dubai" ? visibleDubaiProjects.length : visibleProjects.length;
   const contextCategoriesForMap: Record<CityContextCategory, boolean> =
     showCityLayers
       ? visibleContextCategories
@@ -2503,10 +2617,19 @@ export function HyderabadPropertyMapOverlay({
           "data-centers": false,
           "power-plants": false,
         };
-  const routeProjectIds = visibleMapProjects.map((project) => project.id).join(",");
-  const selectedPinProject = PROJECTS.find(
-    (project) => project.id === selectedPinProjectId,
-  );
+  const routeProjectIds = visibleHyderabadMapProjects
+    .map((project) => project.id)
+    .join(",");
+  const selectedPinProject =
+    activeCity === "hyderabad"
+      ? PROJECTS.find((project) => project.id === selectedPinProjectId)
+      : undefined;
+  const selectedDubaiProject =
+    activeCity === "dubai"
+      ? DUBAI_PROPERTY_PROJECTS.find(
+          (project) => project.id === selectedPinProjectId,
+        )
+      : undefined;
 
   useEffect(() => {
     if (
@@ -2527,7 +2650,7 @@ export function HyderabadPropertyMapOverlay({
     [showCityLayers, visibleContextCategories],
   );
   const initialProject = PROJECTS.find(
-    (project) => project.id === initialProjectId,
+    (project) => activeCity === "hyderabad" && project.id === initialProjectId,
   );
 
   useEffect(() => {
@@ -2699,6 +2822,24 @@ export function HyderabadPropertyMapOverlay({
     setShowLakeHelp(false);
   };
 
+  const selectCity = (city: "hyderabad" | "dubai") => {
+    if (city === activeCity) return;
+    setActiveCity(city);
+    setQuery("");
+    setSelectedIntentId(null);
+    setSelectedSubcategoryId(null);
+    setSelectedPinProjectId(null);
+    setShowProjectList(false);
+    setShowCityLayers(false);
+    setShowContextPanel(false);
+    setIsRadiusFilterOpen(false);
+    setShowLakes(false);
+    setShowLakeHelp(false);
+    setSelectedLake(null);
+    setCheckedProjectLake(null);
+    setIsMasterPlanSelected(false);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -2707,11 +2848,12 @@ export function HyderabadPropertyMapOverlay({
       className="fixed inset-0 z-[140] overflow-hidden bg-[#07111f]"
       role="dialog"
       aria-modal="true"
-      aria-label="PlotsView projects map"
+      aria-label={`${activeCity === "dubai" ? "Dubai developments" : "Hyderabad properties"} map`}
     >
       <PropertyMap
-        center={HYDERABAD_CENTER}
-        zoom={9}
+        key={activeCity}
+        center={activeCity === "dubai" ? DUBAI_MAP_CENTER : HYDERABAD_CENTER}
+        zoom={activeCity === "dubai" ? 10 : 9}
         theme={isDarkMap ? "dark" : "light"}
         styles={
           isSatelliteMap
@@ -2733,38 +2875,43 @@ export function HyderabadPropertyMapOverlay({
             showCityLayers || !showProjectPins ? undefined : initialProject
           }
         />
-        <DigitizedLakesLayer
-          visible={showLakes}
-          checkedProject={selectedPinProject}
-          onLakeSelect={(lake) => {
-            setSelectedLake(lake);
-            setShowLakeHelp(false);
-            setCheckedProjectLake(null);
-          }}
-          onMapTap={() => {
-            setShowLakeHelp(false);
-            setShowContextPanel(false);
-          }}
-          onProjectCheck={setCheckedProjectLake}
-        />
-        <CityContextLayers
-          visibleCategories={contextCategoriesForMap}
-          show3d={showCityLayers}
-        />
-        <OuterRingRoadLayer />
-        <RegionalRingRoadLayer visible />
-        {!showCityLayers &&
+        {activeCity === "hyderabad" && (
+          <>
+            <DigitizedLakesLayer
+              visible={showLakes}
+              checkedProject={selectedPinProject}
+              onLakeSelect={(lake) => {
+                setSelectedLake(lake);
+                setShowLakeHelp(false);
+                setCheckedProjectLake(null);
+              }}
+              onMapTap={() => {
+                setShowLakeHelp(false);
+                setShowContextPanel(false);
+              }}
+              onProjectCheck={setCheckedProjectLake}
+            />
+            <CityContextLayers
+              visibleCategories={contextCategoriesForMap}
+              show3d={showCityLayers}
+            />
+            <OuterRingRoadLayer />
+            <RegionalRingRoadLayer visible />
+          </>
+        )}
+        {activeCity === "hyderabad" &&
+          !showCityLayers &&
           selectedIntent &&
           selectedSubcategory &&
-          visibleMapProjects.length > 0 && (
-          <MagicProjectRoute
-            projects={visibleMapProjects}
-            intent={selectedIntent}
-            subcategoryId={selectedSubcategory.id}
-            progress={routeProgress}
-          />
-        )}
-        {isRadiusFilterOpen && userLocation && (
+          visibleHyderabadMapProjects.length > 0 && (
+            <MagicProjectRoute
+              projects={visibleHyderabadMapProjects}
+              intent={selectedIntent}
+              subcategoryId={selectedSubcategory.id}
+              progress={routeProgress}
+            />
+          )}
+        {activeCity === "hyderabad" && isRadiusFilterOpen && userLocation && (
           <RadiusFilterLayer
             center={userLocation}
             radiusInKilometers={radiusInKilometers}
@@ -2779,7 +2926,12 @@ export function HyderabadPropertyMapOverlay({
             <MarkerContent>
               <PropertyPin
                 accent={project.accent}
-                selected={project.id === selectedPinProject?.id}
+                projectName={project.name}
+                selected={
+                  activeCity === "dubai"
+                    ? project.id === selectedDubaiProject?.id
+                    : project.id === selectedPinProject?.id
+                }
                 onSelect={() => selectProjectPin(project.id)}
               />
             </MarkerContent>
@@ -2817,24 +2969,56 @@ export function HyderabadPropertyMapOverlay({
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search projects or localities"
+                  placeholder={
+                    activeCity === "dubai"
+                      ? "Search Dubai projects, developers or areas"
+                      : "Search projects or localities"
+                  }
                   className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                  aria-label="Search PlotsView projects"
+                  aria-label={
+                    activeCity === "dubai"
+                      ? "Search Dubai projects, developers or areas"
+                      : "Search Hyderabad properties"
+                  }
                 />
               </label>
-              <button
-                type="button"
-                className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-violet-500/70 bg-gradient-to-br from-violet-600 to-indigo-700 px-2 text-[10px] font-semibold tracking-wide text-white shadow-sm shadow-violet-500/20 transition-colors hover:from-violet-500 hover:to-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              <div
+                role="group"
+                aria-label="Choose map city"
+                className="flex shrink-0 items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5"
               >
-                <MapPin className="h-3 w-3" aria-hidden="true" />
-                <span>Dubai</span>
-              </button>
+                {(
+                  [
+                    ["hyderabad", "Hyderabad"],
+                    ["dubai", "Dubai"],
+                  ] as const
+                ).map(([city, label]) => (
+                  <button
+                    key={city}
+                    type="button"
+                    onClick={() => selectCity(city)}
+                    aria-pressed={activeCity === city}
+                    className={`flex h-7 items-center gap-1 rounded-md px-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 ${
+                      activeCity === city
+                        ? "bg-violet-700 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-white hover:text-slate-950"
+                    }`}
+                  >
+                    {city === activeCity && (
+                      <MapPin className="h-3 w-3" aria-hidden="true" />
+                    )}
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="mt-2 flex items-center justify-between gap-3 px-1">
               <p className="min-w-0 text-[10px] font-semibold uppercase leading-4 tracking-[0.14em] text-slate-500">
                 {showCityLayers
                   ? `${visibleContextPoints.length} city context markers shown`
-                  : selectedIntent
+                  : activeCity === "dubai"
+                    ? `${visibleDubaiProjects.length} of ${DUBAI_PROPERTY_PROJECTS.length} Dubai developments ${showProjectPins ? "pinned" : "found"}`
+                    : selectedIntent
                     ? `${visibleProjects.length} ${selectedIntent.label.toLowerCase()} ${showProjectPins ? "shown" : "found"}`
                     : `${visibleProjects.length} of ${PROJECTS.length} projects ${showProjectPins ? "pinned" : "found"}`}
               </p>
@@ -2855,8 +3039,14 @@ export function HyderabadPropertyMapOverlay({
                 </div>
               )}
             </div>
+            {activeCity === "dubai" && (
+              <p className="mt-1 px-1 text-[9px] leading-4 text-slate-500">
+                Approximate community locations, not verified building sites.
+              </p>
+            )}
             </div>
-            <div className="mt-2 inline-flex max-w-full items-center gap-0.5 rounded-lg border border-white/15 bg-slate-950/80 px-1 py-1 shadow-md backdrop-blur-md">
+            {activeCity === "hyderabad" && (
+              <div className="mt-2 inline-flex max-w-full items-center gap-0.5 rounded-lg border border-white/15 bg-slate-950/80 px-1 py-1 shadow-md backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => {
@@ -2897,8 +3087,10 @@ export function HyderabadPropertyMapOverlay({
                 <span>Master Plan</span>
               </button>
               <FlashNewsDialog />
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+              </div>
+            )}
+            {activeCity === "hyderabad" && (
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
               <div
                 className="inline-flex items-center gap-1"
                 onKeyDown={(event) => {
@@ -2991,7 +3183,8 @@ export function HyderabadPropertyMapOverlay({
                   )}
                 </>
               </div>
-            </div>
+              </div>
+            )}
           </div>
 
           <div className="pointer-events-auto flex flex-col items-center gap-2">
@@ -3031,56 +3224,60 @@ export function HyderabadPropertyMapOverlay({
             >
               <Satellite className="h-4 w-4" />
             </button>
-            <button
-              type="button"
-              onClick={() =>
-                setShowCityLayers((visible) => {
-                  const nextVisible = !visible;
-                  setShowContextPanel(nextVisible);
-                  return nextVisible;
-                })
-              }
-              className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
-                showCityLayers
-                  ? "border-emerald-300/80 bg-emerald-950/90"
-                  : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
-              }`}
-              aria-label={
-                showCityLayers
-                  ? "Exit city context mode"
-                  : "Show city context mode"
-              }
-              title={
-                showCityLayers
-                  ? "Exit city context mode"
-                  : "Show city context mode"
-              }
-            >
-              <MapPinned className="h-5 w-5" />
-            </button>
+            {activeCity === "hyderabad" && (
+              <button
+                type="button"
+                onClick={() =>
+                  setShowCityLayers((visible) => {
+                    const nextVisible = !visible;
+                    setShowContextPanel(nextVisible);
+                    return nextVisible;
+                  })
+                }
+                className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
+                  showCityLayers
+                    ? "border-emerald-300/80 bg-emerald-950/90"
+                    : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+                }`}
+                aria-label={
+                  showCityLayers
+                    ? "Exit city context mode"
+                    : "Show city context mode"
+                }
+                title={
+                  showCityLayers
+                    ? "Exit city context mode"
+                    : "Show city context mode"
+                }
+              >
+                <MapPinned className="h-5 w-5" />
+              </button>
+            )}
             {!showCityLayers && (
               <>
-                <button
-                  type="button"
-                  onClick={toggleRadiusFilter}
-                  className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
-                    isRadiusFilterOpen
-                      ? "border-cyan-300/80 bg-cyan-950/90"
-                      : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
-                  }`}
-                  aria-label={
-                    isRadiusFilterOpen
-                      ? "Adjust search radius"
-                      : "Enable search radius filter"
-                  }
-                  title={
-                    isRadiusFilterOpen
-                      ? "Adjust search radius"
-                      : "Search by radius"
-                  }
-                >
-                  <Ruler className="h-4 w-4" />
-                </button>
+                {activeCity === "hyderabad" && (
+                  <button
+                    type="button"
+                    onClick={toggleRadiusFilter}
+                    className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
+                      isRadiusFilterOpen
+                        ? "border-cyan-300/80 bg-cyan-950/90"
+                        : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+                    }`}
+                    aria-label={
+                      isRadiusFilterOpen
+                        ? "Adjust search radius"
+                        : "Enable search radius filter"
+                    }
+                    title={
+                      isRadiusFilterOpen
+                        ? "Adjust search radius"
+                        : "Search by radius"
+                    }
+                  >
+                    <Ruler className="h-4 w-4" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowProjectList((visible) => !visible)}
@@ -3415,7 +3612,7 @@ export function HyderabadPropertyMapOverlay({
         </div>
       )}
 
-      {showLakes && showLakeHelp && (
+      {activeCity === "hyderabad" && showLakes && showLakeHelp && (
         <div className="pointer-events-none absolute right-4 top-4 z-20 mt-[238px] w-[min(290px,calc(100vw-2rem))] sm:right-6">
           <div className="pointer-events-auto rounded-2xl border border-cyan-200/40 bg-slate-950/90 px-3 py-2.5 text-white shadow-2xl backdrop-blur-xl">
             <p className="flex items-center gap-2 text-[11px] font-bold">
@@ -3430,7 +3627,9 @@ export function HyderabadPropertyMapOverlay({
         </div>
       )}
 
-      {showLakes && (selectedLake || selectedPinProject) && (
+      {activeCity === "hyderabad" &&
+        showLakes &&
+        (selectedLake || selectedPinProject) && (
         <div className="pointer-events-none absolute bottom-[86px] right-4 z-30 w-[min(330px,calc(100vw-2rem))] sm:bottom-[82px] sm:right-6">
           <div className="pointer-events-auto relative rounded-2xl border border-cyan-200/40 bg-slate-950/95 p-4 text-white shadow-2xl backdrop-blur-xl">
             <button
@@ -3497,38 +3696,76 @@ export function HyderabadPropertyMapOverlay({
         <div className="pointer-events-auto absolute right-4 top-28 z-30 max-h-[58vh] w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/20 bg-slate-950/90 text-white shadow-2xl backdrop-blur-xl sm:right-6">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <div>
-              <p className="text-xs font-bold">Visible properties</p>
+              <p className="text-xs font-bold">
+                {activeCity === "dubai"
+                  ? "Dubai developments"
+                  : "Visible properties"}
+              </p>
               <p className="mt-0.5 text-[10px] text-white/45">
-                {visibleProjects.length} result
-                {visibleProjects.length === 1 ? "" : "s"} on the map
+                {visibleProjectCount}{" "}
+                {activeCity === "dubai"
+                  ? "developments"
+                  : `result${visibleProjectCount === 1 ? "" : "s"}`}{" "}
+                on the map
               </p>
             </div>
             <div className="flex items-center gap-1.5">
-              <select
-                value={listSort}
-                onChange={(event) =>
-                  setListSort(event.target.value as typeof listSort)
-                }
-                className="rounded-lg border border-white/15 bg-white/[0.08] px-2 py-1.5 text-[10px] text-white outline-none focus:border-cyan-300/60"
-                aria-label="Sort visible properties"
-              >
-                <option value="price">Lowest price</option>
-                <option value="rate">Lowest rate</option>
-                <option value="size">Smallest layout</option>
-              </select>
+              {activeCity === "hyderabad" && (
+                <select
+                  value={listSort}
+                  onChange={(event) =>
+                    setListSort(event.target.value as typeof listSort)
+                  }
+                  className="rounded-lg border border-white/15 bg-white/[0.08] px-2 py-1.5 text-[10px] text-white outline-none focus:border-cyan-300/60"
+                  aria-label="Sort visible properties"
+                >
+                  <option value="price">Lowest price</option>
+                  <option value="rate">Lowest rate</option>
+                  <option value="size">Smallest layout</option>
+                </select>
+              )}
               <button
                 type="button"
                 onClick={() => setShowProjectList(false)}
                 className="rounded-full p-1.5 text-white/55 transition-colors hover:bg-white/10 hover:text-white"
-                aria-label="Close property list"
+                aria-label="Close project list"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
           </div>
           <div className="flash-news-scrollbar max-h-[calc(58vh-64px)] overflow-y-auto p-2">
-            {visibleProjects.length > 0 ? (
-              sortedVisibleProjects.map((project) => (
+            {visibleProjectCount > 0 ? (
+              activeCity === "dubai" ? (
+                visibleDubaiProjects.map((project) => (
+                  <button
+                    key={project.id}
+                    type="button"
+                    onClick={() => {
+                      selectProjectPin(project.id);
+                      setShowProjectList(false);
+                    }}
+                    className="w-full rounded-xl px-3 py-3 text-left transition-colors hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                  >
+                    <p className="truncate text-xs font-semibold">
+                      {project.name}
+                    </p>
+                    <p className="mt-1 flex items-start gap-1 text-[10px] leading-4 text-white/55">
+                      <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-cyan-300" />
+                      {project.locality}
+                    </p>
+                    <p className="mt-1 text-[10px] font-semibold text-cyan-200">
+                      {project.developer}
+                    </p>
+                    {project.note && (
+                      <p className="mt-1 text-[10px] leading-4 text-white/45">
+                        {project.note}
+                      </p>
+                    )}
+                  </button>
+                ))
+              ) : (
+                sortedVisibleProjects.map((project) => (
                 <button
                   key={project.id}
                   type="button"
@@ -3563,7 +3800,8 @@ export function HyderabadPropertyMapOverlay({
                     {project.type}
                   </p>
                 </button>
-              ))
+                ))
+              )
             ) : (
               <p className="px-3 py-6 text-center text-xs text-white/50">
                 No properties match the current filters.
@@ -3573,12 +3811,12 @@ export function HyderabadPropertyMapOverlay({
         </div>
       )}
 
-      {isRadiusFilterOpen && (
+      {activeCity === "hyderabad" && isRadiusFilterOpen && (
         <div className="pointer-events-none absolute inset-x-0 bottom-[82px] z-30 flex justify-center px-3 sm:bottom-[76px] sm:px-5">
           <RadiusArcControl
             radiusInKilometers={radiusInKilometers}
             onRadiusChange={setRadiusInKilometers}
-            visibleProjectCount={visibleProjects.length}
+            visibleProjectCount={visibleProjectCount}
             isDarkMap={isDarkMap}
           />
         </div>
@@ -3586,7 +3824,9 @@ export function HyderabadPropertyMapOverlay({
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-10 pt-3 sm:px-5 sm:pb-8 sm:pt-5">
         <div className="relative mx-auto w-full max-w-[680px]">
-          {!showCityLayers && !isMasterPlanSelected && (
+          {activeCity === "hyderabad" &&
+            !showCityLayers &&
+            !isMasterPlanSelected && (
             <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
             <Sparkles className="ml-1.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
             <div className="flex min-w-max gap-1.5">
@@ -3671,8 +3911,10 @@ export function HyderabadPropertyMapOverlay({
         </div>
         {showMapInfo && (
           <div className="pointer-events-auto absolute bottom-14 left-3 max-w-[280px] rounded-xl border border-white/20 bg-slate-950/90 px-3 py-2 text-[10px] text-white/70 shadow-xl backdrop-blur-md sm:left-5">
-            Map tiles © OpenStreetMap contributors · {PROJECTS.length} project
-            pins imported from the public PlotsView venture catalog.
+            Map tiles © OpenStreetMap contributors ·{" "}
+            {activeCity === "dubai"
+              ? `${DUBAI_PROPERTY_PROJECTS.length} named Dubai developments, pinned at approximate community locations.`
+              : `${PROJECTS.length} project pins imported from the public PlotsView venture catalog.`}
           </div>
         )}
       </div>
@@ -3682,6 +3924,12 @@ export function HyderabadPropertyMapOverlay({
           onClose={() => setSelectedPinProjectId(null)}
           currency={displayCurrency}
           rates={exchangeRates}
+        />
+      )}
+      {selectedDubaiProject && (
+        <DubaiProjectDetailSheet
+          project={selectedDubaiProject}
+          onClose={() => setSelectedPinProjectId(null)}
         />
       )}
     </motion.div>
