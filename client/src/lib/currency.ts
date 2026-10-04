@@ -1,5 +1,7 @@
 export type DisplayCurrency = "INR" | "USD" | "AED";
 
+export const UAE_DIRHAM_SIGN = "\u20C3";
+
 export type DailyInrExchangeRates = {
   USD: number;
   AED: number;
@@ -228,7 +230,7 @@ export function formatAmountFromInr(
 
   if (currency === "INR") return `₹${formatted}`;
   if (currency === "USD") return `$${formatted}`;
-  return `\u20C3 ${formatted}`;
+  return `${UAE_DIRHAM_SIGN} ${formatted}`;
 }
 
 export function formatProjectPrice(

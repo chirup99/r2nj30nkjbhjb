@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import type { MapLayerMouseEvent } from "maplibre-gl";
 import {
@@ -45,6 +46,10 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { FlashNewsDialog } from "@/components/FlashNewsDialog";
 import {
+  FormattedCurrencyText,
+  UaeDirhamSymbol,
+} from "@/components/UaeDirhamSymbol";
+import {
   HMDA_MASTER_PLAN_MAPS,
   type HmdaMasterPlanGroup,
 } from "@/data/hmdaMasterPlanMaps";
@@ -54,6 +59,7 @@ import {
   formatProjectPrice,
   formatStartingPrice,
   loadDailyInrExchangeRates,
+  UAE_DIRHAM_SIGN,
   type DailyInrExchangeRates,
   type DisplayCurrency,
 } from "@/lib/currency";
@@ -1159,7 +1165,7 @@ const MAGIC_INTENTS = [
 const CURRENCY_OPTIONS: { currency: DisplayCurrency; symbol: string }[] = [
   { currency: "INR", symbol: "₹" },
   { currency: "USD", symbol: "$" },
-  { currency: "AED", symbol: "\u20C3" },
+  { currency: "AED", symbol: UAE_DIRHAM_SIGN },
 ];
 
 function getSubcategoryDisplayLabel(
@@ -2112,7 +2118,7 @@ function DetailValue({
   icon: Icon,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   icon: typeof MapPin;
 }) {
   return (
@@ -2205,7 +2211,11 @@ function ProjectDetailSheet({
         <div className="mb-4 grid grid-cols-2 gap-2">
           <DetailValue
             label="Price"
-            value={formatProjectPrice(project.price, currency, rates)}
+            value={
+              <FormattedCurrencyText
+                value={formatProjectPrice(project.price, currency, rates)}
+              />
+            }
             icon={Banknote}
           />
           <DetailValue label="Plot sizes" value={project.bedrooms} icon={Ruler} />
@@ -2222,7 +2232,15 @@ function ProjectDetailSheet({
           {details.startingPrice && (
             <DetailValue
               label="Starting from"
-              value={formatStartingPrice(details.startingPrice, currency, rates)}
+              value={
+                <FormattedCurrencyText
+                  value={formatStartingPrice(
+                    details.startingPrice,
+                    currency,
+                    rates,
+                  )}
+                />
+              }
               icon={Banknote}
             />
           )}
@@ -2912,9 +2930,13 @@ export function HyderabadPropertyMapOverlay({
                     ) : (
                       <>
                         <span dir="ltr">
-                          {CURRENCY_OPTIONS.find(
-                            (option) => option.currency === displayCurrency,
-                          )?.symbol ?? "₹"}
+                          {displayCurrency === "AED" ? (
+                            <UaeDirhamSymbol />
+                          ) : (
+                            CURRENCY_OPTIONS.find(
+                              (option) => option.currency === displayCurrency,
+                            )?.symbol ?? "₹"
+                          )}
                         </span>
                         <span>{displayCurrency}</span>
                         <ChevronDown className="h-3 w-3 text-white/55" />
@@ -2954,7 +2976,13 @@ export function HyderabadPropertyMapOverlay({
                               : "text-white/70 hover:bg-white/10 hover:text-white"
                           }`}
                         >
-                          <span dir="ltr">{option.symbol}</span>
+                          <span dir="ltr">
+                            {option.currency === "AED" ? (
+                              <UaeDirhamSymbol />
+                            ) : (
+                              option.symbol
+                            )}
+                          </span>
                           <span>{option.currency}</span>
                         </button>
                       );
@@ -3521,11 +3549,13 @@ export function HyderabadPropertyMapOverlay({
                       </p>
                     </div>
                     <span className="shrink-0 text-[10px] font-bold text-cyan-200">
-                      {formatProjectPrice(
-                        project.price,
-                        displayCurrency,
-                        exchangeRates,
-                      )}
+                      <FormattedCurrencyText
+                        value={formatProjectPrice(
+                          project.price,
+                          displayCurrency,
+                          exchangeRates,
+                        )}
+                      />
                     </span>
                   </div>
                   <p className="mt-2 text-[10px] text-white/45">
@@ -3597,11 +3627,13 @@ export function HyderabadPropertyMapOverlay({
                         title={subcategory.detail}
                       >
                         <span className="block text-[10px] font-bold">
-                          {getSubcategoryDisplayLabel(
-                            subcategory,
-                            displayCurrency,
-                            exchangeRates,
-                          )}
+                          <FormattedCurrencyText
+                            value={getSubcategoryDisplayLabel(
+                              subcategory,
+                              displayCurrency,
+                              exchangeRates,
+                            )}
+                          />
                         </span>
                       </button>
                     );

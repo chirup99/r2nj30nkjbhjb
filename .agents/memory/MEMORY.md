@@ -1,4 +1,5 @@
 - [Node dependency setup](node-dependency-setup.md) — package installation can upgrade semver ranges in the manifest; restore imported manifests when setup does not require dependency changes.
+- [UAE dirham symbol rendering](uae-dirham-symbol.md) — use the official D crossed by two bars as a vector mask; the newer Unicode character is missing from available fonts.
 - [AWS deployment permissions](aws-deployment-permissions.md) — the current AWS deployment identity needs explicit infrastructure-creation access; fail before touching existing Perala resources when denied.
 - [Carto named road geometry](carto-road-layers.md) — named road lines live in `transportation_name`; Hyderabad ORR features use `name: Outer Ring Road` and `ref: ORR`.
 - [HMDA source map sizes](hmda-map-sizes.md) — official raster sheets vary widely; avoid low pixel caps in optimized previews and retain original full-resolution links.
