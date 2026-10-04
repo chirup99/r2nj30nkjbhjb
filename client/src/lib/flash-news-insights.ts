@@ -1,5 +1,8 @@
 import { HMDA_MASTER_PLAN_MAPS } from "@/data/hmdaMasterPlanMaps";
 import { PLOTSVIEW_PROJECTS } from "@/data/plotsviewProjects";
+import { DUBAI_PROPERTY_PROJECTS } from "@/data/dubaiProjects";
+
+export type FlashNewsRegion = "india" | "dubai";
 
 export type InsightHeadline = {
   title: string;
@@ -41,28 +44,28 @@ const SIGNAL_RULES: {
     title: "Housing, demand & investment",
     description: "Housing, prices, sales, registrations, rentals, and investment.",
     pattern:
-      /\b(demand|homebuyers?|housing|residential|senior living|property prices?|home prices?|sales|registrations?|rentals?|real estate|realty|new launches?|invest(?:s|ed|ment|ments|ing)?)\b/i,
+      /\b(demand|homebuyers?|housing|residential|commercial|developer|senior living|property prices?|home prices?|sales|registrations?|rentals?|real estate|realty|new launches?|new projects?|invest(?:s|ed|ment|ments|ing)?)\b/i,
   },
   {
     id: "policy",
     title: "Government & planning",
-    description: "Government decisions, HMDA actions, approvals, plans, and zoning.",
+    description: "Government decisions, authority actions, urban plans, approvals, and zoning.",
     pattern:
-      /\b(govt|government|minister|cabinet|policy|hmda|approval|approved|registration|order|act|section 22[- ]?a|master plan|zoning|zone|land use|notification|clears?|committee|municipal)\b/i,
+      /\b(govt|government|minister|cabinet|policy|hmda|rera|dld|approval|approved|registration|order|act|section 22[- ]?a|master plan|urban plan|zoning|zone|land use|notification|clears?|committee|municipal|dubai municipality|executive council|regulation|dubai 2040)\b/i,
   },
   {
     id: "zones",
-    title: "SEZ & industrial zones",
-    description: "SEZs, industrial parks, logistics, pharma, and employment hubs.",
+    title: "Free zones, SEZ & industrial zones",
+    description: "Free and special economic zones, industrial parks, logistics, and employment hubs.",
     pattern:
-      /\b(sez|special economic zone|industrial (?:park|zone|corridor|area)|nimz|pharma city|data cent(?:er|re)|logistics park|it park|employment hub)\b/i,
+      /\b(sez|special economic zone|free zones?|economic zones?|jafza|dmcc|difc|industrial (?:park|zone|corridor|area)|nimz|pharma city|data cent(?:er|re)|logistics park|it park|employment hub)\b/i,
   },
   {
     id: "infrastructure",
     title: "Transport & major projects",
     description: "Metro, roads, rail, airports, corridors, and riverfront projects.",
     pattern:
-      /\b(metro|airport|ring road|orr|rrr|road widening|highway|expressway|rail|bullet train|corridor|flyover|riverfront|infrastructure|connectivity)\b/i,
+      /\b(metro|airport|ring road|orr|rrr|road widening|highway|expressway|rail|etihad rail|rta|port|bullet train|corridor|flyover|riverfront|infrastructure|connectivity)\b/i,
   },
 ];
 
@@ -70,6 +73,8 @@ const GENERIC_AREA_WORDS = new Set([
   "area",
   "city",
   "district",
+  "dubai",
+  "emirates",
   "east",
   "estate",
   "farmland",
@@ -91,9 +96,13 @@ const GENERIC_AREA_WORDS = new Set([
   "telangana",
   "temple",
   "township",
+  "uae",
+  "united",
+  "arab",
   "villas",
   "west",
   "zone",
+  "zones",
 ]);
 
 const EXTRA_AREAS: { name: string; aliases?: string[] }[] = [
@@ -120,6 +129,31 @@ const EXTRA_AREAS: { name: string; aliases?: string[] }[] = [
   { name: "Shamshabad" },
   { name: "Tellapur" },
   { name: "Tukkuguda" },
+];
+
+const DUBAI_EXTRA_AREAS: { name: string; aliases?: string[] }[] = [
+  { name: "Academic City", aliases: ["Dubai Academic City"] },
+  { name: "Al Jaddaf" },
+  { name: "Business Bay" },
+  { name: "Dubai 2040 Urban Master Plan", aliases: ["Dubai 2040"] },
+  { name: "Dubai Creek Harbour", aliases: ["Creek Harbour"] },
+  { name: "Dubai Healthcare City" },
+  { name: "Dubai Industrial City" },
+  { name: "Dubai International Financial Centre", aliases: ["DIFC"] },
+  { name: "Dubai Internet City" },
+  { name: "Dubai Islands" },
+  { name: "Dubai Maritime City" },
+  { name: "Dubai Media City" },
+  { name: "Dubai Multi Commodities Centre", aliases: ["DMCC"] },
+  { name: "Dubai Production City" },
+  { name: "Dubai Silicon Oasis", aliases: ["DSO"] },
+  { name: "Dubai South" },
+  { name: "Dubailand" },
+  { name: "Jebel Ali Free Zone", aliases: ["JAFZA"] },
+  { name: "Jumeirah Village Circle", aliases: ["JVC"] },
+  { name: "Jumeirah Village Triangle", aliases: ["JVT"] },
+  { name: "Meydan" },
+  { name: "Palm Jumeirah" },
 ];
 
 function normalize(value: string) {
@@ -153,34 +187,55 @@ function isUsableAreaName(value: string) {
   return !words.every((word) => GENERIC_AREA_WORDS.has(word));
 }
 
-function buildAreaAliases() {
+function buildAreaAliases(region: FlashNewsRegion) {
   const aliases = new Map<string, string>();
-  const add = (name: string, displayName = name) => {
+  const add = (name: string, displayName = name, isExplicitArea = false) => {
     const normalized = normalize(name);
-    if (isUsableAreaName(name)) aliases.set(normalized, displayName);
+    if (
+      normalized &&
+      normalized !== "dubai" &&
+      normalized !== "uae" &&
+      (isExplicitArea || isUsableAreaName(name))
+    ) {
+      aliases.set(normalized, displayName);
+    }
   };
 
-  for (const project of PLOTSVIEW_PROJECTS) {
-    const locality = cleanAreaName(project.locality);
-    if (!locality) continue;
-    add(locality, titleCase(locality));
-    for (const word of locality.split(/\s+/)) {
-      if (isUsableAreaName(word)) add(word, titleCase(word));
+  if (region === "dubai") {
+    for (const project of DUBAI_PROPERTY_PROJECTS) {
+      for (const localityPart of project.locality.split(/[·,]/)) {
+        const locality = cleanAreaName(localityPart);
+        if (locality) add(locality, locality, true);
+      }
     }
-  }
 
-  for (const map of HMDA_MASTER_PLAN_MAPS) {
-    const area = cleanAreaName(map.area);
-    if (!area) continue;
-    add(area, titleCase(area));
-    for (const word of area.split(/\s+/)) {
-      if (isUsableAreaName(word)) add(word, titleCase(word));
+    for (const area of DUBAI_EXTRA_AREAS) {
+      add(area.name, area.name, true);
+      for (const alias of area.aliases ?? []) add(alias, area.name, true);
     }
-  }
+  } else {
+    for (const project of PLOTSVIEW_PROJECTS) {
+      const locality = cleanAreaName(project.locality);
+      if (!locality) continue;
+      add(locality, titleCase(locality));
+      for (const word of locality.split(/\s+/)) {
+        if (isUsableAreaName(word)) add(word, titleCase(word));
+      }
+    }
 
-  for (const area of EXTRA_AREAS) {
-    add(area.name, area.name);
-    for (const alias of area.aliases ?? []) add(alias, area.name);
+    for (const map of HMDA_MASTER_PLAN_MAPS) {
+      const area = cleanAreaName(map.area);
+      if (!area) continue;
+      add(area, titleCase(area));
+      for (const word of area.split(/\s+/)) {
+        if (isUsableAreaName(word)) add(word, titleCase(word));
+      }
+    }
+
+    for (const area of EXTRA_AREAS) {
+      add(area.name, area.name);
+      for (const alias of area.aliases ?? []) add(alias, area.name);
+    }
   }
 
   return Array.from(aliases.entries())
@@ -188,13 +243,19 @@ function buildAreaAliases() {
     .sort((left, right) => right.alias.length - left.alias.length);
 }
 
-const AREA_ALIASES = buildAreaAliases();
+const AREA_ALIASES: Record<FlashNewsRegion, ReturnType<typeof buildAreaAliases>> = {
+  india: buildAreaAliases("india"),
+  dubai: buildAreaAliases("dubai"),
+};
 
-function findAreaMentions(title: string) {
+function findAreaMentions(
+  title: string,
+  aliases: ReturnType<typeof buildAreaAliases>,
+) {
   const normalizedTitle = ` ${normalize(title)} `;
   const mentions: { start: number; end: number; area: string }[] = [];
 
-  for (const { alias, displayName } of AREA_ALIASES) {
+  for (const { alias, displayName } of aliases) {
     const start = normalizedTitle.indexOf(` ${alias} `);
     if (start < 0) continue;
 
@@ -213,7 +274,16 @@ function isHyderabadHeadline(item: InsightHeadline) {
   if (/\b(hyderabad|telangana|hmda)\b/i.test(item.title)) return true;
   const cameFromLocalFeed =
     item.categories.includes("hyderabad") || item.categories.includes("hmda");
-  return cameFromLocalFeed && findAreaMentions(item.title).length > 0;
+  return cameFromLocalFeed && findAreaMentions(item.title, AREA_ALIASES.india).length > 0;
+}
+
+function isDubaiHeadline(item: InsightHeadline) {
+  return (
+    /\b(dubai|united arab emirates|uae)\b/i.test(item.title) ||
+    item.categories.some((category) =>
+      ["dubai", "uae-government", "uae-zones"].includes(category),
+    )
+  );
 }
 
 function uniqueArticles(items: InsightHeadline[]) {
@@ -236,8 +306,12 @@ function newestFirst(items: InsightHeadline[]) {
 
 export function buildFlashNewsInsights(
   items: InsightHeadline[],
+  region: FlashNewsRegion = "india",
 ): FlashNewsInsights {
-  const localItems = items.filter(isHyderabadHeadline);
+  const isRegionalHeadline =
+    region === "dubai" ? isDubaiHeadline : isHyderabadHeadline;
+  const areaAliases = AREA_ALIASES[region];
+  const localItems = items.filter(isRegionalHeadline);
   const areas = new Map<string, { area: string; articles: InsightHeadline[] }>();
 
   for (const item of localItems) {
@@ -246,7 +320,7 @@ export function buildFlashNewsInsights(
     ).map((signal) => signal.id);
     if (matchedSignals.length === 0) continue;
 
-    for (const area of findAreaMentions(item.title)) {
+    for (const area of findAreaMentions(item.title, areaAliases)) {
       const key = normalize(area);
       const insight = areas.get(key) ?? { area, articles: [] };
       insight.articles.push(item);

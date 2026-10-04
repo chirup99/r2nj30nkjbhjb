@@ -16,7 +16,14 @@ import {
 } from "@/components/ui/dialog";
 import { FlashNewsInsightsView } from "@/components/FlashNewsInsightsView";
 
-type FlashNewsCategory = "hyderabad" | "hmda" | "india";
+type FlashNewsRegion = "india" | "dubai";
+type FlashNewsCategory =
+  | "hyderabad"
+  | "hmda"
+  | "india"
+  | "dubai"
+  | "uae-government"
+  | "uae-zones";
 type NewsFilter = "all" | FlashNewsCategory;
 
 type FlashNewsItem = {
@@ -34,17 +41,28 @@ type FlashNewsResponse = {
   warning?: string;
 };
 
-const FILTERS: { id: NewsFilter; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "hyderabad", label: "Hyderabad" },
-  { id: "hmda", label: "HMDA" },
-  { id: "india", label: "India RE" },
-];
+const FILTERS: Record<FlashNewsRegion, { id: NewsFilter; label: string }[]> = {
+  india: [
+    { id: "all", label: "All" },
+    { id: "hyderabad", label: "Hyderabad" },
+    { id: "hmda", label: "HMDA" },
+    { id: "india", label: "India RE" },
+  ],
+  dubai: [
+    { id: "all", label: "All" },
+    { id: "dubai", label: "Dubai" },
+    { id: "uae-government", label: "UAE policy" },
+    { id: "uae-zones", label: "Free zones / SEZ" },
+  ],
+};
 
 const CATEGORY_LABELS: Record<FlashNewsCategory, string> = {
   hyderabad: "Hyderabad",
   hmda: "HMDA",
   india: "India RE",
+  dubai: "Dubai",
+  "uae-government": "UAE policy & plans",
+  "uae-zones": "Free zones & SEZ",
 };
 
 function formatPublishedAt(value: string) {
@@ -62,7 +80,11 @@ function formatUpdatedAt(value: string) {
   }).format(date);
 }
 
-export function FlashNewsDialog() {
+export function FlashNewsDialog({
+  region = "india",
+}: {
+  region?: FlashNewsRegion;
+}) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<NewsFilter>("all");
   const [contentView, setContentView] = useState<"headlines" | "insights">(
@@ -79,6 +101,16 @@ export function FlashNewsDialog() {
     [],
   );
 
+  useEffect(() => {
+    requestController.current?.abort();
+    setFilter("all");
+    setContentView("headlines");
+    setNews(null);
+    setError("");
+    setLoading(false);
+    setInsightsScanning(false);
+  }, [region]);
+
   async function loadNews(forceRefresh = false) {
     requestController.current?.abort();
     const controller = new AbortController();
@@ -87,8 +119,10 @@ export function FlashNewsDialog() {
     setError("");
 
     try {
+      const params = new URLSearchParams({ region });
+      if (forceRefresh) params.set("refresh", "true");
       const response = await fetch(
-        `/api/news/flash${forceRefresh ? "?refresh=true" : ""}`,
+        `/api/news/flash?${params.toString()}`,
         { signal: controller.signal, cache: "no-store" },
       );
       const payload = (await response.json()) as
@@ -148,8 +182,16 @@ export function FlashNewsDialog() {
         <button
           type="button"
           className="flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-transparent px-2.5 py-1 text-[10px] font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950"
-          aria-label="Open latest real estate news"
-          title="Latest real estate, HMDA, and Hyderabad development news"
+          aria-label={
+            region === "dubai"
+              ? "Open Dubai and UAE real estate, government, planning, and free-zone news"
+              : "Open latest real estate news"
+          }
+          title={
+            region === "dubai"
+              ? "Dubai and UAE real estate, government plans, and free-zone news"
+              : "Latest real estate, HMDA, and Hyderabad development news"
+          }
         >
           <Newspaper className="h-3 w-3 shrink-0 text-violet-300" />
           <span>Flash News</span>
@@ -170,7 +212,7 @@ export function FlashNewsDialog() {
             <div className="flex min-w-0 items-center gap-2">
               <Newspaper className="h-4 w-4 shrink-0 text-violet-300" />
               <DialogTitle className="truncate text-sm font-semibold tracking-tight text-white sm:text-base">
-                Flash News
+                {region === "dubai" ? "Dubai & UAE Flash News" : "Flash News"}
               </DialogTitle>
               <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-400/[0.07] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-emerald-300">
                 <span className="h-1 w-1 rounded-full bg-emerald-300" />
@@ -217,7 +259,7 @@ export function FlashNewsDialog() {
                 aria-label="Filter news topics"
                 className="flex min-w-0 max-w-full gap-0.5 overflow-x-auto rounded-lg border border-white/10 bg-slate-950/80 p-0.5"
               >
-                {FILTERS.map((item) => (
+                {FILTERS[region].map((item) => (
                   <button
                     key={item.id}
                     type="button"
@@ -280,13 +322,16 @@ export function FlashNewsDialog() {
                   Refreshing headlines for insights
                 </p>
                 <p className="text-[10px] text-slate-500">
-                  Checking recent Hyderabad and HMDA news
+                  {region === "dubai"
+                    ? "Checking recent Dubai and UAE news"
+                    : "Checking recent Hyderabad and HMDA news"}
                 </p>
               </div>
             ) : news ? (
               <FlashNewsInsightsView
                 items={news.items}
                 updatedAt={news.updatedAt}
+                region={region}
               />
             ) : (
               <div

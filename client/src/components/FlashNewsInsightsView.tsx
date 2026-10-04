@@ -9,6 +9,7 @@ import {
 type FlashNewsInsightsViewProps = {
   items: InsightHeadline[];
   updatedAt: string;
+  region: "india" | "dubai";
 };
 
 const SIGNAL_LABELS: Record<MarketSignalId, string> = {
@@ -111,8 +112,10 @@ function ArticleLink({ item }: { item: InsightHeadline }) {
 export function FlashNewsInsightsView({
   items,
   updatedAt,
+  region,
 }: FlashNewsInsightsViewProps) {
-  const insights = buildFlashNewsInsights(items);
+  const isDubai = region === "dubai";
+  const insights = buildFlashNewsInsights(items, region);
 
   return (
     <div className="space-y-4 py-1">
@@ -125,7 +128,8 @@ export function FlashNewsInsightsView({
                 Headline-based market signals
               </p>
               <p className="mt-0.5 text-[9px] text-slate-400">
-                Feed updated {formatUpdatedAt(updatedAt)}
+                {isDubai ? "Dubai & UAE feed" : "India feed"} updated{" "}
+                {formatUpdatedAt(updatedAt)}
               </p>
             </div>
           </div>
@@ -138,9 +142,11 @@ export function FlashNewsInsightsView({
           </span>
         </div>
         <p className="mt-2 text-[10px] leading-4 text-slate-400">
-          This scan groups current Hyderabad and HMDA headlines by named areas
-          and topics. Mentions show news coverage, not verified buyer demand or
-          an investment forecast.
+          {isDubai
+            ? "This scan groups current Dubai and UAE headlines by named areas and topics."
+            : "This scan groups current Hyderabad and HMDA headlines by named areas and topics."}{" "}
+          Mentions show news coverage, not verified buyer demand or an
+          investment forecast.
         </p>
       </div>
 
@@ -258,8 +264,9 @@ export function FlashNewsInsightsView({
       </section>
 
       <p className="pb-1 text-center text-[9px] text-slate-500">
-        Scanned {insights.localHeadlineCount} local headlines. Open sources to
-        verify details before making property decisions.
+        Scanned {insights.localHeadlineCount}{" "}
+        {isDubai ? "Dubai and UAE" : "local"} headlines. Open sources to verify
+        details before making property decisions.
       </p>
     </div>
   );

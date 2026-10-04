@@ -2420,10 +2420,6 @@ function DubaiProjectDetailSheet({
           {project.note}
         </p>
       )}
-      <p className="mt-3 text-xs leading-5 text-slate-500">
-        Map pin shows the approximate community location, not a verified
-        building or plot boundary.
-      </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <a
           href={`https://www.google.com/maps/search/?api=1&query=${mapSearch}`}
@@ -3035,14 +3031,10 @@ export function HyderabadPropertyMapOverlay({
                 </div>
               )}
             </div>
-            {activeCity === "dubai" && (
-              <p className="mt-1 px-1 text-[9px] leading-4 text-slate-500">
-                Approximate community locations, not verified building sites.
-              </p>
-            )}
             </div>
-            {activeCity === "hyderabad" && (
-              <div className="mt-2 inline-flex max-w-full items-center gap-0.5 rounded-lg border border-white/15 bg-slate-950/80 px-1 py-1 shadow-md backdrop-blur-md">
+            <div className="mt-2 inline-flex max-w-full items-center gap-0.5 rounded-lg border border-white/15 bg-slate-950/80 px-1 py-1 shadow-md backdrop-blur-md">
+              {activeCity === "hyderabad" && (
+                <>
               <button
                 type="button"
                 onClick={() => {
@@ -3082,9 +3074,12 @@ export function HyderabadPropertyMapOverlay({
                 <Layers className="h-3 w-3 shrink-0" />
                 <span>Master Plan</span>
               </button>
-              <FlashNewsDialog />
+                </>
+              )}
+              <FlashNewsDialog
+                region={activeCity === "dubai" ? "dubai" : "india"}
+              />
               </div>
-            )}
             {activeCity === "hyderabad" && (
               <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
               <div
@@ -3909,7 +3904,7 @@ export function HyderabadPropertyMapOverlay({
           <div className="pointer-events-auto absolute bottom-14 left-3 max-w-[280px] rounded-xl border border-white/20 bg-slate-950/90 px-3 py-2 text-[10px] text-white/70 shadow-xl backdrop-blur-md sm:left-5">
             Map tiles © OpenStreetMap contributors ·{" "}
             {activeCity === "dubai"
-              ? `${DUBAI_PROPERTY_PROJECTS.length} named Dubai developments, pinned at approximate community locations.`
+              ? `${DUBAI_PROPERTY_PROJECTS.length} named Dubai developments.`
               : `${PROJECTS.length} project pins imported from the public PlotsView venture catalog.`}
           </div>
         )}

@@ -80,7 +80,11 @@ export async function registerRoutes(
 ): Promise<Server> {
   app.get("/api/news/flash", async (req, res) => {
     try {
-      const news = await getFlashNews(req.query.refresh === "true");
+      const region = req.query.region === "dubai" ? "dubai" : "india";
+      const news = await getFlashNews(
+        req.query.refresh === "true",
+        region,
+      );
       return res
         .status(200)
         .set("Cache-Control", "no-store")
