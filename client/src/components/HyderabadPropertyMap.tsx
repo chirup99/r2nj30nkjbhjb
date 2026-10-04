@@ -2789,6 +2789,12 @@ export function HyderabadPropertyMapOverlay({
               </button>
               <FlashNewsDialog />
             </div>
+            <button
+              type="button"
+              className="pointer-events-auto mt-2 inline-flex items-center rounded-lg border border-violet-400/50 bg-slate-950/80 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white shadow-md backdrop-blur-md transition-colors hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
+            >
+              Dubai
+            </button>
           </div>
 
           <div className="pointer-events-auto flex flex-col items-center gap-2">
