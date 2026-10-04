@@ -4238,7 +4238,7 @@ export function HyderabadPropertyMapOverlay({
           {activeCity === "hyderabad" &&
             !showCityLayers &&
             !isMasterPlanSelected && (
-            <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
+            <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
             <Sparkles className="ml-1.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
             <button
               type="button"
