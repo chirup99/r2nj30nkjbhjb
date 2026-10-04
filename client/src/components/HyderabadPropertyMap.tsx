@@ -2685,13 +2685,14 @@ export function HyderabadPropertyMapOverlay({
     setShowLakeHelp(false);
   };
 
-  const exchangeRateUpdatedLabel = exchangeRates
-    ? new Intl.DateTimeFormat("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }).format(new Date(exchangeRates.updatedAt))
-    : null;
+  const exchangeRateSourceLabel =
+    exchangeRateStatus === "loading"
+      ? "Loading daily exchange rates · ExchangeRate-API"
+      : exchangeRateStatus === "error"
+        ? "Exchange rates unavailable · ExchangeRate-API"
+        : exchangeRates?.isStale
+          ? "Using saved rates · ExchangeRate-API"
+          : "ExchangeRate-API rate source";
 
   return (
     <motion.div
@@ -2975,28 +2976,16 @@ export function HyderabadPropertyMapOverlay({
                   )}
                 </>
               </div>
-              <p
-                className="text-[9px] leading-4 text-white/55"
-                aria-live="polite"
+              <a
+                href="https://www.exchangerate-api.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label={exchangeRateSourceLabel}
+                title={exchangeRateSourceLabel}
+                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-white/45 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
               >
-                {exchangeRateStatus === "loading" && "Loading daily rates…"}
-                {exchangeRateStatus === "error" && "Exchange rates unavailable"}
-                {exchangeRateStatus === "ready" && exchangeRates && (
-                  <>
-                    {exchangeRates.isStale ? "Saved rates · " : "Rates as of "}
-                    {exchangeRateUpdatedLabel}
-                  </>
-                )}
-                {" · "}
-                <a
-                  href="https://www.exchangerate-api.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline decoration-white/30 underline-offset-2 hover:text-white"
-                >
-                  Rates By Exchange Rate API
-                </a>
-              </p>
+                <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              </a>
             </div>
           </div>
 
