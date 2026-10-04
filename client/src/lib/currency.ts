@@ -8,16 +8,13 @@ export type DailyInrExchangeRates = {
   isStale?: boolean;
 };
 
-type OpenExchangeRateResponse = {
-  result?: unknown;
-  base_code?: unknown;
-  time_last_update_utc?: unknown;
-  time_next_update_unix?: unknown;
-  rates?: Record<string, unknown>;
+type DailyCurrencyResponse = {
+  date?: unknown;
+  inr?: Record<string, unknown>;
 };
 
-const RATES_URL = "https://open.er-api.com/v6/latest/INR";
-const CACHE_KEY = "rciq-inr-exchange-rates-v1";
+const CACHE_KEY = "rciq-inr-exchange-rates-v2";
+const SECONDS_PER_DAY = 24 * 60 * 60;
 const US_TIME_ZONES = new Set([
   "America/Adak",
   "America/Anchorage",
@@ -49,6 +46,26 @@ const US_TIME_ZONES = new Set([
   "America/Yakutat",
   "Pacific/Honolulu",
 ]);
+
+function getDailyRateUrls() {
+  const now = new Date();
+  const dates = [
+    now.toISOString().slice(0, 10),
+    new Date(now.getTime() - SECONDS_PER_DAY * 1000)
+      .toISOString()
+      .slice(0, 10),
+  ];
+  const datedUrls = dates.flatMap((date) => [
+    `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${date}/v1/currencies/inr.json`,
+    `https://${date}.currency-api.pages.dev/v1/currencies/inr.json`,
+  ]);
+
+  return [
+    ...datedUrls,
+    "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/inr.json",
+    "https://latest.currency-api.pages.dev/v1/currencies/inr.json",
+  ];
+}
 
 export function detectDefaultDisplayCurrency(): DisplayCurrency {
   let timeZone = "";
@@ -124,60 +141,68 @@ export async function loadDailyInrExchangeRates(
 
   if (cached && cached.nextUpdateUnix > nowUnix) return cached;
 
-  try {
-    const response = await fetch(RATES_URL, {
-      headers: { Accept: "application/json" },
-      signal,
-    });
-    if (!response.ok) {
-      throw new Error(`Exchange-rate service returned HTTP ${response.status}`);
-    }
-
-    const payload = (await response.json()) as OpenExchangeRateResponse;
-    const usd = payload.rates?.USD;
-    const aed = payload.rates?.AED;
-    if (
-      payload.result !== "success" ||
-      payload.base_code !== "INR" ||
-      typeof payload.time_last_update_utc !== "string" ||
-      typeof payload.time_next_update_unix !== "number" ||
-      typeof usd !== "number" ||
-      typeof aed !== "number" ||
-      !Number.isFinite(usd) ||
-      !Number.isFinite(aed) ||
-      usd <= 0 ||
-      aed <= 0
-    ) {
-      throw new Error("Exchange-rate service returned invalid INR, USD, or AED data");
-    }
-
-    const latest: DailyInrExchangeRates = {
-      USD: usd,
-      AED: aed,
-      updatedAt: payload.time_last_update_utc,
-      nextUpdateUnix: payload.time_next_update_unix,
-      isStale: false,
-    };
-
+  let lastError: unknown;
+  for (const url of getDailyRateUrls()) {
     try {
-      localStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify({
-          USD: latest.USD,
-          AED: latest.AED,
-          updatedAt: latest.updatedAt,
-          nextUpdateUnix: latest.nextUpdateUnix,
-        }),
-      );
-    } catch {
-      // The rate data remains usable even when browser storage is unavailable.
-    }
+      const response = await fetch(url, {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+        signal,
+      });
+      if (!response.ok) {
+        throw new Error(`Exchange-rate service returned HTTP ${response.status}`);
+      }
 
-    return latest;
-  } catch (error) {
-    if (cached) return { ...cached, isStale: true };
-    throw error;
+      const payload = (await response.json()) as DailyCurrencyResponse;
+      const rateDate = payload.date;
+      const usd = payload.inr?.usd;
+      const aed = payload.inr?.aed;
+      if (
+        typeof rateDate !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(rateDate) ||
+        !Number.isFinite(Date.parse(rateDate)) ||
+        typeof usd !== "number" ||
+        typeof aed !== "number" ||
+        !Number.isFinite(usd) ||
+        !Number.isFinite(aed) ||
+        usd <= 0 ||
+        aed <= 0
+      ) {
+        throw new Error("Exchange-rate service returned invalid INR, USD, or AED data");
+      }
+
+      const latest: DailyInrExchangeRates = {
+        USD: usd,
+        AED: aed,
+        updatedAt: rateDate,
+        nextUpdateUnix: Math.floor(Date.now() / 1000) + SECONDS_PER_DAY,
+        isStale: false,
+      };
+
+      try {
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            USD: latest.USD,
+            AED: latest.AED,
+            updatedAt: latest.updatedAt,
+            nextUpdateUnix: latest.nextUpdateUnix,
+          }),
+        );
+      } catch {
+        // The rate data remains usable even when browser storage is unavailable.
+      }
+
+      return latest;
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      lastError = error;
+    }
   }
+
+  if (cached) return { ...cached, isStale: true };
+  if (lastError instanceof Error) throw lastError;
+  throw new Error("No daily exchange rates are available.");
 }
 
 export function formatAmountFromInr(

@@ -2398,9 +2398,6 @@ export function HyderabadPropertyMapOverlay({
   const [currencyOptionsOpen, setCurrencyOptionsOpen] = useState(false);
   const [exchangeRates, setExchangeRates] =
     useState<DailyInrExchangeRates | null>(null);
-  const [exchangeRateStatus, setExchangeRateStatus] = useState<
-    "loading" | "ready" | "error"
-  >("loading");
   const [isRadiusFilterOpen, setIsRadiusFilterOpen] = useState(false);
   const [radiusInKilometers, setRadiusInKilometers] = useState(25);
   const [userLocation, setUserLocation] = useState<MapCoordinate | null>(null);
@@ -2660,10 +2657,9 @@ export function HyderabadPropertyMapOverlay({
         const rates = await loadDailyInrExchangeRates(requestController.signal);
         if (!isActive) return;
         setExchangeRates(rates);
-        setExchangeRateStatus("ready");
-      } catch {
+      } catch (error) {
         if (!isActive || requestController.signal.aborted) return;
-        setExchangeRateStatus("error");
+        console.error("Unable to load daily exchange rates", error);
       }
     };
 
@@ -2684,15 +2680,6 @@ export function HyderabadPropertyMapOverlay({
     setSelectedPinProjectId(projectId);
     setShowLakeHelp(false);
   };
-
-  const exchangeRateSourceLabel =
-    exchangeRateStatus === "loading"
-      ? "Loading daily exchange rates · ExchangeRate-API"
-      : exchangeRateStatus === "error"
-        ? "Exchange rates unavailable · ExchangeRate-API"
-        : exchangeRates?.isStale
-          ? "Using saved rates · ExchangeRate-API"
-          : "ExchangeRate-API rate source";
 
   return (
     <motion.div
@@ -2976,16 +2963,6 @@ export function HyderabadPropertyMapOverlay({
                   )}
                 </>
               </div>
-              <a
-                href="https://www.exchangerate-api.com"
-                target="_blank"
-                rel="noreferrer"
-                aria-label={exchangeRateSourceLabel}
-                title={exchangeRateSourceLabel}
-                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-white/45 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
-              >
-                <ExternalLink className="h-3 w-3" aria-hidden="true" />
-              </a>
             </div>
           </div>
 
