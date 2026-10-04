@@ -1340,10 +1340,10 @@ function MagicProjectRoute({
 
 function DubaiDeveloperRoute({
   developer,
-  projects,
+  project,
 }: {
   developer: string;
-  projects: DubaiPropertyProject[];
+  project: DubaiPropertyProject;
 }) {
   const { map, isLoaded } = useMap();
   const [routeStart, setRouteStart] =
@@ -1354,7 +1354,7 @@ function DubaiDeveloperRoute({
 
     const updateRouteStart = () => {
       const anchor = document.querySelector<HTMLElement>(
-        "[data-dubai-developer-route-anchor]",
+        `[data-dubai-route-anchor="${project.id}"]`,
       );
       const container = map.getContainer();
       if (!anchor || !container) return;
@@ -1380,38 +1380,34 @@ function DubaiDeveloperRoute({
       map.off("move", updateRouteStart);
       map.off("resize", updateRouteStart);
     };
-  }, [developer, isLoaded, map]);
+  }, [developer, isLoaded, map, project.id]);
 
   return (
-    <>
-      {projects.map((project) => (
-        <MapRoute
-          key={`dubai-${developer}-${project.id}`}
-          id={`dubai-developer-route-${project.id}`}
-          coordinates={createCurvedRoute(routeStart, [
-            project.longitude,
-            project.latitude,
-          ])}
-          color="#c4b5fd"
-          width={2}
-          opacity={0.45}
-          dashArray={[2, 2]}
-          active
-          activeColor={project.accent}
-          activeWidth={4}
-          activeOpacity={0.95}
-          activeDashArray={[1.5, 1.5]}
-          progress={1}
-        >
-          <RouteProgress
-            color="#fff7ed"
-            width={5}
-            opacity={0.9}
-            dashArray={[1, 1]}
-          />
-        </MapRoute>
-      ))}
-    </>
+    <MapRoute
+      key={`dubai-${developer}-${project.id}`}
+      id={`dubai-developer-route-${project.id}`}
+      coordinates={createCurvedRoute(routeStart, [
+        project.longitude,
+        project.latitude,
+      ])}
+      color="#c4b5fd"
+      width={2}
+      opacity={0.5}
+      dashArray={[2, 2]}
+      active
+      activeColor={project.accent}
+      activeWidth={4}
+      activeOpacity={0.95}
+      activeDashArray={[1.5, 1.5]}
+      progress={1}
+    >
+      <RouteProgress
+        color="#fff7ed"
+        width={5}
+        opacity={0.9}
+        dashArray={[1, 1]}
+      />
+    </MapRoute>
   );
 }
 
@@ -1481,7 +1477,7 @@ function FitProjectPins({ projects }: { projects: MapPinProject[] }) {
 function FocusProjectPin({
   project,
 }: {
-  project?: PropertyProject;
+  project?: Pick<PropertyProject | DubaiPropertyProject, "longitude" | "latitude">;
 }) {
   const { map, isLoaded } = useMap();
 
@@ -2566,6 +2562,8 @@ export function HyderabadPropertyMapOverlay({
   const [selectedDubaiDeveloper, setSelectedDubaiDeveloper] = useState<
     string | null
   >(null);
+  const [selectedDubaiRouteProjectId, setSelectedDubaiRouteProjectId] =
+    useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [showMapInfo, setShowMapInfo] = useState(false);
   const [selectedIntentId, setSelectedIntentId] = useState<string | null>(null);
@@ -2800,6 +2798,12 @@ export function HyderabadPropertyMapOverlay({
           (project) => project.id === selectedPinProjectId,
         )
       : undefined;
+  const selectedDubaiRouteProject =
+    activeCity === "dubai" && showProjectPins
+      ? visibleDubaiProjects.find(
+          (project) => project.id === selectedDubaiRouteProjectId,
+        )
+      : undefined;
 
   useEffect(() => {
     if (
@@ -2809,6 +2813,22 @@ export function HyderabadPropertyMapOverlay({
       setSelectedPinProjectId(null);
     }
   }, [selectedPinProjectId, visibleMapProjects]);
+
+  useEffect(() => {
+    if (
+      selectedDubaiRouteProjectId &&
+      (!showProjectPins ||
+        !visibleDubaiProjects.some(
+          (project) => project.id === selectedDubaiRouteProjectId,
+        ))
+    ) {
+      setSelectedDubaiRouteProjectId(null);
+    }
+  }, [
+    selectedDubaiRouteProjectId,
+    showProjectPins,
+    visibleDubaiProjects,
+  ]);
 
   const visibleContextPoints = useMemo(
     () =>
@@ -2995,6 +3015,7 @@ export function HyderabadPropertyMapOverlay({
   }, []);
 
   const selectProjectPin = (projectId: string) => {
+    setSelectedDubaiRouteProjectId(null);
     setSelectedPinProjectId(projectId);
     setShowLakeHelp(false);
   };
@@ -3003,6 +3024,7 @@ export function HyderabadPropertyMapOverlay({
     if (city === activeCity) return;
     setActiveCity(city);
     setSelectedDubaiDeveloper(null);
+    setSelectedDubaiRouteProjectId(null);
     setQuery("");
     setSelectedIntentId(null);
     setSelectedSubcategoryId(null);
@@ -3050,7 +3072,11 @@ export function HyderabadPropertyMapOverlay({
         <FitProjectPins projects={visibleMapProjects} />
         <FocusProjectPin
           project={
-            showCityLayers || !showProjectPins ? undefined : initialProject
+            activeCity === "dubai"
+              ? selectedDubaiRouteProject
+              : showCityLayers || !showProjectPins
+                ? undefined
+                : initialProject
           }
         />
         {activeCity === "hyderabad" && (
@@ -3091,11 +3117,12 @@ export function HyderabadPropertyMapOverlay({
           )}
         {activeCity === "dubai" &&
           selectedDubaiDeveloper &&
+          selectedDubaiRouteProject &&
           showProjectPins &&
-          visibleDubaiProjects.length > 0 && (
+          (
             <DubaiDeveloperRoute
               developer={selectedDubaiDeveloper}
-              projects={visibleDubaiProjects}
+              project={selectedDubaiRouteProject}
             />
           )}
         {isRadiusFilterOpen && radiusCenter && (
@@ -4299,10 +4326,7 @@ export function HyderabadPropertyMapOverlay({
               aria-label="Dubai developers and projects"
             >
               <div className="mb-1.5 flex items-center justify-between gap-3 px-1">
-                <p
-                  data-dubai-developer-route-anchor
-                  className="flex min-w-0 items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/70"
-                >
+                <p className="flex min-w-0 items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/70">
                   <Building2
                     aria-hidden="true"
                     className="h-3.5 w-3.5 shrink-0 text-violet-300"
@@ -4316,6 +4340,7 @@ export function HyderabadPropertyMapOverlay({
                     type="button"
                     onClick={() => {
                       setSelectedDubaiDeveloper(null);
+                      setSelectedDubaiRouteProjectId(null);
                       setSelectedPinProjectId(null);
                     }}
                     className="shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold text-violet-200 transition-colors hover:bg-white/10 hover:text-white"
@@ -4338,14 +4363,20 @@ export function HyderabadPropertyMapOverlay({
                       <button
                         key={project.id}
                         type="button"
-                        onClick={() => selectProjectPin(project.id)}
+                        data-dubai-route-anchor={project.id}
+                        onClick={() => {
+                          setSelectedPinProjectId(null);
+                          setSelectedDubaiRouteProjectId(project.id);
+                        }}
                         className={`shrink-0 rounded-full border px-3 py-2 text-left text-[10px] font-semibold transition-colors ${
-                          selectedPinProjectId === project.id
+                          selectedDubaiRouteProjectId === project.id
                             ? "border-violet-300/70 bg-violet-300/20 text-violet-100"
                             : "border-white/10 bg-white/5 text-white/80 hover:border-violet-300/50 hover:bg-white/10 hover:text-white"
                         }`}
-                        aria-pressed={selectedPinProjectId === project.id}
-                        title={`${project.name} · ${project.locality}`}
+                        aria-pressed={
+                          selectedDubaiRouteProjectId === project.id
+                        }
+                        title={`Show curved map line to ${project.name} · ${project.locality}`}
                       >
                         {project.name}
                       </button>
@@ -4360,6 +4391,7 @@ export function HyderabadPropertyMapOverlay({
                           type="button"
                           onClick={() => {
                             setSelectedDubaiDeveloper(developer);
+                            setSelectedDubaiRouteProjectId(null);
                             setSelectedPinProjectId(null);
                           }}
                           className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-left text-[10px] font-semibold text-white/80 transition-colors hover:border-violet-300/50 hover:bg-white/10 hover:text-white"
