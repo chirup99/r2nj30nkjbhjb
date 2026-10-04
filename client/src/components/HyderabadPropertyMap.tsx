@@ -27,6 +27,7 @@ import {
   Ruler,
   Search,
   Satellite,
+  Sparkles,
   Sun,
   Trees,
   X,
@@ -4237,7 +4238,8 @@ export function HyderabadPropertyMapOverlay({
           {activeCity === "hyderabad" &&
             !showCityLayers &&
             !isMasterPlanSelected && (
-            <div className="pointer-events-auto flex max-w-full items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
+            <div className="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/20 bg-slate-950/90 p-1.5 text-white shadow-2xl backdrop-blur-xl scrollbar-hide">
+            <Sparkles className="ml-1.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
             <button
               type="button"
               onClick={() => setIsMagicFiltersOpen((open) => !open)}
@@ -4255,7 +4257,7 @@ export function HyderabadPropertyMapOverlay({
                   ? ` · ${activeMagicFilterCount} active`
                   : ""
               }`}
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border p-0 transition-colors ${
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border p-0 transition-colors ${
                 isMagicFiltersOpen || activeMagicFilterCount > 0
                   ? "border-cyan-300/50 bg-cyan-300/10 text-cyan-100"
                   : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
@@ -4269,18 +4271,20 @@ export function HyderabadPropertyMapOverlay({
                   <button
                     type="button"
                     onClick={resetMagicFilters}
-                    className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-left text-[10px] font-semibold text-white/75 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+                    className="shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-left text-white/70 transition-all hover:border-white/40 hover:bg-white/10 hover:text-white"
                     aria-label="Clear property filters"
                   >
-                    <span className="block">All</span>
+                    <span className="block text-[10px] font-bold">All</span>
                   </button>
                   <button
                     type="button"
                     data-magic-intent={selectedIntent.id}
                     onClick={() => chooseMagicIntent(selectedIntent.id)}
-                    className="shrink-0 rounded-full border border-cyan-300/70 bg-cyan-300/15 px-3 py-2 text-left text-[10px] font-semibold text-cyan-100 transition-colors hover:bg-cyan-300/20"
+                    className="shrink-0 rounded-full border border-white/80 bg-white px-3 py-2 text-left text-slate-950 shadow-lg"
                   >
-                    <span className="block">{selectedIntent.label}</span>
+                    <span className="block text-[10px] font-bold">
+                      {selectedIntent.label}
+                    </span>
                   </button>
                   {selectedIntent.subcategories.map((subcategory) => {
                     const isSelected =
@@ -4291,14 +4295,14 @@ export function HyderabadPropertyMapOverlay({
                         type="button"
                         data-magic-subcategory={subcategory.id}
                         onClick={() => chooseMagicSubcategory(subcategory.id)}
-                        className={`shrink-0 rounded-full border px-3 py-2 text-left text-[10px] font-semibold transition-colors ${
+                        className={`shrink-0 rounded-full border px-3 py-2 text-left transition-all ${
                           isSelected
-                            ? "border-cyan-300/70 bg-cyan-300/15 text-cyan-100"
+                            ? "border-cyan-300/70 bg-cyan-300/15 text-cyan-100 shadow-lg"
                             : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
                         }`}
                         title={subcategory.detail}
                       >
-                        <span className="block">
+                        <span className="block text-[10px] font-bold">
                           <FormattedCurrencyText
                             value={getSubcategoryDisplayLabel(
                               subcategory,
@@ -4318,10 +4322,12 @@ export function HyderabadPropertyMapOverlay({
                     type="button"
                     data-magic-intent={intent.id}
                     onClick={() => chooseMagicIntent(intent.id)}
-                    className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-left text-[10px] font-semibold text-white/75 transition-colors hover:border-cyan-300/50 hover:bg-white/10"
+                    className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-left text-white/75 transition-all hover:border-cyan-300/50 hover:bg-white/10"
                     title={intent.detail}
                   >
-                    <span className="block truncate">{intent.label}</span>
+                    <span className="block truncate text-[10px] font-bold">
+                      {intent.label}
+                    </span>
                   </button>
                 ))
               )}
