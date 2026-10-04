@@ -1338,6 +1338,83 @@ function MagicProjectRoute({
   );
 }
 
+function DubaiDeveloperRoute({
+  developer,
+  projects,
+}: {
+  developer: string;
+  projects: DubaiPropertyProject[];
+}) {
+  const { map, isLoaded } = useMap();
+  const [routeStart, setRouteStart] =
+    useState<[number, number]>(DUBAI_MAP_CENTER);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+
+    const updateRouteStart = () => {
+      const anchor = document.querySelector<HTMLElement>(
+        "[data-dubai-developer-route-anchor]",
+      );
+      const container = map.getContainer();
+      if (!anchor || !container) return;
+
+      const anchorBounds = anchor.getBoundingClientRect();
+      const mapBounds = container.getBoundingClientRect();
+      const start = map.unproject([
+        anchorBounds.left + anchorBounds.width / 2 - mapBounds.left,
+        anchorBounds.top + anchorBounds.height / 2 - mapBounds.top,
+      ]);
+      setRouteStart([start.lng, start.lat]);
+    };
+
+    updateRouteStart();
+    const frame = requestAnimationFrame(updateRouteStart);
+    window.addEventListener("resize", updateRouteStart);
+    map.on("move", updateRouteStart);
+    map.on("resize", updateRouteStart);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updateRouteStart);
+      map.off("move", updateRouteStart);
+      map.off("resize", updateRouteStart);
+    };
+  }, [developer, isLoaded, map]);
+
+  return (
+    <>
+      {projects.map((project) => (
+        <MapRoute
+          key={`dubai-${developer}-${project.id}`}
+          id={`dubai-developer-route-${project.id}`}
+          coordinates={createCurvedRoute(routeStart, [
+            project.longitude,
+            project.latitude,
+          ])}
+          color="#c4b5fd"
+          width={2}
+          opacity={0.45}
+          dashArray={[2, 2]}
+          active
+          activeColor={project.accent}
+          activeWidth={4}
+          activeOpacity={0.95}
+          activeDashArray={[1.5, 1.5]}
+          progress={1}
+        >
+          <RouteProgress
+            color="#fff7ed"
+            width={5}
+            opacity={0.9}
+            dashArray={[1, 1]}
+          />
+        </MapRoute>
+      ))}
+    </>
+  );
+}
+
 function PropertyPin({
   accent,
   projectName,
@@ -3012,6 +3089,15 @@ export function HyderabadPropertyMapOverlay({
               progress={routeProgress}
             />
           )}
+        {activeCity === "dubai" &&
+          selectedDubaiDeveloper &&
+          showProjectPins &&
+          visibleDubaiProjects.length > 0 && (
+            <DubaiDeveloperRoute
+              developer={selectedDubaiDeveloper}
+              projects={visibleDubaiProjects}
+            />
+          )}
         {isRadiusFilterOpen && radiusCenter && (
           <RadiusFilterLayer
             center={radiusCenter}
@@ -4213,7 +4299,10 @@ export function HyderabadPropertyMapOverlay({
               aria-label="Dubai developers and projects"
             >
               <div className="mb-1.5 flex items-center justify-between gap-3 px-1">
-                <p className="flex min-w-0 items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/70">
+                <p
+                  data-dubai-developer-route-anchor
+                  className="flex min-w-0 items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/70"
+                >
                   <Building2
                     aria-hidden="true"
                     className="h-3.5 w-3.5 shrink-0 text-violet-300"
