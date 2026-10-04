@@ -3073,6 +3073,7 @@ export function HyderabadPropertyMapOverlay({
     setQuery("");
     setSelectedIntentId(null);
     setSelectedSubcategoryId(null);
+    setIsMagicFiltersOpen(false);
     setSelectedPinProjectId(null);
     setShowProjectList(false);
     setShowCityLayers(false);
@@ -3131,6 +3132,7 @@ export function HyderabadPropertyMapOverlay({
                 setCheckedProjectLake(null);
               }}
               onMapTap={() => {
+                setIsMagicFiltersOpen(false);
                 setShowLakeHelp(false);
                 setShowContextPanel(false);
               }}
