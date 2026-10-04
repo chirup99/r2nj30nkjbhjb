@@ -2511,6 +2511,8 @@ export function HyderabadPropertyMapOverlay({
   const [locationStatus, setLocationStatus] = useState<
     "idle" | "loading" | "ready" | "fallback"
   >("idle");
+  const radiusCenter =
+    activeCity === "dubai" ? DUBAI_MAP_CENTER : userLocation;
 
   const selectedIntent = MAGIC_INTENTS.find(
     (intent) => intent.id === selectedIntentId,
@@ -2568,14 +2570,22 @@ export function HyderabadPropertyMapOverlay({
 
   const visibleDubaiProjects = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return DUBAI_PROPERTY_PROJECTS.filter(
-      (project) =>
+    return DUBAI_PROPERTY_PROJECTS.filter((project) => {
+      const matchesQuery =
         !normalizedQuery ||
         `${project.name} ${project.locality} ${project.developer} ${project.note ?? ""}`
           .toLowerCase()
-          .includes(normalizedQuery),
-    );
-  }, [query]);
+          .includes(normalizedQuery);
+      const matchesRadius =
+        !isRadiusFilterOpen ||
+        !radiusCenter ||
+        distanceInKilometers(radiusCenter, [
+          project.longitude,
+          project.latitude,
+        ]) <= radiusInKilometers;
+      return matchesQuery && matchesRadius;
+    });
+  }, [isRadiusFilterOpen, query, radiusCenter, radiusInKilometers]);
 
   const sortedVisibleProjects = useMemo(() => {
     return [...visibleProjects].sort((a, b) => {
@@ -2749,7 +2759,13 @@ export function HyderabadPropertyMapOverlay({
   };
 
   useEffect(() => {
-    if (!isRadiusFilterOpen || locationStatus !== "idle") return;
+    if (
+      !isRadiusFilterOpen ||
+      activeCity === "dubai" ||
+      locationStatus !== "idle"
+    ) {
+      return;
+    }
 
     if (!("geolocation" in navigator)) {
       setUserLocation(HYDERABAD_CENTER);
@@ -2772,7 +2788,7 @@ export function HyderabadPropertyMapOverlay({
       },
       { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 },
     );
-  }, [isRadiusFilterOpen, locationStatus]);
+  }, [activeCity, isRadiusFilterOpen, locationStatus]);
 
   const toggleRadiusFilter = () => {
     setIsRadiusFilterOpen((open) => {
@@ -2907,9 +2923,9 @@ export function HyderabadPropertyMapOverlay({
               progress={routeProgress}
             />
           )}
-        {activeCity === "hyderabad" && isRadiusFilterOpen && userLocation && (
+        {isRadiusFilterOpen && radiusCenter && (
           <RadiusFilterLayer
-            center={userLocation}
+            center={radiusCenter}
             radiusInKilometers={radiusInKilometers}
           />
         )}
@@ -3244,29 +3260,27 @@ export function HyderabadPropertyMapOverlay({
             )}
             {!showCityLayers && (
               <>
-                {activeCity === "hyderabad" && (
-                  <button
-                    type="button"
-                    onClick={toggleRadiusFilter}
-                    className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
-                      isRadiusFilterOpen
-                        ? "border-cyan-300/80 bg-cyan-950/90"
-                        : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
-                    }`}
-                    aria-label={
-                      isRadiusFilterOpen
-                        ? "Adjust search radius"
-                        : "Enable search radius filter"
-                    }
-                    title={
-                      isRadiusFilterOpen
-                        ? "Adjust search radius"
-                        : "Search by radius"
-                    }
-                  >
-                    <Ruler className="h-4 w-4" />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={toggleRadiusFilter}
+                  className={`rounded-full border p-2.5 text-white shadow-xl backdrop-blur-md transition-colors ${
+                    isRadiusFilterOpen
+                      ? "border-cyan-300/80 bg-cyan-950/90"
+                      : "border-white/30 bg-slate-950/80 hover:bg-slate-900"
+                  }`}
+                  aria-label={
+                    isRadiusFilterOpen
+                      ? "Adjust search radius"
+                      : "Enable search radius filter"
+                  }
+                  title={
+                    isRadiusFilterOpen
+                      ? "Adjust search radius"
+                      : "Search by radius"
+                  }
+                >
+                  <Ruler className="h-4 w-4" />
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowProjectList((visible) => !visible)}
@@ -3800,7 +3814,7 @@ export function HyderabadPropertyMapOverlay({
         </div>
       )}
 
-      {activeCity === "hyderabad" && isRadiusFilterOpen && (
+      {isRadiusFilterOpen && radiusCenter && (
         <div className="pointer-events-none absolute inset-x-0 bottom-[82px] z-30 flex justify-center px-3 sm:bottom-[76px] sm:px-5">
           <RadiusArcControl
             radiusInKilometers={radiusInKilometers}
