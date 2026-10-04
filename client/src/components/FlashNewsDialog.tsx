@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
   AlertCircle,
+  ArrowLeft,
   ArrowUpRight,
   Clock3,
   Lightbulb,
@@ -280,8 +281,10 @@ export function FlashNewsDialog({
               <button
                 type="button"
                 onClick={() => setContentView("headlines")}
-                className="rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+                aria-label="Back to latest headlines"
+                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
               >
+                <ArrowLeft aria-hidden="true" className="h-3 w-3" />
                 Latest headlines
               </button>
             )}
