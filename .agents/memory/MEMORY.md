@@ -3,3 +3,4 @@
 - [AWS deployment permissions](aws-deployment-permissions.md) — the current AWS deployment identity needs explicit infrastructure-creation access; fail before touching existing Perala resources when denied.
 - [Carto named road geometry](carto-road-layers.md) — named road lines live in `transportation_name`; Hyderabad ORR features use `name: Outer Ring Road` and `ref: ORR`.
 - [HMDA source map sizes](hmda-map-sizes.md) — official raster sheets vary widely; avoid low pixel caps in optimized previews and retain original full-resolution links.
+- [Map route control parity](map-route-control-parity.md) — route extensions should match the established control anchor and progress behavior while keeping route selection separate from pin details.

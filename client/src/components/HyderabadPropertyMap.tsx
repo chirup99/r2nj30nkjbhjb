@@ -1348,13 +1348,14 @@ function DubaiDeveloperRoute({
   const { map, isLoaded } = useMap();
   const [routeStart, setRouteStart] =
     useState<[number, number]>(DUBAI_MAP_CENTER);
+  const [routeProgress, setRouteProgress] = useState(0);
 
   useEffect(() => {
     if (!map || !isLoaded) return;
 
     const updateRouteStart = () => {
       const anchor = document.querySelector<HTMLElement>(
-        `[data-dubai-route-anchor="${project.id}"]`,
+        `[data-magic-subcategory="${project.id}"]`,
       );
       const container = map.getContainer();
       if (!anchor || !container) return;
@@ -1363,7 +1364,7 @@ function DubaiDeveloperRoute({
       const mapBounds = container.getBoundingClientRect();
       const start = map.unproject([
         anchorBounds.left + anchorBounds.width / 2 - mapBounds.left,
-        anchorBounds.top + anchorBounds.height / 2 - mapBounds.top,
+        anchorBounds.top - mapBounds.top,
       ]);
       setRouteStart([start.lng, start.lat]);
     };
@@ -1382,6 +1383,20 @@ function DubaiDeveloperRoute({
     };
   }, [developer, isLoaded, map, project.id]);
 
+  useEffect(() => {
+    setRouteProgress(0);
+    const startedAt = performance.now();
+    let frame = 0;
+    const animateRoute = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / 850);
+      setRouteProgress(progress);
+      if (progress < 1) frame = requestAnimationFrame(animateRoute);
+    };
+
+    frame = requestAnimationFrame(animateRoute);
+    return () => cancelAnimationFrame(frame);
+  }, [project.id]);
+
   return (
     <MapRoute
       key={`dubai-${developer}-${project.id}`}
@@ -1399,7 +1414,7 @@ function DubaiDeveloperRoute({
       activeWidth={4}
       activeOpacity={0.95}
       activeDashArray={[1.5, 1.5]}
-      progress={1}
+      progress={routeProgress}
     >
       <RouteProgress
         color="#fff7ed"
@@ -4363,7 +4378,7 @@ export function HyderabadPropertyMapOverlay({
                       <button
                         key={project.id}
                         type="button"
-                        data-dubai-route-anchor={project.id}
+                        data-magic-subcategory={project.id}
                         onClick={() => {
                           setSelectedPinProjectId(null);
                           setSelectedDubaiRouteProjectId(project.id);
