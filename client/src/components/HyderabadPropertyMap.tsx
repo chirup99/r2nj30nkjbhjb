@@ -3133,6 +3133,7 @@ export function HyderabadPropertyMapOverlay({
           showProjectPins &&
           selectedDubaiRouteProject && (
             <DubaiDeveloperProjectRoute
+              key={selectedDubaiRouteProject.id}
               project={selectedDubaiRouteProject}
               progress={dubaiRouteProgress}
             />
