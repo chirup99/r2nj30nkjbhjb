@@ -1020,20 +1020,29 @@ function getEstimatedMinimumPlotValue(project: PropertyProject) {
   return getPricePerSquareYard(project) * getMinimumPlotSize(project);
 }
 
-type MagicBudgetFilter = "any" | "under-30-lakh" | "30-to-50-lakh" | "50-lakh-plus";
-type MagicPlotSizeFilter = "any" | "under-150" | "150-to-200" | "200-plus";
 type MagicApprovalFilter = "any" | "HMDA" | "DTCP" | "other";
 
 type MagicPropertyFilters = {
-  budget: MagicBudgetFilter;
-  plotSize: MagicPlotSizeFilter;
+  maxBudget: number;
+  minimumPlotSize: number;
   approval: MagicApprovalFilter;
   activeOnly: boolean;
 };
 
+const MAGIC_BUDGET_STEP = 100_000;
+const MAGIC_BUDGET_MIN = 500_000;
+const PROJECT_STARTING_BUDGETS = PROJECTS.map(getEstimatedMinimumPlotValue).filter(
+  (budget) => budget > 0,
+);
+const MAGIC_BUDGET_MAX =
+  Math.ceil(Math.max(...PROJECT_STARTING_BUDGETS) / MAGIC_BUDGET_STEP) *
+  MAGIC_BUDGET_STEP;
+const MAGIC_PLOT_SIZE_MAX =
+  Math.ceil(Math.max(...PROJECTS.map(getMinimumPlotSize)) / 100) * 100;
+
 const DEFAULT_MAGIC_PROPERTY_FILTERS: MagicPropertyFilters = {
-  budget: "any",
-  plotSize: "any",
+  maxBudget: MAGIC_BUDGET_MAX,
+  minimumPlotSize: 0,
   approval: "any",
   activeOnly: false,
 };
@@ -2543,12 +2552,22 @@ export function HyderabadPropertyMapOverlay({
     (subcategory) => subcategory.id === selectedSubcategoryId,
   );
   const activeMagicFilterCount =
-    Number(magicPropertyFilters.budget !== "any") +
-    Number(magicPropertyFilters.plotSize !== "any") +
+    Number(magicPropertyFilters.maxBudget < MAGIC_BUDGET_MAX) +
+    Number(magicPropertyFilters.minimumPlotSize > 0) +
     Number(magicPropertyFilters.approval !== "any") +
     Number(magicPropertyFilters.activeOnly) +
     Number(Boolean(selectedIntent)) +
     Number(Boolean(selectedSubcategory));
+  const formatMagicBudget = (amountInr: number) => {
+    const displayAmount = formatAmountFromInr(
+      amountInr,
+      displayCurrency,
+      exchangeRates,
+    );
+    return displayAmount === "Rate unavailable"
+      ? formatAmountFromInr(amountInr, "INR", null)
+      : displayAmount;
+  };
   const visibleMasterPlanMaps = useMemo(() => {
     const normalizedSearch = masterPlanSearch.trim().toLowerCase();
     return HMDA_MASTER_PLAN_MAPS.filter(
@@ -2578,23 +2597,13 @@ export function HyderabadPropertyMapOverlay({
       const estimatedBudget = getEstimatedMinimumPlotValue(project);
       const startingPlotSize = getMinimumPlotSize(project);
       const matchesBudget =
-        magicPropertyFilters.budget === "any" ||
-        (magicPropertyFilters.budget === "under-30-lakh" &&
-          estimatedBudget < 3_000_000) ||
-        (magicPropertyFilters.budget === "30-to-50-lakh" &&
-          estimatedBudget >= 3_000_000 &&
-          estimatedBudget < 5_000_000) ||
-        (magicPropertyFilters.budget === "50-lakh-plus" &&
-          estimatedBudget >= 5_000_000);
+        magicPropertyFilters.maxBudget >= MAGIC_BUDGET_MAX ||
+        (estimatedBudget > 0 &&
+          estimatedBudget <= magicPropertyFilters.maxBudget);
       const matchesPlotSize =
-        magicPropertyFilters.plotSize === "any" ||
-        (magicPropertyFilters.plotSize === "under-150" &&
-          startingPlotSize < 150) ||
-        (magicPropertyFilters.plotSize === "150-to-200" &&
-          startingPlotSize >= 150 &&
-          startingPlotSize < 200) ||
-        (magicPropertyFilters.plotSize === "200-plus" &&
-          startingPlotSize >= 200);
+        magicPropertyFilters.minimumPlotSize <= 0 ||
+        (startingPlotSize > 0 &&
+          startingPlotSize >= magicPropertyFilters.minimumPlotSize);
       const matchesApproval =
         magicPropertyFilters.approval === "any" ||
         project.approvalType === magicPropertyFilters.approval ||
@@ -3921,55 +3930,105 @@ export function HyderabadPropertyMapOverlay({
                 </div>
 
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <label className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-                    <span className="block text-[10px] font-semibold text-white/80">
-                      Starting plot budget
-                    </span>
-                    <select
-                      value={magicPropertyFilters.budget}
+                  <div className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <label
+                        htmlFor="magic-budget-slider"
+                        className="text-[10px] font-semibold text-white/80"
+                      >
+                        Maximum starting budget
+                      </label>
+                      <output
+                        htmlFor="magic-budget-slider"
+                        className="text-[10px] font-semibold text-cyan-100"
+                        aria-live="polite"
+                      >
+                        {magicPropertyFilters.maxBudget >= MAGIC_BUDGET_MAX
+                          ? "Any budget"
+                          : `Up to ${formatMagicBudget(
+                              magicPropertyFilters.maxBudget,
+                            )}`}
+                      </output>
+                    </div>
+                    <input
+                      id="magic-budget-slider"
+                      type="range"
+                      min={MAGIC_BUDGET_MIN}
+                      max={MAGIC_BUDGET_MAX}
+                      step={MAGIC_BUDGET_STEP}
+                      value={magicPropertyFilters.maxBudget}
                       onChange={(event) =>
                         setMagicPropertyFilters((filters) => ({
                           ...filters,
-                          budget: event.target.value as MagicBudgetFilter,
+                          maxBudget: Number(event.currentTarget.value),
                         }))
                       }
-                      aria-label="Filter by estimated starting plot budget"
-                      className="mt-2 w-full rounded-lg border border-white/10 bg-slate-900 px-2.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
-                    >
-                      <option value="any">Any budget</option>
-                      <option value="under-30-lakh">Under ₹30L</option>
-                      <option value="30-to-50-lakh">₹30L–₹50L</option>
-                      <option value="50-lakh-plus">₹50L+</option>
-                    </select>
+                      aria-label="Maximum estimated starting plot budget"
+                      aria-valuetext={
+                        magicPropertyFilters.maxBudget >= MAGIC_BUDGET_MAX
+                          ? "Any budget"
+                          : `Up to ${formatMagicBudget(
+                              magicPropertyFilters.maxBudget,
+                            )}`
+                      }
+                      className="mt-3 h-2 w-full cursor-pointer accent-cyan-300"
+                    />
+                    <div className="mt-1 flex justify-between text-[9px] text-white/45">
+                      <span>{formatMagicBudget(MAGIC_BUDGET_MIN)}</span>
+                      <span>{formatMagicBudget(MAGIC_BUDGET_MAX)}</span>
+                    </div>
                     <span className="mt-1.5 block text-[9px] leading-4 text-white/45">
-                      Estimate from listed rate × smallest plot size
+                      Estimated from rate × smallest plot size
                     </span>
-                  </label>
+                  </div>
 
-                  <label className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-                    <span className="block text-[10px] font-semibold text-white/80">
-                      Starting plot size
-                    </span>
-                    <select
-                      value={magicPropertyFilters.plotSize}
+                  <div className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <label
+                        htmlFor="magic-plot-size-slider"
+                        className="text-[10px] font-semibold text-white/80"
+                      >
+                        Minimum plot size
+                      </label>
+                      <output
+                        htmlFor="magic-plot-size-slider"
+                        className="text-[10px] font-semibold text-cyan-100"
+                        aria-live="polite"
+                      >
+                        {magicPropertyFilters.minimumPlotSize <= 0
+                          ? "Any size"
+                          : `${magicPropertyFilters.minimumPlotSize}+ sq yd`}
+                      </output>
+                    </div>
+                    <input
+                      id="magic-plot-size-slider"
+                      type="range"
+                      min={0}
+                      max={MAGIC_PLOT_SIZE_MAX}
+                      step={25}
+                      value={magicPropertyFilters.minimumPlotSize}
                       onChange={(event) =>
                         setMagicPropertyFilters((filters) => ({
                           ...filters,
-                          plotSize: event.target.value as MagicPlotSizeFilter,
+                          minimumPlotSize: Number(event.currentTarget.value),
                         }))
                       }
-                      aria-label="Filter by starting plot size"
-                      className="mt-2 w-full rounded-lg border border-white/10 bg-slate-900 px-2.5 py-2 text-xs text-white outline-none focus:border-cyan-300/60"
-                    >
-                      <option value="any">Any size</option>
-                      <option value="under-150">Under 150 sq yd</option>
-                      <option value="150-to-200">150–199 sq yd</option>
-                      <option value="200-plus">200+ sq yd</option>
-                    </select>
+                      aria-label="Minimum starting plot size"
+                      aria-valuetext={
+                        magicPropertyFilters.minimumPlotSize <= 0
+                          ? "Any size"
+                          : `At least ${magicPropertyFilters.minimumPlotSize} square yards`
+                      }
+                      className="mt-3 h-2 w-full cursor-pointer accent-cyan-300"
+                    />
+                    <div className="mt-1 flex justify-between text-[9px] text-white/45">
+                      <span>Any size</span>
+                      <span>{MAGIC_PLOT_SIZE_MAX}+ sq yd</span>
+                    </div>
                     <span className="mt-1.5 block text-[9px] leading-4 text-white/45">
                       Based on each project’s smallest listed plot
                     </span>
-                  </label>
+                  </div>
 
                   <label className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
                     <span className="block text-[10px] font-semibold text-white/80">
@@ -4039,25 +4098,23 @@ export function HyderabadPropertyMapOverlay({
               aria-controls={
                 isMagicFiltersOpen ? "magic-property-filters" : undefined
               }
-              className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-left transition-colors ${
+              aria-label={`Property filters${
+                activeMagicFilterCount > 0
+                  ? `, ${activeMagicFilterCount} active`
+                  : ""
+              }`}
+              title={`Property filters${
+                activeMagicFilterCount > 0
+                  ? ` · ${activeMagicFilterCount} active`
+                  : ""
+              }`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border p-0 transition-colors ${
                 isMagicFiltersOpen || activeMagicFilterCount > 0
                   ? "border-cyan-300/50 bg-cyan-300/10 text-cyan-100"
                   : "border-white/10 bg-white/5 text-white/75 hover:border-cyan-300/50 hover:bg-white/10"
               }`}
             >
-              <Filter aria-hidden="true" className="h-3 w-3" />
-              <span className="text-[10px] font-bold">Filters</span>
-              {activeMagicFilterCount > 0 && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-300 px-1 text-[9px] font-bold text-slate-950">
-                  {activeMagicFilterCount}
-                </span>
-              )}
-              <ChevronDown
-                aria-hidden="true"
-                className={`h-3 w-3 transition-transform ${
-                  isMagicFiltersOpen ? "rotate-180" : ""
-                }`}
-              />
+              <Filter aria-hidden="true" className="h-4 w-4" />
             </button>
             <div className="flex min-w-max gap-1.5">
               {selectedIntent ? (
