@@ -27,7 +27,7 @@ import {
   Ruler,
   Search,
   Satellite,
-  Share2,
+  Share,
   Sparkles,
   Sun,
   Trees,
@@ -2594,7 +2594,7 @@ function ProjectDetailSheet({
                 {isPreparingCard || isLakeCheckPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Share2 className="h-4 w-4" />
+                  <Share className="h-4 w-4" />
                 )}
               </span>
               <span className="min-w-0">
@@ -2861,7 +2861,7 @@ function DubaiProjectDetailSheet({
               {isPreparingCard ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Share2 className="h-4 w-4" />
+                <Share className="h-4 w-4" />
               )}
             </span>
             <span className="min-w-0">
