@@ -5,7 +5,10 @@ import {
   ArrowDownToLine,
   Check,
   MapPin,
+  Moon,
+  Rainbow,
   Share2,
+  Sun,
   X,
   Waves,
 } from "lucide-react";
@@ -25,6 +28,104 @@ export type MiniPropertyCardData = {
 
 type CanvasSize = "poster" | "square" | "story";
 type ImageFormat = "png" | "jpeg";
+type CardTheme = "light" | "dark" | "rainbow";
+
+const CARD_THEME_STYLES: Record<
+  CardTheme,
+  {
+    background: string;
+    border: string;
+    developer: string;
+    title: string;
+    price: string;
+    mapFrame: string;
+    mapTint: string;
+    location: string;
+    factsDivider: string;
+    factLabel: string;
+    factValue: string;
+    lakeIcon: string;
+    disclaimer: string;
+    footerBorder: string;
+    footer: string;
+  }
+> = {
+  light: {
+    background: "#f4f0e7",
+    border: "border-[#d9d0bc]",
+    developer: "text-[#8d7950]",
+    title: "text-[#1d1e19]",
+    price: "bg-[#e8dfca] text-[#383326]",
+    mapFrame: "border-[#d6cebf] bg-[#ded9ce]",
+    mapTint: "bg-[#30291c]/[0.06]",
+    location: "text-[#716b5e]",
+    factsDivider: "border-[#d7cfbf]",
+    factLabel: "text-[#928977]",
+    factValue: "text-[#3c3b33]",
+    lakeIcon: "text-cyan-700",
+    disclaimer: "text-[#7a756a]",
+    footerBorder: "border-[#d7cfbf]",
+    footer: "text-[#89816f]",
+  },
+  dark: {
+    background: "#111827",
+    border: "border-slate-700",
+    developer: "text-amber-200/75",
+    title: "text-slate-50",
+    price: "bg-white/10 text-slate-100",
+    mapFrame: "border-slate-700 bg-slate-800",
+    mapTint: "bg-black/20",
+    location: "text-slate-300",
+    factsDivider: "border-slate-700",
+    factLabel: "text-slate-400",
+    factValue: "text-slate-100",
+    lakeIcon: "text-cyan-300",
+    disclaimer: "text-slate-400",
+    footerBorder: "border-slate-700",
+    footer: "text-slate-400",
+  },
+  rainbow: {
+    background:
+      "linear-gradient(135deg, #4c0519 0%, #86198f 20%, #2e1065 38%, #312e81 55%, #0c4a6e 70%, #134e4a 84%, #451a03 100%)",
+    border: "border-fuchsia-300/50",
+    developer: "text-cyan-100/80",
+    title: "text-white",
+    price: "bg-white/90 text-slate-950",
+    mapFrame: "border-white/35 bg-slate-950/50",
+    mapTint:
+      "bg-gradient-to-tr from-fuchsia-500/[0.12] via-transparent to-cyan-400/20",
+    location: "text-white/80",
+    factsDivider: "border-white/30",
+    factLabel: "text-white/65",
+    factValue: "text-white",
+    lakeIcon: "text-cyan-200",
+    disclaimer: "text-white/65",
+    footerBorder: "border-white/25",
+    footer: "text-white/65",
+  },
+};
+
+const CARD_THEME_OPTIONS = [
+  {
+    id: "dark",
+    label: "Dark",
+    icon: Moon,
+    selectedClass: "border-slate-400 bg-slate-700/80 text-white",
+  },
+  {
+    id: "light",
+    label: "Light",
+    icon: Sun,
+    selectedClass: "border-amber-300 bg-amber-200 text-amber-950",
+  },
+  {
+    id: "rainbow",
+    label: "Rainbow",
+    icon: Rainbow,
+    selectedClass:
+      "border-fuchsia-300 bg-gradient-to-r from-rose-500/20 via-fuchsia-500/20 to-cyan-400/20 text-fuchsia-100",
+  },
+] as const;
 
 const CANVAS_SIZES: {
   id: CanvasSize;
@@ -65,6 +166,7 @@ export function MiniPropertyCard({
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState<CanvasSize>("poster");
+  const [cardTheme, setCardTheme] = useState<CardTheme>("light");
   const [imageFormat, setImageFormat] = useState<ImageFormat>("png");
   const [isExporting, setIsExporting] = useState(false);
   const [notice, setNotice] = useState<{
@@ -73,6 +175,7 @@ export function MiniPropertyCard({
   } | null>(null);
   const selectedSize =
     CANVAS_SIZES.find((size) => size.id === canvasSize) ?? CANVAS_SIZES[0];
+  const theme = CARD_THEME_STYLES[cardTheme];
   const visibleFacts = data.facts
     .filter((fact) => fact.icon !== "lake" || data.showLakeFact === true)
     .slice(0, 4);
@@ -213,22 +316,25 @@ export function MiniPropertyCard({
 
             <div
               ref={cardRef}
-              className="relative isolate overflow-hidden border border-[#d9d0bc] bg-[#f4f0e7] text-[#171813] shadow-[0_20px_70px_rgba(0,0,0,0.42)]"
+              className={`relative isolate overflow-hidden border shadow-[0_20px_70px_rgba(0,0,0,0.42)] ${theme.border}`}
               style={{
                 width: `${cardWidth}px`,
                 maxWidth: "100%",
                 aspectRatio: selectedSize.ratio,
+                background: theme.background,
               }}
             >
               <div className="flex h-full flex-col p-[3.5%]">
-                <div className="relative min-h-0 flex-[6_0_0%] overflow-hidden border border-[#d6cebf] bg-[#ded9ce]">
+                <div
+                  className={`relative min-h-0 flex-[6_0_0%] overflow-hidden border ${theme.mapFrame}`}
+                >
                   <img
                     src={data.mapImage}
                     alt={`Live map centered on ${data.name}`}
                     className="absolute inset-0 h-full w-full object-cover"
                     crossOrigin="anonymous"
                   />
-                  <div className="absolute inset-0 bg-[#30291c]/[0.06]" />
+                  <div className={`absolute inset-0 ${theme.mapTint}`} />
                   <div
                     className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center"
                     aria-hidden="true"
@@ -245,34 +351,48 @@ export function MiniPropertyCard({
                 <div className="flex min-h-0 flex-[4_0_0%] flex-col overflow-hidden pt-[2.5%]">
                   <div className="flex min-h-0 items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="text-[6px] font-bold uppercase tracking-[0.15em] text-[#8d7950]">
+                      <p
+                        className={`text-[6px] font-bold uppercase tracking-[0.15em] ${theme.developer}`}
+                      >
                         {data.developer}
                       </p>
-                      <h2 className="mt-0.5 line-clamp-2 font-[var(--font-display)] text-[clamp(16px,4vw,24px)] font-medium leading-[0.96] tracking-[-0.05em] text-[#1d1e19]">
+                      <h2
+                        className={`mt-0.5 line-clamp-2 font-[var(--font-display)] text-[clamp(16px,4vw,24px)] font-medium leading-[0.96] tracking-[-0.05em] ${theme.title}`}
+                      >
                         {data.name}
                       </h2>
                     </div>
                     {data.price && (
-                      <p className="max-w-[38%] shrink-0 rounded-sm bg-[#e8dfca] px-2 py-1 text-right text-[clamp(6px,1.7vw,8px)] font-bold leading-tight text-[#383326]">
-                      {data.price}
+                      <p
+                        className={`max-w-[38%] shrink-0 rounded-sm px-2 py-1 text-right text-[clamp(6px,1.7vw,8px)] font-bold leading-tight ${theme.price}`}
+                      >
+                        {data.price}
                       </p>
                     )}
                   </div>
-                  <p className="mt-[1.5%] flex shrink-0 items-center gap-1 text-[7px] font-medium text-[#716b5e]">
+                  <p
+                    className={`mt-[1.5%] flex shrink-0 items-center gap-1 text-[7px] font-medium ${theme.location}`}
+                  >
                     <MapPin className="h-2.5 w-2.5 shrink-0" />
                     <span className="line-clamp-1">{data.location}</span>
                   </p>
                   {visibleFacts.length > 0 && (
-                    <div className="mt-[1.5%] grid shrink-0 grid-cols-2 gap-x-2 border-t border-[#d7cfbf] pt-[1.5%]">
+                    <div
+                      className={`mt-[1.5%] grid shrink-0 grid-cols-2 gap-x-2 border-t pt-[1.5%] ${theme.factsDivider}`}
+                    >
                       {visibleFacts.map((fact) => (
                         <div className="min-w-0" key={`${fact.label}-${fact.value}`}>
-                          <p className="flex items-center gap-0.5 text-[5px] font-bold uppercase tracking-[0.12em] text-[#928977]">
+                          <p
+                            className={`flex items-center gap-0.5 text-[5px] font-bold uppercase tracking-[0.12em] ${theme.factLabel}`}
+                          >
                             {fact.icon === "lake" && (
-                              <Waves className="h-2 w-2 shrink-0 text-cyan-700" />
+                              <Waves className={`h-2 w-2 shrink-0 ${theme.lakeIcon}`} />
                             )}
                             {fact.label}
                           </p>
-                          <p className="mt-0.5 line-clamp-2 break-words text-[7px] font-semibold leading-tight text-[#3c3b33]">
+                          <p
+                            className={`mt-0.5 line-clamp-2 break-words text-[7px] font-semibold leading-tight ${theme.factValue}`}
+                          >
                             {fact.value}
                           </p>
                         </div>
@@ -280,15 +400,23 @@ export function MiniPropertyCard({
                     </div>
                   )}
                   {visibleFacts.some((fact) => fact.icon === "lake") && (
-                    <p className="mt-[1%] shrink-0 text-[4px] leading-tight text-[#7a756a]">
+                    <p
+                      className={`mt-[1%] shrink-0 text-[4px] leading-tight ${theme.disclaimer}`}
+                    >
                       Map overlay only · verify official FTL and buffer boundaries
                     </p>
                   )}
-                  <div className="mt-auto flex shrink-0 items-center justify-between gap-2 border-t border-[#d7cfbf] pt-[1.5%]">
-                    <span className="text-[6px] font-semibold uppercase tracking-[0.13em] text-[#89816f]">
+                  <div
+                    className={`mt-auto flex shrink-0 items-center justify-between gap-2 border-t pt-[1.5%] ${theme.footerBorder}`}
+                  >
+                    <span
+                      className={`text-[6px] font-semibold uppercase tracking-[0.13em] ${theme.footer}`}
+                    >
                       DISCOVERED ON TRYYAM
                     </span>
-                    <span className="max-w-[60%] truncate text-right font-mono text-[5px] text-[#89816f]">
+                    <span
+                      className={`max-w-[60%] truncate text-right font-mono text-[5px] ${theme.footer}`}
+                    >
                       {data.mapAttribution}
                     </span>
                   </div>
@@ -321,6 +449,49 @@ export function MiniPropertyCard({
             </div>
 
             <div className="mt-4 md:mt-8">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.17em] text-white/45">
+                  Card theme
+                </p>
+                <p className="text-[9px] text-white/35">
+                  Included in the image
+                </p>
+              </div>
+              <div
+                role="group"
+                aria-label="Choose a card theme"
+                className="mt-2 grid grid-cols-3 gap-2"
+              >
+                {CARD_THEME_OPTIONS.map((option) => {
+                  const isSelected = cardTheme === option.id;
+                  const Icon = option.icon;
+
+                  return (
+                    <button
+                      type="button"
+                      key={option.id}
+                      onClick={() => {
+                        setCardTheme(option.id);
+                        setNotice(null);
+                      }}
+                      className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2 text-[10px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
+                        isSelected
+                          ? option.selectedClass
+                          : "border-white/10 bg-white/[0.025] text-white/60 hover:border-white/25 hover:text-white/85"
+                      }`}
+                      aria-label={`Use ${option.label} theme`}
+                      aria-pressed={isSelected}
+                      title={`${option.label} theme`}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                      <span>{option.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.17em] text-white/45">
                 Canvas size
               </p>
