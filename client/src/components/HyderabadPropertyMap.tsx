@@ -4522,10 +4522,18 @@ export function HyderabadPropertyMapOverlay({
         </div>
         {showMapInfo && (
           <div className="pointer-events-auto absolute bottom-14 left-3 max-w-[280px] rounded-xl border border-white/20 bg-slate-950/90 px-3 py-2 text-[10px] text-white/70 shadow-xl backdrop-blur-md sm:left-5">
-            Map tiles © OpenStreetMap contributors ·{" "}
-            {activeCity === "dubai"
-              ? `${DUBAI_PROPERTY_PROJECTS.length} named Dubai developments.`
-              : `${PROJECTS.length} project pins imported from the public PlotsView venture catalog.`}
+            <p className="font-semibold text-white">
+              {isSatelliteMap
+                ? "Esri World Imagery"
+                : isDarkMap
+                  ? "CARTO Dark Matter"
+                  : "CARTO Positron"}
+            </p>
+            <p className="mt-1">
+              {isSatelliteMap
+                ? "Imagery © Esri"
+                : "© CARTO · © OpenStreetMap contributors"}
+            </p>
           </div>
         )}
       </div>
