@@ -2412,6 +2412,7 @@ export function HyderabadPropertyMapThumbnail() {
             src={tile.src}
             alt=""
             draggable={false}
+            loading="lazy"
             referrerPolicy="no-referrer"
             className="pointer-events-none absolute max-w-none select-none"
             style={{
@@ -2427,6 +2428,9 @@ export function HyderabadPropertyMapThumbnail() {
       </div>
       <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(8,8,10,0.24),rgba(36,36,40,0.02)_46%,rgba(6,6,8,0.34))]" />
       <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#0b0b0d]/45 to-transparent" />
+      <span className="absolute bottom-1 right-1 rounded bg-black/40 px-1 py-0.5 text-[5px] leading-none text-white/75">
+        © OpenStreetMap
+      </span>
     </div>
   );
 }
