@@ -3562,9 +3562,6 @@ export function HyderabadPropertyMapOverlay({
         : undefined,
       facts,
       showLakeFact: showLakes,
-      mapAttribution: isSatelliteMap
-        ? "Imagery © Esri"
-        : "© CARTO · © OpenStreetMap",
       accent: project.accent,
     });
   };
@@ -3578,9 +3575,6 @@ export function HyderabadPropertyMapOverlay({
       facts: project.note
         ? [{ label: "Published note", value: project.note }]
         : [{ label: "Development", value: "Named Dubai development" }],
-      mapAttribution: isSatelliteMap
-        ? "Imagery © Esri"
-        : "© CARTO · © OpenStreetMap",
       accent: project.accent,
     });
   };

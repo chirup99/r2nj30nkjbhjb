@@ -21,7 +21,6 @@ export type MiniPropertyCardData = {
   facts: { label: string; value: string; icon?: "lake" }[];
   showLakeFact?: boolean;
   mapImage: string;
-  mapAttribution: string;
   accent: string;
 };
 
@@ -458,11 +457,6 @@ export function MiniPropertyCard({
                       className={`text-[6px] font-semibold uppercase tracking-[0.13em] ${theme.footer}`}
                     >
                       DISCOVERED ON TRYYAM
-                    </span>
-                    <span
-                      className={`max-w-[60%] truncate text-right font-mono text-[5px] ${theme.footer}`}
-                    >
-                      {data.mapAttribution}
                     </span>
                   </div>
                 </div>
