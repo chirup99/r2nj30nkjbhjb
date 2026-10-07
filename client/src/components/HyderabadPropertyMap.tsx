@@ -130,6 +130,12 @@ type LakeCheck = {
   areaAcres?: number;
 };
 
+type LakePointCheck = {
+  projectId: string;
+  status: "overlap" | "clear";
+  lake?: LakeCheck;
+};
+
 function cleanLakeText(value: unknown) {
   return String(value ?? "")
     .replace(/<[^>]*>/g, " ")
@@ -1580,7 +1586,7 @@ function DigitizedLakesLayer({
   checkedProject?: PropertyProject;
   onLakeSelect: (lake: LakeCheck) => void;
   onMapTap: () => void;
-  onProjectCheck: (lake: LakeCheck | null) => void;
+  onProjectCheck: (check: LakePointCheck | null) => void;
 }) {
   const { map, isLoaded } = useMap();
   const latestLakeSelect = useRef(onLakeSelect);
@@ -1695,6 +1701,7 @@ function DigitizedLakesLayer({
 
     const checkProject = () => {
       if (!map.getLayer("digitized-lakes-fill")) return;
+      if (!map.isSourceLoaded("digitized-lakes-source")) return;
       const point = map.project({
         lng: checkedProject.longitude,
         lat: checkedProject.latitude,
@@ -1706,13 +1713,17 @@ function DigitizedLakesLayer({
       const properties = feature?.properties;
       latestProjectCheck.current(
         properties
-          ? getLakeCheck(
-              properties,
-              checkedProject.longitude,
-              checkedProject.latitude,
-              feature?.geometry,
-            )
-          : null,
+          ? {
+              projectId: checkedProject.id,
+              status: "overlap",
+              lake: getLakeCheck(
+                properties,
+                checkedProject.longitude,
+                checkedProject.latitude,
+                feature?.geometry,
+              ),
+            }
+          : { projectId: checkedProject.id, status: "clear" },
       );
     };
 
@@ -2295,6 +2306,8 @@ function DetailValue({
 
 function ProjectDetailSheet({
   project,
+  lakePointCheck,
+  onCheckLakeStatus,
   onClose,
   currency,
   rates,
@@ -2303,6 +2316,8 @@ function ProjectDetailSheet({
   cardError,
 }: {
   project: PropertyProject;
+  lakePointCheck: LakePointCheck | null;
+  onCheckLakeStatus: () => void;
   onClose: () => void;
   currency: DisplayCurrency;
   rates: DailyInrExchangeRates | null;
@@ -2427,6 +2442,17 @@ function ProjectDetailSheet({
             value={`${project.acres} acres`}
             icon={Maximize2}
           />
+          <DetailValue
+            label="Lake / FTL map check"
+            value={
+              lakePointCheck?.status === "overlap"
+                ? `Mapped overlap${lakePointCheck.lake?.name ? ` · ${lakePointCheck.lake.name}` : ""}`
+                : lakePointCheck?.status === "clear"
+                  ? "No mapped overlap"
+                  : "Not checked"
+            }
+            icon={Waves}
+          />
           {details.startingPrice && (
             <DetailValue
               label="Starting from"
@@ -2450,6 +2476,20 @@ function ProjectDetailSheet({
             />
           )}
         </div>
+        <p className="-mt-2 mb-4 text-[10px] leading-4 text-slate-500">
+          Lake/FTL status is a preliminary map check, not official clearance.
+          Confirm the official boundaries before purchase.
+        </p>
+        {!lakePointCheck && (
+          <button
+            type="button"
+            onClick={onCheckLakeStatus}
+            className="-mt-2 mb-4 inline-flex items-center gap-2 self-start rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-900 transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+          >
+            <Waves className="h-3.5 w-3.5" />
+            Check mapped lakes / FTL
+          </button>
+        )}
 
         <div className="space-y-3">
           <section className="rounded-2xl border border-slate-200 p-4">
@@ -2729,9 +2769,8 @@ export function HyderabadPropertyMapOverlay({
     useState<CityContextPoint | null>(null);
   const [showLakeHelp, setShowLakeHelp] = useState(false);
   const [selectedLake, setSelectedLake] = useState<LakeCheck | null>(null);
-  const [checkedProjectLake, setCheckedProjectLake] = useState<LakeCheck | null>(
-    null,
-  );
+  const [projectLakePointCheck, setProjectLakePointCheck] =
+    useState<LakePointCheck | null>(null);
   const [showProjectList, setShowProjectList] = useState(false);
   const [listSort, setListSort] = useState<"price" | "rate" | "size">("price");
   const [displayCurrency, setDisplayCurrency] =
@@ -2966,6 +3005,11 @@ export function HyderabadPropertyMapOverlay({
     activeCity === "hyderabad"
       ? PROJECTS.find((project) => project.id === selectedPinProjectId)
       : undefined;
+  const selectedProjectLakePointCheck =
+    selectedPinProject &&
+    projectLakePointCheck?.projectId === selectedPinProject.id
+      ? projectLakePointCheck
+      : null;
   const selectedDubaiProject =
     activeCity === "dubai"
       ? DUBAI_PROPERTY_PROJECTS.find(
@@ -3290,16 +3334,24 @@ export function HyderabadPropertyMapOverlay({
 
   const createHyderabadCard = (project: PropertyProject) => {
     const details = getProjectListingDetails(project);
+    const lakePointCheck =
+      projectLakePointCheck?.projectId === project.id
+        ? projectLakePointCheck
+        : null;
     const facts = [
-      { label: "Development", value: project.type },
-      { label: "Approval", value: `${project.approvalType} approved` },
-      { label: "Plot size", value: project.bedrooms },
+      { label: "Plot sizes", value: project.bedrooms },
       { label: "Total plots", value: project.totalPlots.toLocaleString("en-IN") },
       { label: "Project area", value: `${project.acres} acres` },
-      ...(details.availablePlots !== undefined
-        ? [{ label: "Available", value: `${details.availablePlots} plots` }]
-        : []),
-      ...(details.rera ? [{ label: "RERA", value: details.rera }] : []),
+      {
+        label: "Lake / FTL",
+        value:
+          lakePointCheck?.status === "overlap"
+            ? "Mapped overlap"
+            : lakePointCheck?.status === "clear"
+              ? "No mapped overlap"
+              : "Not checked",
+        icon: "lake" as const,
+      },
     ];
     void prepareMiniCard([project.longitude, project.latitude], {
       market: "Hyderabad",
@@ -3355,7 +3407,7 @@ export function HyderabadPropertyMapOverlay({
     setShowLakes(false);
     setShowLakeHelp(false);
     setSelectedLake(null);
-    setCheckedProjectLake(null);
+    setProjectLakePointCheck(null);
     setIsMasterPlanSelected(false);
   };
 
@@ -3405,14 +3457,14 @@ export function HyderabadPropertyMapOverlay({
               onLakeSelect={(lake) => {
                 setSelectedLake(lake);
                 setShowLakeHelp(false);
-                setCheckedProjectLake(null);
+                setProjectLakePointCheck(null);
               }}
               onMapTap={() => {
                 setIsMagicFiltersOpen(false);
                 setShowLakeHelp(false);
                 setShowContextPanel(false);
               }}
-              onProjectCheck={setCheckedProjectLake}
+              onProjectCheck={setProjectLakePointCheck}
             />
             <CityContextLayers
               visibleCategories={contextCategoriesForMap}
@@ -3578,7 +3630,7 @@ export function HyderabadPropertyMapOverlay({
                   setShowLakes((visible) => !visible);
                   setShowLakeHelp((visible) => !visible);
                   setSelectedLake(null);
-                  setCheckedProjectLake(null);
+                  setProjectLakePointCheck(null);
                 }}
                 className={`flex shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950 ${
                   showLakes
@@ -4167,7 +4219,7 @@ export function HyderabadPropertyMapOverlay({
               onClick={() => {
                 setSelectedLake(null);
                 setSelectedPinProjectId(null);
-                setCheckedProjectLake(null);
+                setProjectLakePointCheck(null);
               }}
               className="absolute right-3 top-3 rounded-full p-1.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
               aria-label="Close lake details"
@@ -4181,9 +4233,11 @@ export function HyderabadPropertyMapOverlay({
                 </p>
                 <p className="mt-1 text-sm font-bold">{selectedPinProject.name}</p>
                 <p className="mt-2 text-xs leading-5 text-white/75">
-                  {checkedProjectLake
-                    ? `This project point falls inside the mapped ${checkedProjectLake.name} FTL/buffer polygon.`
-                    : "This project point is outside the mapped lake/FTL polygons currently visible."}
+                  {selectedProjectLakePointCheck?.status === "overlap"
+                    ? `This project point falls inside the mapped ${selectedProjectLakePointCheck.lake?.name ?? "lake"} FTL/buffer polygon.`
+                    : selectedProjectLakePointCheck?.status === "clear"
+                      ? "No overlap was found in the mapped lake/FTL polygons currently visible."
+                      : "Turn on the Lakes layer to check this project point against the mapped FTL/buffer polygons."}
                 </p>
               </>
             )}
@@ -4772,6 +4826,13 @@ export function HyderabadPropertyMapOverlay({
       {selectedPinProject && (
         <ProjectDetailSheet
           project={selectedPinProject}
+          lakePointCheck={selectedProjectLakePointCheck}
+          onCheckLakeStatus={() => {
+            setShowLakes(true);
+            setShowLakeHelp(false);
+            setSelectedLake(null);
+            setProjectLakePointCheck(null);
+          }}
           onClose={() => setSelectedPinProjectId(null)}
           currency={displayCurrency}
           rates={exchangeRates}

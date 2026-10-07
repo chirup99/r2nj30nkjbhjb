@@ -7,6 +7,7 @@ import {
   MapPin,
   Share2,
   X,
+  Waves,
 } from "lucide-react";
 
 export type MiniPropertyCardData = {
@@ -15,7 +16,7 @@ export type MiniPropertyCardData = {
   location: string;
   developer: string;
   price?: string;
-  facts: { label: string; value: string }[];
+  facts: { label: string; value: string; icon?: "lake" }[];
   mapImage: string;
   mapAttribution: string;
   accent: string;
@@ -71,10 +72,7 @@ export function MiniPropertyCard({
   } | null>(null);
   const selectedSize =
     CANVAS_SIZES.find((size) => size.id === canvasSize) ?? CANVAS_SIZES[0];
-  const visibleFacts = data.facts.slice(
-    0,
-    canvasSize === "square" ? 1 : 2,
-  );
+  const visibleFacts = data.facts.slice(0, 4);
   const cardWidth = Math.min(
     390,
     window.innerHeight * 0.47 * selectedSize.ratio,
@@ -220,7 +218,7 @@ export function MiniPropertyCard({
               }}
             >
               <div className="flex h-full flex-col p-[3.5%]">
-                <div className="relative min-h-0 flex-[7_0_0%] overflow-hidden border border-[#d6cebf] bg-[#ded9ce]">
+                <div className="relative min-h-0 flex-[6_0_0%] overflow-hidden border border-[#d6cebf] bg-[#ded9ce]">
                   <img
                     src={data.mapImage}
                     alt={`Live map centered on ${data.name}`}
@@ -241,7 +239,7 @@ export function MiniPropertyCard({
                   </div>
                 </div>
 
-                <div className="flex min-h-0 flex-[3_0_0%] flex-col overflow-hidden pt-[2.5%]">
+                <div className="flex min-h-0 flex-[4_0_0%] flex-col overflow-hidden pt-[2.5%]">
                   <div className="flex min-h-0 items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="text-[6px] font-bold uppercase tracking-[0.15em] text-[#8d7950]">
@@ -265,7 +263,10 @@ export function MiniPropertyCard({
                     <div className="mt-[1.5%] grid shrink-0 grid-cols-2 gap-x-2 border-t border-[#d7cfbf] pt-[1.5%]">
                       {visibleFacts.map((fact) => (
                         <div className="min-w-0" key={`${fact.label}-${fact.value}`}>
-                          <p className="text-[5px] font-bold uppercase tracking-[0.12em] text-[#928977]">
+                          <p className="flex items-center gap-0.5 text-[5px] font-bold uppercase tracking-[0.12em] text-[#928977]">
+                            {fact.icon === "lake" && (
+                              <Waves className="h-2 w-2 shrink-0 text-cyan-700" />
+                            )}
                             {fact.label}
                           </p>
                           <p className="mt-0.5 truncate text-[7px] font-semibold text-[#3c3b33]">
@@ -274,6 +275,11 @@ export function MiniPropertyCard({
                         </div>
                       ))}
                     </div>
+                  )}
+                  {visibleFacts.some((fact) => fact.icon === "lake") && (
+                    <p className="mt-[1%] shrink-0 text-[4px] leading-tight text-[#7a756a]">
+                      Map overlay only · verify official FTL and buffer boundaries
+                    </p>
                   )}
                   <div className="mt-auto flex shrink-0 items-center justify-between gap-2 border-t border-[#d7cfbf] pt-[1.5%]">
                     <span className="text-[6px] font-semibold uppercase tracking-[0.13em] text-[#89816f]">
