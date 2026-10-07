@@ -459,6 +459,11 @@ export function MiniPropertyCard({
                     >
                       DISCOVERED ON TRYYAM
                     </span>
+                    <span
+                      className={`max-w-[60%] truncate text-right font-mono text-[5px] ${theme.footer}`}
+                    >
+                      {data.mapAttribution}
+                    </span>
                   </div>
                 </div>
               </div>
