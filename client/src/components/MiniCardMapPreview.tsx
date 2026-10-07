@@ -155,9 +155,6 @@ export function MiniCardMapPreview({
           Approx. area
         </span>
       )}
-      <span className="absolute bottom-1.5 right-2 rounded-sm bg-black/35 px-1 py-0.5 text-[6px] leading-none text-white/75">
-        © CARTO · © OpenStreetMap
-      </span>
     </div>
   );
 }
