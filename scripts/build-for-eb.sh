@@ -30,7 +30,7 @@ echo "==> Staging Elastic Beanstalk bundle..."
 STAGING_DIR="$TEMP_DIR/staging"
 mkdir -p "$STAGING_DIR/.ebextensions"
 cp -R dist package.json package-lock.json Procfile server shared tsconfig.json "$STAGING_DIR/"
-cp .ebextensions/port.config "$STAGING_DIR/.ebextensions/"
+cp -R .ebextensions/. "$STAGING_DIR/.ebextensions/"
 
 # Replit's lockfile can contain absolute tarball URLs for its private package
 # firewall. Elastic Beanstalk instances cannot resolve that host, so rewrite

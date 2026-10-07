@@ -98,3 +98,17 @@ mtime_ms = 1791038062766
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:b6bf627d-430c-429e-bb47-32d18235e539/c5829f55-43fd-4422-8490-f93f376bdd28/18efe2e4-927c-4360-809e-62d92c1b31a0"
 storage_version_token = "1791038091937150"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "JOTS1Lp61XN490sDsNF4d"
+uri = "file://persona-hub-eb-latest-2026-10-07.zip"
+type = "unspecified"
+title = "Updated AWS Elastic Beanstalk ZIP"
+description = "Latest production build of the current project, with all supplied archive files retained, current EB configuration included, and the ZIP verified to start and serve the app."
+logical_id = "dbb3183c-d3ba-4a42-8853-0212e76c172f"
+content_hash = "sha256:0e6b78bb80542c2bb160c0629a7676d06a36f08dbbfecd92f5ea2699cdf930d8"
+size = 6150158
+mtime_ms = 1791382728972
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:01a0096f-484d-412a-a97b-e3e1a14d4f0a/dbb3183c-d3ba-4a42-8853-0212e76c172f/8a4b5dad-ed16-4c57-8bc7-682fdc998cbb"
+storage_version_token = "1791382789504378"
+content_type = "application/octet-stream"
