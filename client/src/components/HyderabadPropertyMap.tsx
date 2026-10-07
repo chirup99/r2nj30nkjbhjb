@@ -3561,6 +3561,7 @@ export function HyderabadPropertyMapOverlay({
         ? formatProjectPrice(project.price, displayCurrency, exchangeRates)
         : undefined,
       facts,
+      showLakeFact: showLakes,
       mapAttribution: isSatelliteMap
         ? "Imagery © Esri"
         : "© CARTO · © OpenStreetMap",

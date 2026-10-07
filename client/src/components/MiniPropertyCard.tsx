@@ -17,6 +17,7 @@ export type MiniPropertyCardData = {
   developer: string;
   price?: string;
   facts: { label: string; value: string; icon?: "lake" }[];
+  showLakeFact?: boolean;
   mapImage: string;
   mapAttribution: string;
   accent: string;
@@ -72,7 +73,9 @@ export function MiniPropertyCard({
   } | null>(null);
   const selectedSize =
     CANVAS_SIZES.find((size) => size.id === canvasSize) ?? CANVAS_SIZES[0];
-  const visibleFacts = data.facts.slice(0, 4);
+  const visibleFacts = data.facts
+    .filter((fact) => fact.icon !== "lake" || data.showLakeFact === true)
+    .slice(0, 4);
   const cardWidth = Math.min(
     390,
     window.innerHeight * 0.47 * selectedSize.ratio,
