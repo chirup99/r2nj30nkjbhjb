@@ -113,15 +113,13 @@ const CARD_THEME_STYLES: Record<
     footer: "text-slate-400",
   },
   rainbow: {
-    background:
-      "linear-gradient(135deg, #4c0519 0%, #86198f 20%, #2e1065 38%, #312e81 55%, #0c4a6e 70%, #134e4a 84%, #451a03 100%)",
-    border: "border-fuchsia-300/50",
-    developer: "text-cyan-100/80",
+    background: "linear-gradient(135deg, #33204a 0%, #111827 100%)",
+    border: "border-white/25",
+    developer: "text-white/75",
     title: "text-white",
     price: "bg-white/90 text-slate-950",
     mapFrame: "border-white/35 bg-slate-950/50",
-    mapTint:
-      "bg-gradient-to-tr from-fuchsia-500/[0.12] via-transparent to-cyan-400/20",
+    mapTint: "bg-transparent",
     location: "text-white/80",
     factsDivider: "border-white/30",
     factLabel: "text-white/65",
@@ -203,6 +201,18 @@ export function MiniPropertyCard({
   const selectedSize =
     CANVAS_SIZES.find((size) => size.id === canvasSize) ?? CANVAS_SIZES[0];
   const theme = CARD_THEME_STYLES[cardTheme];
+  const cardAccent = data.accent || "#8b5cf6";
+  const cardBackground =
+    cardTheme === "rainbow"
+      ? `linear-gradient(135deg, color-mix(in srgb, ${cardAccent} 34%, #101827) 0%, color-mix(in srgb, ${cardAccent} 18%, #111827) 54%, #10120f 100%)`
+      : theme.background;
+  const cardMapTintStyle =
+    cardTheme === "rainbow"
+      ? {
+          background: `linear-gradient(135deg, color-mix(in srgb, ${cardAccent} 26%, transparent), transparent 55%, color-mix(in srgb, ${cardAccent} 30%, transparent))`,
+          mixBlendMode: "soft-light" as const,
+        }
+      : undefined;
   const visibleFacts = data.facts
     .filter((fact) => fact.icon !== "lake" || data.showLakeFact === true)
     .slice(0, 4);
@@ -342,7 +352,12 @@ export function MiniPropertyCard({
                 width: `${cardWidth}px`,
                 maxWidth: "100%",
                 aspectRatio: selectedSize.ratio,
-                background: theme.background,
+                background: cardBackground,
+                ...(cardTheme === "rainbow"
+                  ? {
+                      borderColor: `color-mix(in srgb, ${cardAccent} 70%, white 30%)`,
+                    }
+                  : {}),
               }}
             >
               <div className="flex h-full flex-col p-[3.5%]">
@@ -355,7 +370,10 @@ export function MiniPropertyCard({
                     className="absolute inset-0 h-full w-full object-cover"
                     crossOrigin="anonymous"
                   />
-                  <div className={`absolute inset-0 ${theme.mapTint}`} />
+                  <div
+                    className={`absolute inset-0 ${theme.mapTint}`}
+                    style={cardMapTintStyle}
+                  />
                   <div
                     className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center"
                     aria-hidden="true"
