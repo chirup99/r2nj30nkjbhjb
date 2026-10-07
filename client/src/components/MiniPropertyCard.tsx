@@ -2,7 +2,6 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toCanvas } from "html-to-image";
 import {
-  ArrowDownToLine,
   Check,
   MapPin,
   Moon,
@@ -311,29 +310,6 @@ export function MiniPropertyCard({
       cancelled = true;
     };
   }, [createImageBlob, data, canvasSize, cardTheme]);
-
-  const saveImage = async () => {
-    setIsExporting(true);
-    setNotice(null);
-    try {
-      const blob =
-        isShareImageReady && preparedShareImage
-          ? preparedShareImage.blob
-          : await createImageBlob();
-      triggerDownload(blob, filename);
-      setNotice({ kind: "success", message: `${extension.toUpperCase()} saved to your device.` });
-    } catch (error) {
-      setNotice({
-        kind: "error",
-        message:
-          error instanceof Error
-            ? error.message
-            : "The image could not be saved. Please try again.",
-      });
-    } finally {
-      setIsExporting(false);
-    }
-  };
 
   const shareImage = () => {
     if (!isShareImageReady || !preparedShareImage) return;
@@ -662,15 +638,6 @@ export function MiniPropertyCard({
                     : shareImageError
                       ? "Image unavailable"
                       : "Preparing image…"}
-              </button>
-              <button
-                type="button"
-                onClick={() => void saveImage()}
-                disabled={isExporting}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/[0.06] disabled:cursor-wait disabled:opacity-60"
-              >
-                <ArrowDownToLine className="h-4 w-4" />
-                Save {extension.toUpperCase()}
               </button>
               <AnimatePresence mode="wait">
                 {notice && (
