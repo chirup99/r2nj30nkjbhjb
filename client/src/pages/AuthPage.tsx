@@ -41,6 +41,7 @@ import {
   Building2,
   Search,
   Lock,
+  Map as MapIcon,
 } from "lucide-react";
 import {
   motion,
@@ -764,6 +765,7 @@ const SwipeCardContent = forwardRef(
     const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0, 1, 1, 1, 0]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const [showMapPreview, setShowMapPreview] = useState(true);
     const [xVideoUrl, setXVideoUrl] = useState<string | null>(null);
     const [xVideoThumbnail, setXVideoThumbnail] = useState<string | null>(null);
     const [isFetchingXVideo, setIsFetchingXVideo] = useState(false);
@@ -975,13 +977,54 @@ const SwipeCardContent = forwardRef(
           </div>
         ) : (
           <div className="flex flex-col h-full items-center justify-between relative z-10">
-            <div className="flex items-center gap-1.5">
-              <span className="text-white/90 text-[9px] font-bold tracking-[0.2em] uppercase">
+            <div className="flex w-full items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[9px] font-bold uppercase tracking-[0.2em] text-white/90">
                 {card.title}
               </span>
-              {card.type !== "product" && card.type !== "tweet" && (
-                <Mic className="w-3.5 h-3.5 text-white/90" />
-              )}
+              <div className="flex shrink-0 items-center gap-1.5">
+                {card.type === "property" && card.imageUrl && (
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-label="Property map preview"
+                    aria-checked={showMapPreview}
+                    title={
+                      showMapPreview
+                        ? "Map is on — switch to property photo"
+                        : "Photo is shown — switch to map"
+                    }
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setShowMapPreview((current) => !current);
+                    }}
+                    className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-black/30 px-2 text-white/75 backdrop-blur-sm transition-colors hover:border-emerald-300/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/80"
+                  >
+                    <MapIcon
+                      className={`h-3.5 w-3.5 transition-colors ${
+                        showMapPreview ? "text-emerald-300" : "text-white/55"
+                      }`}
+                    />
+                    <span
+                      className={`relative h-4 w-7 rounded-full transition-colors ${
+                        showMapPreview ? "bg-emerald-400/65" : "bg-white/20"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      <span
+                        className={`absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${
+                          showMapPreview ? "translate-x-3.5" : ""
+                        }`}
+                      />
+                    </span>
+                  </button>
+                )}
+                {card.type !== "product" &&
+                  card.type !== "tweet" &&
+                  card.type !== "property" && (
+                    <Mic className="h-3.5 w-3.5 text-white/90" />
+                  )}
+              </div>
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center w-full space-y-3">
@@ -1027,7 +1070,15 @@ const SwipeCardContent = forwardRef(
               ) : card.type === "property" ? (
                 <div className="w-full space-y-3">
                   <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/15 bg-black/20 shadow-lg">
-                    <MiniCardMapPreview card={card as any} />
+                    {showMapPreview || !card.imageUrl ? (
+                      <MiniCardMapPreview card={card as any} />
+                    ) : (
+                      <img
+                        src={card.imageUrl}
+                        alt={card.name}
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10" />
                     <span className="absolute bottom-2 left-2 rounded-full border border-white/20 bg-black/40 px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-white/85 backdrop-blur-sm">
                       {card.location}
