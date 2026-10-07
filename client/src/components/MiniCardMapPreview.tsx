@@ -2,8 +2,6 @@ import { MapPin } from "lucide-react";
 import { CURATED_RESIDENTIAL_PROPERTIES } from "@/data/curatedProperties";
 import {
   Map as PropertyMap,
-  MapMarker,
-  MarkerContent,
 } from "@/components/ui/map";
 
 type MiniCardLocationData = {
@@ -13,7 +11,38 @@ type MiniCardLocationData = {
   subname?: unknown;
   longitude?: unknown;
   latitude?: unknown;
+  color?: unknown;
 };
+
+const CARD_MAP_PALETTES = [
+  { token: "lime", accent: "#a3e635", tint: "rgba(132, 204, 22, 0.22)" },
+  { token: "emerald", accent: "#34d399", tint: "rgba(16, 185, 129, 0.2)" },
+  { token: "teal", accent: "#2dd4bf", tint: "rgba(20, 184, 166, 0.2)" },
+  { token: "green", accent: "#4ade80", tint: "rgba(34, 197, 94, 0.2)" },
+  { token: "cyan", accent: "#22d3ee", tint: "rgba(6, 182, 212, 0.2)" },
+  { token: "sky", accent: "#38bdf8", tint: "rgba(14, 165, 233, 0.2)" },
+  { token: "blue", accent: "#60a5fa", tint: "rgba(59, 130, 246, 0.2)" },
+  { token: "indigo", accent: "#818cf8", tint: "rgba(99, 102, 241, 0.2)" },
+  { token: "violet", accent: "#a78bfa", tint: "rgba(139, 92, 246, 0.2)" },
+  { token: "purple", accent: "#c084fc", tint: "rgba(168, 85, 247, 0.2)" },
+  { token: "amber", accent: "#fbbf24", tint: "rgba(245, 158, 11, 0.2)" },
+  { token: "orange", accent: "#fb923c", tint: "rgba(249, 115, 22, 0.2)" },
+  { token: "rose", accent: "#fb7185", tint: "rgba(244, 63, 94, 0.2)" },
+  { token: "fuchsia", accent: "#e879f9", tint: "rgba(217, 70, 239, 0.2)" },
+] as const;
+
+function resolveCardMapPalette(color: unknown, fallbackAccent: string) {
+  const colorClasses = typeof color === "string" ? color.toLowerCase() : "";
+  const palette = CARD_MAP_PALETTES.find(({ token }) =>
+    colorClasses.includes(token),
+  );
+  return (
+    palette ?? {
+      accent: fallbackAccent,
+      tint: "rgba(139, 92, 246, 0.14)",
+    }
+  );
+}
 
 function resolveLocation(card: MiniCardLocationData) {
   const longitude = Number(card.longitude);
@@ -85,6 +114,8 @@ export function MiniCardMapPreview({
     );
   }
 
+  const mapPalette = resolveCardMapPalette(card.color, location.accent);
+
   return (
     <div
       className="absolute inset-0 overflow-hidden bg-[#15151b]"
@@ -99,25 +130,26 @@ export function MiniCardMapPreview({
         attributionControl={false}
         className="absolute inset-0 h-full w-full"
       >
-        <MapMarker
-          longitude={location.longitude}
-          latitude={location.latitude}
-          anchor="center"
-        >
-          <MarkerContent className="pointer-events-none">
-            <span
-              className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#f7f2e7] text-white shadow-[0_2px_8px_rgba(24,25,20,0.35)]"
-              style={{ backgroundColor: location.accent }}
-            >
-              <MapPin
-                className="h-3.5 w-3.5"
-                fill="currentColor"
-                strokeWidth={1.5}
-              />
-            </span>
-          </MarkerContent>
-        </MapMarker>
       </PropertyMap>
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundColor: mapPalette.tint,
+          mixBlendMode: "soft-light",
+        }}
+        aria-hidden="true"
+      />
+      <span
+        className="pointer-events-none absolute left-1/2 top-1/2 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-[#f7f2e7] text-white shadow-[0_2px_8px_rgba(24,25,20,0.35)]"
+        style={{ backgroundColor: mapPalette.accent }}
+        aria-hidden="true"
+      >
+        <MapPin
+          className="h-3.5 w-3.5"
+          fill="currentColor"
+          strokeWidth={1.5}
+        />
+      </span>
       {location.approximate && (
         <span className="absolute right-2 top-2 rounded-full border border-white/15 bg-black/40 px-2 py-1 text-[7px] font-bold uppercase tracking-wider text-white/80 backdrop-blur-sm">
           Approx. area
