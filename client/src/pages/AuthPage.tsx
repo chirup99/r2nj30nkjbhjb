@@ -3657,32 +3657,34 @@ export default function AuthPage({ slug }: { slug?: string }) {
           style={{ opacity: isMenuOpen ? 1 : 0 }}
         ></div>
 
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="absolute top-8 right-8 z-50 p-2 group"
-        >
-          {isMenuOpen ? (
-            <div className="text-white/80 hover:text-white transition-colors">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              >
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1.5 items-end">
-              <div className="w-8 h-1 bg-white rounded-full transition-all group-hover:w-6"></div>
-              <div className="w-5 h-1 bg-white rounded-full transition-all group-hover:w-8"></div>
-            </div>
-          )}
-        </button>
+        <div className="pointer-events-none absolute inset-x-4 top-4 z-50 mx-auto flex max-w-md justify-end">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="pointer-events-auto ml-auto p-2 group"
+          >
+            {isMenuOpen ? (
+              <div className="text-white/80 hover:text-white transition-colors">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5 items-end">
+                <div className="w-8 h-1 bg-white rounded-full transition-all group-hover:w-6"></div>
+                <div className="w-5 h-1 bg-white rounded-full transition-all group-hover:w-8"></div>
+              </div>
+            )}
+          </button>
+        </div>
 
         <AnimatePresence>
           {!showScannerDialog && !showMapDialog && showMapThumbnail && (
