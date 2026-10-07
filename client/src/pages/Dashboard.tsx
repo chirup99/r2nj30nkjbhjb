@@ -7,7 +7,7 @@ export default function Dashboard() {
       <nav className="flex items-center justify-between max-w-7xl mx-auto bg-card/50 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-4 shadow-xl">
         <div className="flex items-center gap-3">
           <InfinityIcon className="w-8 h-8 text-purple-500" strokeWidth={2.5} />
-          <span className="text-xl font-display font-bold tracking-widest uppercase">RCiQ-AI</span>
+          <span className="text-xl font-display font-bold tracking-widest uppercase">Tryyam</span>
         </div>
         
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/60">

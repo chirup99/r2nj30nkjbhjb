@@ -192,7 +192,7 @@ export function MiniPropertyCard({
             <div className="absolute inset-x-0 top-0 flex items-center justify-between border-b border-white/10 px-5 py-3.5 sm:px-7">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#d7ba79]">
-                  RCiQ-AI · {data.market}
+                  {data.market} · SHARE CARD
                 </p>
                 <p className="mt-1 text-xs text-white/55">A place worth knowing</p>
               </div>
@@ -217,14 +217,9 @@ export function MiniPropertyCard({
             >
               <div className="flex h-full flex-col gap-[3.2%] p-[4.5%]">
                 <div className="flex shrink-0 items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#cfc4ac] text-[10px] font-extrabold tracking-[-0.08em] text-[#342f25]">
-                      RQ
-                    </span>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#504b3f]">
-                      RCiQ-AI · PROPERTY ATLAS
-                    </span>
-                  </div>
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#504b3f]">
+                    PROPERTY ATLAS
+                  </span>
                   <span className="text-[8px] font-semibold uppercase tracking-[0.17em] text-[#89816f]">
                     {data.market}
                   </span>
@@ -297,7 +292,7 @@ export function MiniPropertyCard({
                   )}
                   <div className="mt-3 flex items-center justify-between border-t border-[#d7cfbf] pt-2">
                     <span className="text-[7px] font-semibold uppercase tracking-[0.16em] text-[#89816f]">
-                      DISCOVERED ON RCIQ-AI
+                      DISCOVERED ON TRYYAM
                     </span>
                     <span className="font-mono text-[7px] text-[#89816f]">
                       {data.market.toUpperCase()}

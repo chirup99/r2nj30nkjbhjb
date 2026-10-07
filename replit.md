@@ -1,6 +1,6 @@
 # Project Overview
 
-A React + Express (TypeScript) property discovery concept branded as RCiQ-AI. The current experience keeps the imported profile/auth foundation while presenting Hyderabad real-estate discovery, AI-guided search language, and a full-screen project map with curated demo pins.
+A React + Express (TypeScript) property discovery concept branded as Tryyam. The current experience keeps the imported profile/auth foundation while presenting Hyderabad real-estate discovery, AI-guided search language, and a full-screen project map with curated demo pins.
 
 ## Architecture
 
@@ -45,7 +45,7 @@ A React + Express (TypeScript) property discovery concept branded as RCiQ-AI. Th
 
 ## Current Product Direction
 
-- The main entry point is branded **RCiQ-AI** and positioned as Hyderabad Property Discovery.
+- The main entry point is branded **Tryyam** and positioned as Hyderabad Property Discovery.
 - The property map includes a Dubai city mode with named launches from Emaar, DAMAC, Binghatti, Imtiaz, Ellington, OMNIYAT, and Sobha. Dubai pins indicate approximate community locations rather than verified building sites; the catalog does not invent prices for these developments.
 - The floating property map opens on the public PlotsView catalog, using each venture's published latitude and longitude. City context layers are optional: they hide property pins and show airport, industrial, SEZ, commercial, metro, data-centre, and power-plant context. City context locations use category-colored circular markers; exiting city context restores the property pins.
 - The map fits its initial viewport to every visible project pin, supports searching the full catalog, and links each popup back to its PlotsView venture page. The imported catalog is a snapshot and should be refreshed when listings change.

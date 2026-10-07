@@ -193,7 +193,7 @@ async function fetchFeed(feed: (typeof NEWS_FEEDS)[number]) {
   const response = await fetch(url, {
     headers: {
       Accept: "application/rss+xml, application/xml, text/xml",
-      "User-Agent": "RCiQ-AI-Flash-News/1.0",
+      "User-Agent": "Tryyam-Flash-News/1.0",
     },
     signal: AbortSignal.timeout(12_000),
   });

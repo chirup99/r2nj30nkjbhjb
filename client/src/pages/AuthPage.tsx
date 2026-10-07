@@ -124,7 +124,7 @@ const PROPERTY_EVENTS: PropertyEvent[] = [
     timeLabel: "4:00 PM – 6:00 PM",
     location: "The Grand Courtyard, Nanakramguda",
     area: "Financial District",
-    host: "RCiQ-AI Curated",
+    host: "Tryyam Curated",
     description:
       "Meet developers, understand rental demand, and see the strongest investment-ready projects nearby.",
     attendees: 24,
@@ -3781,7 +3781,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/35">
-                        RCiQ-AI · HYDERABAD
+                        TRYYAM · HYDERABAD
                       </p>
                       <h3 className="mt-1 text-base font-semibold tracking-tight text-white">
                         Meet the project
