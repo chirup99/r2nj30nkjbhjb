@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toCanvas } from "html-to-image";
 import {
@@ -6,7 +6,6 @@ import {
   Check,
   MapPin,
   Moon,
-  Rainbow,
   Share2,
   Sun,
   X,
@@ -29,6 +28,36 @@ export type MiniPropertyCardData = {
 type CanvasSize = "poster" | "square" | "story";
 type ImageFormat = "png" | "jpeg";
 type CardTheme = "light" | "dark" | "rainbow";
+
+function RainbowThemeIcon({ className }: { className?: string }) {
+  const gradientId = `share-card-rainbow-${useId().replace(/:/g, "")}`;
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2.2"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#fb7185" />
+          <stop offset="22%" stopColor="#f97316" />
+          <stop offset="42%" stopColor="#facc15" />
+          <stop offset="62%" stopColor="#22c55e" />
+          <stop offset="81%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#c084fc" />
+        </linearGradient>
+      </defs>
+      <path d="M22 17a10 10 0 0 0-20 0" stroke={`url(#${gradientId})`} />
+      <path d="M6 17a6 6 0 0 1 12 0" stroke={`url(#${gradientId})`} />
+      <path d="M10 17a2 2 0 0 1 4 0" stroke={`url(#${gradientId})`} />
+    </svg>
+  );
+}
 
 const CARD_THEME_STYLES: Record<
   CardTheme,
@@ -121,9 +150,9 @@ const CARD_THEME_OPTIONS = [
   {
     id: "rainbow",
     label: "Rainbow",
-    icon: Rainbow,
+    icon: RainbowThemeIcon,
     selectedClass:
-      "border-fuchsia-300 bg-gradient-to-r from-rose-500/20 via-fuchsia-500/20 to-cyan-400/20 text-fuchsia-100",
+      "border-white/50 bg-gradient-to-r from-rose-500/45 via-fuchsia-500/45 to-cyan-400/45 text-white shadow-[0_0_18px_rgba(217,70,239,0.22)]",
   },
 ] as const;
 
@@ -483,7 +512,9 @@ export function MiniPropertyCard({
                       aria-pressed={isSelected}
                       title={`${option.label} theme`}
                     >
-                      <Icon className="h-4 w-4" aria-hidden="true" />
+                      <Icon
+                        className={`shrink-0 ${option.id === "rainbow" ? "h-5 w-5" : "h-4 w-4"}`}
+                      />
                       <span>{option.label}</span>
                     </button>
                   );
