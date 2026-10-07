@@ -4173,8 +4173,8 @@ export default function AuthPage({ slug }: { slug?: string }) {
                   mode === "swipe" ? "text-white" : "text-white/50",
                 )}
               >
-                <span>Saved Cards</span>
-                <span className="rounded-full bg-white/15 px-1.5 py-0.5 text-[9px] tabular-nums text-white/75">
+                <span>Mini Cards</span>
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-emerald-300/25 bg-emerald-300/15 px-1.5 text-[10px] font-bold leading-none tabular-nums text-emerald-200 shadow-[0_2px_8px_rgba(52,211,153,0.12)]">
                   {savedCardCount}
                 </span>
               </button>
