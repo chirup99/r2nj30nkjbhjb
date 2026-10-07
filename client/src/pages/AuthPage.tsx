@@ -234,15 +234,15 @@ function PropertyProjectFeed({
         Tap a card to open its full listing.
       </p>
 
-      <div className="space-y-2.5 pr-1">
+      <div className="space-y-2.5 pr-1 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
         {PLOTSVIEW_PROJECTS.map((project, index) => (
           <motion.button
             key={project.id}
             type="button"
             onClick={() => onProjectSelect(project.id)}
-            className="group grid grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-2.5 text-left transition-all hover:border-purple-300/40 hover:bg-white/[0.07] hover:shadow-[0_8px_24px_rgba(124,58,237,0.14)]"
+            className="group grid grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-2.5 text-left transition-all hover:border-purple-300/40 hover:bg-white/[0.07] hover:shadow-[0_8px_24px_rgba(124,58,237,0.14)] lg:grid-cols-[minmax(260px,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]"
           >
-            <div className="relative min-h-[92px] overflow-hidden rounded-xl border border-white/10 bg-black/20">
+            <div className="relative min-h-[92px] overflow-hidden rounded-xl border border-white/10 bg-black/20 lg:min-h-[160px]">
               <img
                 src={getPropertyProjectImage(project, index)}
                 alt={`${project.name} property`}
@@ -3657,7 +3657,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
           style={{ opacity: isMenuOpen ? 1 : 0 }}
         ></div>
 
-        <div className="pointer-events-none absolute inset-x-4 top-4 z-50 mx-auto flex max-w-md justify-end">
+        <div className="pointer-events-none absolute inset-x-4 top-4 z-50 mx-auto flex max-w-md justify-end lg:max-w-none">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="pointer-events-auto ml-auto p-2 group"
@@ -4068,7 +4068,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
           animate={{ opacity: 1, y: 0, height: "auto", marginBottom: 24 }}
           exit={{ opacity: 0, y: -10, height: 0, marginBottom: 0 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
-          className="z-10 w-full max-w-md overflow-hidden"
+          className="z-10 w-full max-w-md overflow-hidden lg:max-w-none"
         >
           <div className="mb-3 flex items-center justify-between px-1">
             <div className="flex items-center">
@@ -4089,15 +4089,15 @@ export default function AuthPage({ slug }: { slug?: string }) {
               {PROPERTY_ADS.map((ad) => (
                 <article
                   key={ad.eyebrow}
-                  className="relative h-[226px] shrink-0 overflow-hidden bg-[#101016]"
+                className="relative h-[226px] shrink-0 overflow-hidden bg-[#101016] lg:h-[300px]"
                   style={{ width: `${100 / PROPERTY_ADS.length}%` }}
                 >
                   <img
                     src={ad.image}
                     alt={ad.title}
-                    className="absolute inset-x-0 top-0 h-[226px] w-full object-contain object-right"
+                    className="absolute inset-x-0 top-0 h-[226px] w-full object-contain object-right lg:inset-y-0 lg:left-auto lg:right-0 lg:h-full lg:w-[44%] lg:object-cover"
                   />
-                  <div className="absolute inset-x-0 top-0 h-[226px] bg-gradient-to-r from-[#08080b]/95 via-[#08080b]/65 to-[#08080b]/10" />
+                  <div className="absolute inset-x-0 top-0 h-[226px] bg-gradient-to-r from-[#08080b]/95 via-[#08080b]/65 to-[#08080b]/10 lg:h-[300px]" />
                   <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2 rounded-full border border-white/20 bg-black/65 px-2.5 py-1.5 shadow-lg backdrop-blur-sm">
                     <span className="text-[10px] font-bold tabular-nums tracking-wider text-white">
                       {activePropertyAd + 1} / {PROPERTY_ADS.length}
@@ -4118,8 +4118,8 @@ export default function AuthPage({ slug }: { slug?: string }) {
                       ))}
                     </div>
                   </div>
-                  <div className="relative flex h-[226px] items-start p-5 pb-12 text-left flex-col justify-start">
-                    <div className="max-w-[78%]">
+                  <div className="relative flex h-[226px] items-start p-5 pb-12 text-left flex-col justify-start lg:h-[300px] lg:justify-center lg:pl-10">
+                    <div className="max-w-[78%] lg:max-w-[48%]">
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-300/90">
                         {ad.eyebrow}
                       </p>
@@ -4150,7 +4150,7 @@ export default function AuthPage({ slug }: { slug?: string }) {
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md flex-1 min-h-0 bg-card border border-white/10 rounded-[20px] shadow-2xl p-5 sm:p-6 z-10 relative overflow-hidden flex flex-col"
+            className="w-full max-w-md flex-1 min-h-0 bg-card border border-white/10 rounded-[20px] shadow-2xl p-5 sm:p-6 z-10 relative overflow-hidden flex flex-col lg:max-w-none"
         >
           {(mode === "login" || mode === "swipe") && (
             <div className="sticky top-0 z-30 -mx-5 bg-card px-5 pb-2 pt-1 sm:-mx-6 sm:px-6">
