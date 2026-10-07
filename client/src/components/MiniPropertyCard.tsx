@@ -6,7 +6,7 @@ import {
   Check,
   MapPin,
   Moon,
-  Share2,
+  Share,
   Sun,
   X,
   Waves,
@@ -26,7 +26,6 @@ export type MiniPropertyCardData = {
 };
 
 type CanvasSize = "poster" | "square" | "story";
-type ImageFormat = "png" | "jpeg";
 type CardTheme = "light" | "dark" | "rainbow";
 
 function RainbowThemeIcon({ className }: { className?: string }) {
@@ -196,7 +195,6 @@ export function MiniPropertyCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState<CanvasSize>("poster");
   const [cardTheme, setCardTheme] = useState<CardTheme>("light");
-  const [imageFormat, setImageFormat] = useState<ImageFormat>("png");
   const [isExporting, setIsExporting] = useState(false);
   const [notice, setNotice] = useState<{
     kind: "success" | "error" | "neutral";
@@ -213,7 +211,7 @@ export function MiniPropertyCard({
     window.innerHeight * 0.47 * selectedSize.ratio,
     window.innerWidth * 0.86,
   );
-  const extension = imageFormat === "jpeg" ? "jpg" : "png";
+  const extension = "jpg";
   const filename = `${fileSlug(data.name) || "property-card"}-${canvasSize}.${extension}`;
 
   const createImageBlob = async () => {
@@ -225,13 +223,8 @@ export function MiniPropertyCard({
       pixelRatio: Math.min(4, Math.max(2, 1080 / cardWidth)),
       backgroundColor: "#f4f0e7",
     });
-    const mimeType = imageFormat === "jpeg" ? "image/jpeg" : "image/png";
     const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(
-        resolve,
-        mimeType,
-        imageFormat === "jpeg" ? 0.96 : undefined,
-      ),
+      canvas.toBlob(resolve, "image/jpeg", 0.96),
     );
     if (!blob) {
       throw new Error("The image could not be created. Please try again.");
@@ -264,8 +257,7 @@ export function MiniPropertyCard({
     setNotice(null);
     try {
       const blob = await createImageBlob();
-      const mimeType = imageFormat === "jpeg" ? "image/jpeg" : "image/png";
-      const file = new File([blob], filename, { type: mimeType });
+      const file = new File([blob], filename, { type: "image/jpeg" });
       if (
         typeof navigator.share === "function" &&
         typeof navigator.canShare === "function" &&
@@ -554,32 +546,6 @@ export function MiniPropertyCard({
               </div>
             </div>
 
-            <div className="mt-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.17em] text-white/45">
-                Image format
-              </p>
-              <div className="mt-2 flex rounded-xl border border-white/10 bg-[#111310] p-1">
-                {(["png", "jpeg"] as const).map((format) => (
-                  <button
-                    type="button"
-                    key={format}
-                    onClick={() => {
-                      setImageFormat(format);
-                      setNotice(null);
-                    }}
-                    className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${
-                      imageFormat === format
-                        ? "bg-[#34342c] text-[#f3d994]"
-                        : "text-white/50 hover:text-white/80"
-                    }`}
-                    aria-pressed={imageFormat === format}
-                  >
-                    {format.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div className="mt-auto pt-5">
               <button
                 type="button"
@@ -587,7 +553,7 @@ export function MiniPropertyCard({
                 disabled={isExporting}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ba79] px-4 py-3 text-sm font-bold text-[#28251d] transition hover:bg-[#e6cb8d] disabled:cursor-wait disabled:opacity-60"
               >
-                <Share2 className="h-4 w-4" />
+                <Share className="h-4 w-4" />
                 {isExporting ? "Preparing image…" : "Share image"}
               </button>
               <button
