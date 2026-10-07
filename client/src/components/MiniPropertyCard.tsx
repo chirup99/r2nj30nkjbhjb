@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toCanvas } from "html-to-image";
 import {
@@ -193,6 +193,13 @@ export function MiniPropertyCard({
   const [canvasSize, setCanvasSize] = useState<CanvasSize>("poster");
   const [cardTheme, setCardTheme] = useState<CardTheme>("light");
   const [isExporting, setIsExporting] = useState(false);
+  const [preparedShareImage, setPreparedShareImage] = useState<{
+    data: MiniPropertyCardData;
+    canvasSize: CanvasSize;
+    cardTheme: CardTheme;
+    blob: Blob;
+  } | null>(null);
+  const [shareImageError, setShareImageError] = useState<string | null>(null);
   const [notice, setNotice] = useState<{
     kind: "success" | "error" | "neutral";
     message: string;
@@ -229,10 +236,34 @@ export function MiniPropertyCard({
   const extension = "jpg";
   const filename = `${fileSlug(data.name) || "property-card"}-${canvasSize}.${extension}`;
 
-  const createImageBlob = async () => {
+  const isShareImageReady =
+    preparedShareImage?.data === data &&
+    preparedShareImage.canvasSize === canvasSize &&
+    preparedShareImage.cardTheme === cardTheme;
+
+  const createImageBlob = useCallback(async () => {
     if (!cardRef.current) {
       throw new Error("The property card is not ready to export.");
     }
+    await Promise.all(
+      Array.from(cardRef.current.querySelectorAll("img")).map(async (image) => {
+        if (typeof image.decode === "function") {
+          await image.decode();
+        } else if (!image.complete) {
+          await new Promise<void>((resolve, reject) => {
+            image.addEventListener("load", () => resolve(), { once: true });
+            image.addEventListener(
+              "error",
+              () => reject(new Error("The map image could not be loaded. Please try again.")),
+              { once: true },
+            );
+          });
+        }
+        if (image.naturalWidth === 0 || image.naturalHeight === 0) {
+          throw new Error("The map image could not be loaded. Please try again.");
+        }
+      }),
+    );
     await document.fonts.ready;
     const canvas = await toCanvas(cardRef.current, {
       pixelRatio: Math.min(4, Math.max(2, 1080 / cardWidth)),
@@ -245,13 +276,43 @@ export function MiniPropertyCard({
       throw new Error("The image could not be created. Please try again.");
     }
     return blob;
-  };
+  }, [cardWidth, exportBackgroundColor]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPreparedShareImage(null);
+    setShareImageError(null);
+
+    void createImageBlob()
+      .then((blob) => {
+        if (!cancelled) {
+          setPreparedShareImage({ data, canvasSize, cardTheme, blob });
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "The image could not be prepared for sharing.";
+          setShareImageError(message);
+          setNotice({ kind: "error", message });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [createImageBlob, data, canvasSize, cardTheme]);
 
   const saveImage = async () => {
     setIsExporting(true);
     setNotice(null);
     try {
-      const blob = await createImageBlob();
+      const blob =
+        isShareImageReady && preparedShareImage
+          ? preparedShareImage.blob
+          : await createImageBlob();
       triggerDownload(blob, filename);
       setNotice({ kind: "success", message: `${extension.toUpperCase()} saved to your device.` });
     } catch (error) {
@@ -267,47 +328,62 @@ export function MiniPropertyCard({
     }
   };
 
-  const shareImage = async () => {
+  const shareImage = () => {
+    if (!isShareImageReady || !preparedShareImage) return;
+
     setIsExporting(true);
     setNotice(null);
+    let shareStarted = false;
     try {
-      const blob = await createImageBlob();
-      const file = new File([blob], filename, { type: "image/jpeg" });
+      const file = new File([preparedShareImage.blob], filename, { type: "image/jpeg" });
       if (
         typeof navigator.share === "function" &&
         typeof navigator.canShare === "function" &&
         navigator.canShare({ files: [file] })
       ) {
-        await navigator.share({
+        const shareRequest = navigator.share({
           files: [file],
           title: data.name,
           text: `${data.name} · ${data.location}`,
         });
-        setNotice({ kind: "success", message: "Property card shared." });
+        shareStarted = true;
+        void shareRequest
+          .then(() => setNotice({ kind: "success", message: "Property card shared." }))
+          .catch((error) => {
+            if (error instanceof DOMException && error.name === "AbortError") {
+              setNotice({
+                kind: "neutral",
+                message: "Sharing was cancelled. Nothing was shared.",
+              });
+            } else {
+              setNotice({
+                kind: "error",
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : "The image could not be shared. Try saving it instead.",
+              });
+            }
+          })
+          .finally(() => setIsExporting(false));
+        return;
       } else {
-        triggerDownload(blob, filename);
+        triggerDownload(preparedShareImage.blob, filename);
         setNotice({
           kind: "neutral",
           message: "File sharing is not available here, so the image was saved instead.",
         });
       }
     } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        setNotice({
-          kind: "neutral",
-          message: "Sharing was cancelled. Nothing was shared.",
-        });
-      } else {
-        setNotice({
-          kind: "error",
-          message:
-            error instanceof Error
-              ? error.message
-              : "The image could not be shared. Try saving it instead.",
-        });
-      }
+      setNotice({
+        kind: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "The image could not be shared. Try saving it instead.",
+      });
     } finally {
-      setIsExporting(false);
+      if (!shareStarted) setIsExporting(false);
     }
   };
 
@@ -567,12 +643,18 @@ export function MiniPropertyCard({
             <div className="mt-auto pt-5">
               <button
                 type="button"
-                onClick={() => void shareImage()}
-                disabled={isExporting}
+                onClick={shareImage}
+                disabled={isExporting || !isShareImageReady}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d7ba79] px-4 py-3 text-sm font-bold text-[#28251d] transition hover:bg-[#e6cb8d] disabled:cursor-wait disabled:opacity-60"
               >
                 <Share className="h-4 w-4" />
-                {isExporting ? "Preparing image…" : "Share image"}
+                {isExporting
+                  ? "Sharing image…"
+                  : isShareImageReady
+                    ? "Share image"
+                    : shareImageError
+                      ? "Image unavailable"
+                      : "Preparing image…"}
               </button>
               <button
                 type="button"
