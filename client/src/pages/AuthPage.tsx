@@ -78,6 +78,7 @@ import {
   HyderabadPropertyMapThumbnail,
 } from "@/components/HyderabadPropertyMap";
 import { PropertyMeetupMark } from "@/components/PropertyMeetupMark";
+import { MiniCardMapPreview } from "@/components/MiniCardMapPreview";
 import { PLOTSVIEW_PROJECTS } from "@/data/plotsviewProjects";
 
 type AuthMode = "login" | "register" | "customize" | "swipe";
@@ -1026,11 +1027,7 @@ const SwipeCardContent = forwardRef(
               ) : card.type === "property" ? (
                 <div className="w-full space-y-3">
                   <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/15 bg-black/20 shadow-lg">
-                    <img
-                      src={card.imageUrl}
-                      alt={card.name}
-                      className="h-full w-full object-cover"
-                    />
+                    <MiniCardMapPreview card={card as any} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10" />
                     <span className="absolute bottom-2 left-2 rounded-full border border-white/20 bg-black/40 px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-white/85 backdrop-blur-sm">
                       {card.location}
