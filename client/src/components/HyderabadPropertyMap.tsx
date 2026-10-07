@@ -3260,7 +3260,7 @@ export function HyderabadPropertyMapOverlay({
         map.once("idle", finish);
         map.easeTo({
           center: coordinates,
-          zoom: activeCity === "dubai" ? 13.2 : 13.4,
+          zoom: activeCity === "dubai" ? 12.2 : 12.4,
           duration: 650,
           essential: true,
         });

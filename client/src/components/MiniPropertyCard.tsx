@@ -71,6 +71,10 @@ export function MiniPropertyCard({
   } | null>(null);
   const selectedSize =
     CANVAS_SIZES.find((size) => size.id === canvasSize) ?? CANVAS_SIZES[0];
+  const visibleFacts = data.facts.slice(
+    0,
+    canvasSize === "square" ? 1 : 2,
+  );
   const cardWidth = Math.min(
     390,
     window.innerHeight * 0.47 * selectedSize.ratio,
@@ -215,17 +219,8 @@ export function MiniPropertyCard({
                 aspectRatio: selectedSize.ratio,
               }}
             >
-              <div className="flex h-full flex-col gap-[3.2%] p-[4.5%]">
-                <div className="flex shrink-0 items-center justify-between gap-3">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#504b3f]">
-                    PROPERTY ATLAS
-                  </span>
-                  <span className="text-[8px] font-semibold uppercase tracking-[0.17em] text-[#89816f]">
-                    {data.market}
-                  </span>
-                </div>
-
-                <div className="relative min-h-0 flex-1 overflow-hidden border border-[#d6cebf] bg-[#ded9ce]">
+              <div className="flex h-full flex-col p-[3.5%]">
+                <div className="relative min-h-0 flex-[7_0_0%] overflow-hidden border border-[#d6cebf] bg-[#ded9ce]">
                   <img
                     src={data.mapImage}
                     alt={`Live map centered on ${data.name}`}
@@ -234,68 +229,58 @@ export function MiniPropertyCard({
                   />
                   <div className="absolute inset-0 bg-[#30291c]/[0.06]" />
                   <div
-                    className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-[78%] flex-col items-center"
+                    className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center"
                     aria-hidden="true"
                   >
                     <span
-                      className="flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-[#f7f2e7] text-white shadow-[0_3px_12px_rgba(24,25,20,0.35)]"
+                      className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#f7f2e7] text-white shadow-[0_2px_8px_rgba(24,25,20,0.35)]"
                       style={{ backgroundColor: data.accent }}
                     >
-                      <MapPin className="h-5 w-5" fill="currentColor" strokeWidth={1.5} />
-                    </span>
-                    <span
-                      className="mt-1 rounded-sm px-2 py-1 text-[8px] font-bold uppercase tracking-[0.12em] text-white shadow-sm"
-                      style={{ backgroundColor: data.accent }}
-                    >
-                      Mapped point
-                    </span>
-                  </div>
-                  <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between gap-2">
-                    <span className="rounded-sm bg-[#f4f0e7]/90 px-2 py-1 text-[7px] font-semibold uppercase tracking-[0.12em] text-[#514b3e] backdrop-blur-sm">
-                      {data.location}
-                    </span>
-                    <span className="rounded-sm bg-[#f4f0e7]/90 px-2 py-1 text-[6px] font-medium text-[#6b6558] backdrop-blur-sm">
-                      {data.mapAttribution}
+                      <MapPin className="h-3.5 w-3.5" fill="currentColor" strokeWidth={1.5} />
                     </span>
                   </div>
                 </div>
 
-                <div className="shrink-0">
-                  <p className="mb-1.5 text-[8px] font-bold uppercase tracking-[0.2em] text-[#8d7950]">
-                    {data.developer}
-                  </p>
-                  <h2 className="line-clamp-2 font-[var(--font-display)] text-[clamp(22px,5vw,36px)] font-medium leading-[0.98] tracking-[-0.055em] text-[#1d1e19]">
-                    {data.name}
-                  </h2>
-                  <p className="mt-2 flex items-center gap-1.5 text-[10px] font-medium text-[#716b5e]">
-                    <MapPin className="h-3 w-3 shrink-0" />
+                <div className="flex min-h-0 flex-[3_0_0%] flex-col overflow-hidden pt-[2.5%]">
+                  <div className="flex min-h-0 items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[6px] font-bold uppercase tracking-[0.15em] text-[#8d7950]">
+                        {data.developer}
+                      </p>
+                      <h2 className="mt-0.5 line-clamp-2 font-[var(--font-display)] text-[clamp(16px,4vw,24px)] font-medium leading-[0.96] tracking-[-0.05em] text-[#1d1e19]">
+                        {data.name}
+                      </h2>
+                    </div>
+                    {data.price && (
+                      <p className="max-w-[38%] shrink-0 rounded-sm bg-[#e8dfca] px-2 py-1 text-right text-[clamp(6px,1.7vw,8px)] font-bold leading-tight text-[#383326]">
+                      {data.price}
+                      </p>
+                    )}
+                  </div>
+                  <p className="mt-[1.5%] flex shrink-0 items-center gap-1 text-[7px] font-medium text-[#716b5e]">
+                    <MapPin className="h-2.5 w-2.5 shrink-0" />
                     <span className="line-clamp-1">{data.location}</span>
                   </p>
-                  {data.price && (
-                    <p className="mt-3 inline-flex rounded-sm bg-[#e8dfca] px-2.5 py-1.5 text-[10px] font-bold text-[#383326]">
-                      {data.price}
-                    </p>
-                  )}
-                  {data.facts.length > 0 && (
-                    <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-[#d7cfbf] pt-2.5">
-                      {data.facts.slice(0, 4).map((fact) => (
+                  {visibleFacts.length > 0 && (
+                    <div className="mt-[1.5%] grid shrink-0 grid-cols-2 gap-x-2 border-t border-[#d7cfbf] pt-[1.5%]">
+                      {visibleFacts.map((fact) => (
                         <div className="min-w-0" key={`${fact.label}-${fact.value}`}>
-                          <p className="text-[6px] font-bold uppercase tracking-[0.15em] text-[#928977]">
+                          <p className="text-[5px] font-bold uppercase tracking-[0.12em] text-[#928977]">
                             {fact.label}
                           </p>
-                          <p className="mt-0.5 truncate text-[9px] font-semibold text-[#3c3b33]">
+                          <p className="mt-0.5 truncate text-[7px] font-semibold text-[#3c3b33]">
                             {fact.value}
                           </p>
                         </div>
                       ))}
                     </div>
                   )}
-                  <div className="mt-3 flex items-center justify-between border-t border-[#d7cfbf] pt-2">
-                    <span className="text-[7px] font-semibold uppercase tracking-[0.16em] text-[#89816f]">
+                  <div className="mt-auto flex shrink-0 items-center justify-between gap-2 border-t border-[#d7cfbf] pt-[1.5%]">
+                    <span className="text-[6px] font-semibold uppercase tracking-[0.13em] text-[#89816f]">
                       DISCOVERED ON TRYYAM
                     </span>
-                    <span className="font-mono text-[7px] text-[#89816f]">
-                      {data.market.toUpperCase()}
+                    <span className="max-w-[60%] truncate text-right font-mono text-[5px] text-[#89816f]">
+                      {data.mapAttribution}
                     </span>
                   </div>
                 </div>
