@@ -395,7 +395,7 @@ export function MiniPropertyCard({
             <div className="absolute inset-x-0 top-0 flex items-center justify-between border-b border-white/10 px-5 py-3.5 sm:px-7">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#d7ba79]">
-                  {data.market} · SHARE CARD
+                  TRYYAM · SHARE CARD
                 </p>
                 <p className="mt-1 text-xs text-white/55">A place worth knowing</p>
               </div>
