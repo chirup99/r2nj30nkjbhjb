@@ -402,6 +402,8 @@ function formatLakeDistance(distanceKm: number) {
   return distanceKm < 0.05 ? "0 km" : `${distanceKm.toFixed(1)} km`;
 }
 
+const MAX_DISPLAYED_NEARBY_LAKE_DISTANCE_KM = 5;
+
 function getLakePointCheckLabel(check: LakePointCheck | null) {
   if (!check) return "Not checked";
   if (check.status === "checking") return "Checking nearby lakes…";
@@ -409,7 +411,12 @@ function getLakePointCheckLabel(check: LakePointCheck | null) {
   if (check.status === "overlap") {
     return `Mapped FTL overlap · ${check.lake?.name ?? "Lake"} (0 km)`;
   }
-  if (!check.nearestLake) return "No mapped FTL overlap";
+  if (
+    !check.nearestLake ||
+    check.nearestLake.distanceKm > MAX_DISPLAYED_NEARBY_LAKE_DISTANCE_KM
+  ) {
+    return "No mapped FTL overlap";
+  }
   return `No mapped FTL overlap · nearest: ${check.nearestLake.lake.name} ${formatLakeDistance(check.nearestLake.distanceKm)} away`;
 }
 
@@ -2635,11 +2642,13 @@ function ProjectDetailSheet({
             value={`${project.acres} acres`}
             icon={Maximize2}
           />
-          <DetailValue
-            label="Lake / FTL map check"
-            value={getLakePointCheckLabel(lakePointCheck)}
-            icon={Waves}
-          />
+          {lakesLayerVisible && (
+            <DetailValue
+              label="Lake / FTL map check"
+              value={getLakePointCheckLabel(lakePointCheck)}
+              icon={Waves}
+            />
+          )}
           {details.startingPrice && (
             <DetailValue
               label="Starting from"
@@ -3533,11 +3542,15 @@ export function HyderabadPropertyMapOverlay({
       { label: "Plot sizes", value: project.bedrooms },
       { label: "Total plots", value: project.totalPlots.toLocaleString("en-IN") },
       { label: "Project area", value: `${project.acres} acres` },
-      {
-        label: "Lake / FTL",
-        value: getLakePointCheckLabel(lakePointCheck),
-        icon: "lake" as const,
-      },
+      ...(showLakes
+        ? [
+            {
+              label: "Lake / FTL",
+              value: getLakePointCheckLabel(lakePointCheck),
+              icon: "lake" as const,
+            },
+          ]
+        : []),
     ];
     void prepareMiniCard([project.longitude, project.latitude], {
       market: "Hyderabad",
@@ -4422,8 +4435,12 @@ export function HyderabadPropertyMapOverlay({
                     ? `This project point falls inside the mapped ${selectedProjectLakePointCheck.lake?.name ?? "lake"} FTL/buffer polygon. Distance to its boundary: 0 km.`
                     : selectedProjectLakePointCheck?.status === "clear"
                       ? selectedProjectLakePointCheck.nearestLake
+                        && selectedProjectLakePointCheck.nearestLake.distanceKm <=
+                          MAX_DISPLAYED_NEARBY_LAKE_DISTANCE_KM
                         ? `No mapped FTL overlap. Nearest lake: ${selectedProjectLakePointCheck.nearestLake.lake.name}, ${formatLakeDistance(selectedProjectLakePointCheck.nearestLake.distanceKm)} from this project point.`
-                        : "No mapped FTL overlap was found. A nearby lake was not available in the loaded map tiles."
+                        : selectedProjectLakePointCheck.nearestLake
+                          ? "No mapped FTL overlap. No mapped lake is within 5 km of this project point."
+                          : "No mapped FTL overlap was found. A nearby lake distance was not available in the loaded map tiles."
                       : selectedProjectLakePointCheck?.status === "checking"
                         ? "Checking the mapped FTL layer and nearby lake distances…"
                         : selectedProjectLakePointCheck?.status === "unavailable"
