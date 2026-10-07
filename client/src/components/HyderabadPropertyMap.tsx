@@ -2646,6 +2646,7 @@ export function HyderabadPropertyMapOverlay({
   const [exchangeRates, setExchangeRates] =
     useState<DailyInrExchangeRates | null>(null);
   const [isRadiusFilterOpen, setIsRadiusFilterOpen] = useState(false);
+  const mapOverlayRef = useRef<HTMLDivElement>(null);
   const [radiusInKilometers, setRadiusInKilometers] = useState(25);
   const [userLocation, setUserLocation] = useState<MapCoordinate | null>(null);
   const [locationStatus, setLocationStatus] = useState<
@@ -2653,6 +2654,46 @@ export function HyderabadPropertyMapOverlay({
   >("idle");
   const radiusCenter =
     activeCity === "dubai" ? DUBAI_MAP_CENTER : userLocation;
+
+  useEffect(() => {
+    if (!isRadiusFilterOpen) return;
+
+    const closeRadiusForOpenDialog = () => {
+      const mapDialog = mapOverlayRef.current;
+      const hasOtherOpenDialog = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '[aria-modal="true"], dialog[open]',
+        ),
+      ).some(
+        (dialog) =>
+          dialog !== mapDialog &&
+          dialog.getAttribute("aria-hidden") !== "true" &&
+          dialog.getAttribute("data-state") !== "closed",
+      );
+
+      if (hasOtherOpenDialog) {
+        setIsRadiusFilterOpen(false);
+        setLocationStatus("idle");
+      }
+    };
+
+    const observer = new MutationObserver(closeRadiusForOpenDialog);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: [
+        "aria-hidden",
+        "aria-modal",
+        "data-state",
+        "open",
+        "role",
+      ],
+    });
+    closeRadiusForOpenDialog();
+
+    return () => observer.disconnect();
+  }, [isRadiusFilterOpen]);
 
   const selectedIntent = MAGIC_INTENTS.find(
     (intent) => intent.id === selectedIntentId,
@@ -3061,6 +3102,8 @@ export function HyderabadPropertyMapOverlay({
 
   const selectProjectPin = (projectId: string) => {
     if (activeCity === "dubai") setSelectedDubaiRouteProjectId(null);
+    setIsRadiusFilterOpen(false);
+    setLocationStatus("idle");
     setSelectedPinProjectId(projectId);
     setShowLakeHelp(false);
   };
@@ -3088,6 +3131,7 @@ export function HyderabadPropertyMapOverlay({
 
   return (
     <motion.div
+      ref={mapOverlayRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -3167,7 +3211,7 @@ export function HyderabadPropertyMapOverlay({
               progress={dubaiRouteProgress}
             />
           )}
-        {isRadiusFilterOpen && radiusCenter && (
+        {isRadiusFilterOpen && radiusCenter && !isMasterPlanSelected && (
           <RadiusFilterLayer
             center={radiusCenter}
             radiusInKilometers={radiusInKilometers}
@@ -3318,7 +3362,13 @@ export function HyderabadPropertyMapOverlay({
               </button>
               <button
                 type="button"
-                onClick={() => setIsMasterPlanSelected((selected) => !selected)}
+                onClick={() => {
+                  if (!isMasterPlanSelected) {
+                    setIsRadiusFilterOpen(false);
+                    setLocationStatus("idle");
+                  }
+                  setIsMasterPlanSelected((selected) => !selected);
+                }}
                 className={`flex shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950 ${
                   isMasterPlanSelected
                     ? "border-violet-300/60 bg-violet-500 text-white"
@@ -3547,7 +3597,7 @@ export function HyderabadPropertyMapOverlay({
         </div>
 
         {isMasterPlanSelected && (
-          <div className="pointer-events-auto absolute inset-0 z-30 flex items-center justify-center bg-slate-950/70 p-2 backdrop-blur-sm sm:p-5">
+          <div className="pointer-events-auto absolute inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-2 backdrop-blur-sm sm:p-5">
             <section
               className="flex h-full max-h-[900px] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-slate-950 text-white shadow-2xl"
               aria-label="HMDA official master plan maps"
@@ -4059,7 +4109,7 @@ export function HyderabadPropertyMapOverlay({
         </div>
       )}
 
-      {isRadiusFilterOpen && radiusCenter && (
+      {isRadiusFilterOpen && radiusCenter && !isMasterPlanSelected && (
         <div className="pointer-events-none absolute inset-x-0 bottom-[82px] z-30 flex justify-center px-3 sm:bottom-[76px] sm:px-5">
           <RadiusArcControl
             radiusInKilometers={radiusInKilometers}
