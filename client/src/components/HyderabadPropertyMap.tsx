@@ -1991,18 +1991,30 @@ function RadiusArcControl({
     (radiusInKilometers - minimumRadius) / (maximumRadius - minimumRadius);
   const centerX = 140;
   const centerY = 122;
-  const arcRadius = 101;
+  const viewBoxWidth = 280;
+  const viewBoxHeight = 150;
+  const arcRadiusX = 125;
+  const arcRadiusY = 101;
   const angle = Math.PI + progress * Math.PI;
-  const handleX = centerX + arcRadius * Math.cos(angle);
-  const handleY = centerY + arcRadius * Math.sin(angle);
-  const arcPath = "M 39 122 A 101 101 0 0 1 241 122";
+  const handleX = centerX + arcRadiusX * Math.cos(angle);
+  const handleY = centerY + arcRadiusY * Math.sin(angle);
+  const arcPath = `M ${centerX - arcRadiusX} ${centerY} A ${arcRadiusX} ${arcRadiusY} 0 0 1 ${centerX + arcRadiusX} ${centerY}`;
   const [isDragging, setIsDragging] = useState(false);
 
   const updateRadiusFromPointer = (event: React.PointerEvent<SVGSVGElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
-    const x = ((event.clientX - bounds.left) / bounds.width) * 280;
-    const y = ((event.clientY - bounds.top) / bounds.height) * 150;
-    let pointerAngle = Math.atan2(y - centerY, x - centerX);
+    const scale = Math.min(
+      bounds.width / viewBoxWidth,
+      bounds.height / viewBoxHeight,
+    );
+    const offsetX = (bounds.width - viewBoxWidth * scale) / 2;
+    const offsetY = (bounds.height - viewBoxHeight * scale) / 2;
+    const x = (event.clientX - bounds.left - offsetX) / scale;
+    const y = (event.clientY - bounds.top - offsetY) / scale;
+    let pointerAngle = Math.atan2(
+      (y - centerY) / arcRadiusY,
+      (x - centerX) / arcRadiusX,
+    );
 
     if (pointerAngle < Math.PI) pointerAngle += Math.PI * 2;
     const nextProgress = Math.min(
@@ -2055,7 +2067,7 @@ function RadiusArcControl({
         <X className="h-3.5 w-3.5" />
       </button>
       <svg
-        viewBox="0 0 280 150"
+        viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
         className={`h-[124px] w-full touch-none select-none ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         } focus:outline-none focus-visible:outline-none`}
