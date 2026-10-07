@@ -213,6 +213,12 @@ export function MiniPropertyCard({
           mixBlendMode: "soft-light" as const,
         }
       : undefined;
+  const exportBackgroundColor =
+    cardTheme === "dark"
+      ? "#111827"
+      : cardTheme === "rainbow"
+        ? "#10120f"
+        : "#f4f0e7";
   const visibleFacts = data.facts
     .filter((fact) => fact.icon !== "lake" || data.showLakeFact === true)
     .slice(0, 4);
@@ -231,7 +237,7 @@ export function MiniPropertyCard({
     await document.fonts.ready;
     const canvas = await toCanvas(cardRef.current, {
       pixelRatio: Math.min(4, Math.max(2, 1080 / cardWidth)),
-      backgroundColor: "#f4f0e7",
+      backgroundColor: exportBackgroundColor,
     });
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, "image/jpeg", 0.96),
