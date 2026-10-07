@@ -132,8 +132,12 @@ type LakeCheck = {
 
 type LakePointCheck = {
   projectId: string;
-  status: "overlap" | "clear";
+  status: "checking" | "unavailable" | "overlap" | "clear";
   lake?: LakeCheck;
+  nearestLake?: {
+    lake: LakeCheck;
+    distanceKm: number;
+  };
 };
 
 function cleanLakeText(value: unknown) {
@@ -290,6 +294,123 @@ function distanceInKilometers(
       Math.cos(toLatitude);
 
   return earthRadius * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+function isPointInRing(point: MapCoordinate, ring: GeoJSON.Position[]) {
+  let isInside = false;
+  for (let index = 0, previous = ring.length - 1; index < ring.length; previous = index++) {
+    const [longitude, latitude] = ring[index];
+    const [previousLongitude, previousLatitude] = ring[previous];
+    const crossesLatitude = (latitude > point[1]) !== (previousLatitude > point[1]);
+    if (
+      crossesLatitude &&
+      point[0] <
+        ((previousLongitude - longitude) * (point[1] - latitude)) /
+          (previousLatitude - latitude) +
+          longitude
+    ) {
+      isInside = !isInside;
+    }
+  }
+  return isInside;
+}
+
+function distanceToRingInKilometers(
+  point: MapCoordinate,
+  ring: GeoJSON.Position[],
+) {
+  if (ring.length < 2) return Number.POSITIVE_INFINITY;
+
+  const earthRadiusInMeters = 6_371_000;
+  const latitudeRadians = (point[1] * Math.PI) / 180;
+  const longitudeMetersPerDegree =
+    (Math.PI / 180) * earthRadiusInMeters * Math.cos(latitudeRadians);
+  const latitudeMetersPerDegree = (Math.PI / 180) * earthRadiusInMeters;
+  const project = (position: GeoJSON.Position): MapCoordinate => [
+    (position[0] - point[0]) * longitudeMetersPerDegree,
+    (position[1] - point[1]) * latitudeMetersPerDegree,
+  ];
+
+  let nearestDistanceInMeters = Number.POSITIVE_INFINITY;
+  for (let index = 0; index < ring.length; index += 1) {
+    const start = project(ring[index]);
+    const end = project(ring[(index + 1) % ring.length]);
+    const segmentLongitude = end[0] - start[0];
+    const segmentLatitude = end[1] - start[1];
+    const segmentLengthSquared =
+      segmentLongitude ** 2 + segmentLatitude ** 2;
+    const fraction =
+      segmentLengthSquared === 0
+        ? 0
+        : Math.max(
+            0,
+            Math.min(
+              1,
+              -(
+                start[0] * segmentLongitude +
+                start[1] * segmentLatitude
+              ) / segmentLengthSquared,
+            ),
+          );
+    const nearestLongitude = start[0] + fraction * segmentLongitude;
+    const nearestLatitude = start[1] + fraction * segmentLatitude;
+    nearestDistanceInMeters = Math.min(
+      nearestDistanceInMeters,
+      Math.hypot(nearestLongitude, nearestLatitude),
+    );
+  }
+
+  return nearestDistanceInMeters / 1000;
+}
+
+function distanceToPolygonInKilometers(
+  point: MapCoordinate,
+  polygon: GeoJSON.Position[][],
+) {
+  const [outerRing, ...innerRings] = polygon;
+  if (!outerRing) return Number.POSITIVE_INFINITY;
+  if (
+    isPointInRing(point, outerRing) &&
+    !innerRings.some((ring) => isPointInRing(point, ring))
+  ) {
+    return 0;
+  }
+
+  return Math.min(
+    ...polygon.map((ring) => distanceToRingInKilometers(point, ring)),
+  );
+}
+
+function distanceToLakeGeometryInKilometers(
+  point: MapCoordinate,
+  geometry: GeoJSON.Geometry | null | undefined,
+) {
+  if (geometry?.type === "Polygon") {
+    return distanceToPolygonInKilometers(point, geometry.coordinates);
+  }
+  if (geometry?.type === "MultiPolygon") {
+    return Math.min(
+      ...geometry.coordinates.map((polygon) =>
+        distanceToPolygonInKilometers(point, polygon),
+      ),
+    );
+  }
+  return undefined;
+}
+
+function formatLakeDistance(distanceKm: number) {
+  return distanceKm < 0.05 ? "0 km" : `${distanceKm.toFixed(1)} km`;
+}
+
+function getLakePointCheckLabel(check: LakePointCheck | null) {
+  if (!check) return "Not checked";
+  if (check.status === "checking") return "Checking nearby lakes…";
+  if (check.status === "unavailable") return "Lake map data unavailable";
+  if (check.status === "overlap") {
+    return `Mapped FTL overlap · ${check.lake?.name ?? "Lake"} (0 km)`;
+  }
+  if (!check.nearestLake) return "No mapped FTL overlap";
+  return `No mapped FTL overlap · nearest: ${check.nearestLake.lake.name} ${formatLakeDistance(check.nearestLake.distanceKm)} away`;
 }
 
 function createRadiusPolygon(
@@ -1592,6 +1713,7 @@ function DigitizedLakesLayer({
   const latestLakeSelect = useRef(onLakeSelect);
   const latestMapTap = useRef(onMapTap);
   const latestProjectCheck = useRef(onProjectCheck);
+  const lastFocusedProjectId = useRef<string | null>(null);
   latestLakeSelect.current = onLakeSelect;
   latestMapTap.current = onMapTap;
   latestProjectCheck.current = onProjectCheck;
@@ -1694,45 +1816,106 @@ function DigitizedLakesLayer({
   }, [isLoaded, map, visible]);
 
   useEffect(() => {
-    if (!map || !isLoaded || !visible || !checkedProject) {
+    if (!map || !isLoaded) return;
+    if (!visible || !checkedProject) {
       latestProjectCheck.current(null);
+      lastFocusedProjectId.current = null;
       return;
     }
 
+    const shouldFocusProject =
+      lastFocusedProjectId.current !== checkedProject.id;
+    lastFocusedProjectId.current = checkedProject.id;
+    latestProjectCheck.current({
+      projectId: checkedProject.id,
+      status: "checking",
+    });
+
+    const unavailableTimer = window.setTimeout(() => {
+      latestProjectCheck.current({
+        projectId: checkedProject.id,
+        status: "unavailable",
+      });
+    }, 15_000);
+
     const checkProject = () => {
+      if (map.isMoving()) return;
       if (!map.getLayer("digitized-lakes-fill")) return;
       if (!map.isSourceLoaded("digitized-lakes-source")) return;
       const point = map.project({
         lng: checkedProject.longitude,
         lat: checkedProject.latitude,
       });
-      const features = map.queryRenderedFeatures(point, {
+      const overlapFeature = map.queryRenderedFeatures(point, {
         layers: ["digitized-lakes-fill"],
+      })[0];
+      const nearestLake = map
+        .querySourceFeatures("digitized-lakes-source", {
+          sourceLayer: "lakes_map",
+        })
+        .reduce<LakePointCheck["nearestLake"]>((nearest, feature) => {
+          const geometryDistance = distanceToLakeGeometryInKilometers(
+            [checkedProject.longitude, checkedProject.latitude],
+            feature.geometry,
+          );
+          if (
+            geometryDistance === undefined ||
+            !Number.isFinite(geometryDistance) ||
+            (nearest && geometryDistance >= nearest.distanceKm)
+          ) {
+            return nearest;
+          }
+          return {
+            lake: getLakeCheck(
+              feature.properties ?? {},
+              checkedProject.longitude,
+              checkedProject.latitude,
+              feature.geometry,
+            ),
+            distanceKm: geometryDistance,
+          };
+        }, undefined);
+      const overlapLake = overlapFeature?.properties
+        ? getLakeCheck(
+            overlapFeature.properties,
+            checkedProject.longitude,
+            checkedProject.latitude,
+            overlapFeature.geometry,
+          )
+        : undefined;
+      const resolvedNearestLake =
+        overlapLake && (!nearestLake || nearestLake.distanceKm > 0)
+          ? { lake: overlapLake, distanceKm: 0 }
+          : nearestLake;
+
+      window.clearTimeout(unavailableTimer);
+      latestProjectCheck.current({
+        projectId: checkedProject.id,
+        status: overlapLake ? "overlap" : "clear",
+        ...(overlapLake ? { lake: overlapLake } : {}),
+        ...(resolvedNearestLake ? { nearestLake: resolvedNearestLake } : {}),
       });
-      const feature = features[0];
-      const properties = feature?.properties;
-      latestProjectCheck.current(
-        properties
-          ? {
-              projectId: checkedProject.id,
-              status: "overlap",
-              lake: getLakeCheck(
-                properties,
-                checkedProject.longitude,
-                checkedProject.latitude,
-                feature?.geometry,
-              ),
-            }
-          : { projectId: checkedProject.id, status: "clear" },
-      );
     };
 
-    checkProject();
     map.on("idle", checkProject);
     map.on("moveend", checkProject);
+    map.on("sourcedata", checkProject);
+    if (shouldFocusProject) {
+      map.flyTo({
+        center: [checkedProject.longitude, checkedProject.latitude],
+        zoom: 12.4,
+        duration: 500,
+        essential: true,
+      });
+      window.requestAnimationFrame(checkProject);
+    } else {
+      checkProject();
+    }
     return () => {
+      window.clearTimeout(unavailableTimer);
       map.off("idle", checkProject);
       map.off("moveend", checkProject);
+      map.off("sourcedata", checkProject);
     };
   }, [
     checkedProject?.id,
@@ -2297,7 +2480,7 @@ function DetailValue({
         <Icon className="h-3.5 w-3.5" />
         {label}
       </div>
-      <p className="mt-1.5 text-sm font-bold leading-tight text-slate-800">
+      <p className="mt-1.5 break-words text-sm font-bold leading-tight text-slate-800">
         {value}
       </p>
     </div>
@@ -2307,6 +2490,8 @@ function DetailValue({
 function ProjectDetailSheet({
   project,
   lakePointCheck,
+  lakesLayerVisible,
+  isLakeCheckPending,
   onCheckLakeStatus,
   onClose,
   currency,
@@ -2317,6 +2502,8 @@ function ProjectDetailSheet({
 }: {
   project: PropertyProject;
   lakePointCheck: LakePointCheck | null;
+  lakesLayerVisible: boolean;
+  isLakeCheckPending: boolean;
   onCheckLakeStatus: () => void;
   onClose: () => void;
   currency: DisplayCurrency;
@@ -2392,12 +2579,12 @@ function ProjectDetailSheet({
           <button
             type="button"
             onClick={onCreateCard}
-            disabled={isPreparingCard}
+            disabled={isPreparingCard || isLakeCheckPending}
             className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[#ded4b9] bg-[#f7f4ec] px-4 py-3 text-left transition hover:border-[#c9b47b] hover:bg-[#f3eddd] disabled:cursor-wait disabled:opacity-70"
           >
             <span className="flex min-w-0 items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#252820] text-[#dfc88e]">
-                {isPreparingCard ? (
+                {isPreparingCard || isLakeCheckPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Share2 className="h-4 w-4" />
@@ -2405,10 +2592,16 @@ function ProjectDetailSheet({
               </span>
               <span className="min-w-0">
                 <span className="block text-sm font-bold text-slate-900">
-                  {isPreparingCard ? "Preparing your map card…" : "Create share card"}
+                  {isPreparingCard
+                    ? "Preparing your map card…"
+                    : isLakeCheckPending
+                      ? "Checking nearby lakes…"
+                      : "Create share card"}
                 </span>
                 <span className="mt-0.5 block truncate text-xs text-slate-500">
-                  Real nearby map, price and published project facts
+                  {isLakeCheckPending
+                    ? "The share card will include the mapped FTL result"
+                    : "Real nearby map, price and published project facts"}
                 </span>
               </span>
             </span>
@@ -2444,13 +2637,7 @@ function ProjectDetailSheet({
           />
           <DetailValue
             label="Lake / FTL map check"
-            value={
-              lakePointCheck?.status === "overlap"
-                ? `Mapped overlap${lakePointCheck.lake?.name ? ` · ${lakePointCheck.lake.name}` : ""}`
-                : lakePointCheck?.status === "clear"
-                  ? "No mapped overlap"
-                  : "Not checked"
-            }
+            value={getLakePointCheckLabel(lakePointCheck)}
             icon={Waves}
           />
           {details.startingPrice && (
@@ -2480,7 +2667,7 @@ function ProjectDetailSheet({
           Lake/FTL status is a preliminary map check, not official clearance.
           Confirm the official boundaries before purchase.
         </p>
-        {!lakePointCheck && (
+        {!lakesLayerVisible && !lakePointCheck && (
           <button
             type="button"
             onClick={onCheckLakeStatus}
@@ -3010,6 +3197,10 @@ export function HyderabadPropertyMapOverlay({
     projectLakePointCheck?.projectId === selectedPinProject.id
       ? projectLakePointCheck
       : null;
+  const isLakeCheckPending =
+    showLakes &&
+    (!selectedProjectLakePointCheck ||
+      selectedProjectLakePointCheck.status === "checking");
   const selectedDubaiProject =
     activeCity === "dubai"
       ? DUBAI_PROPERTY_PROJECTS.find(
@@ -3344,12 +3535,7 @@ export function HyderabadPropertyMapOverlay({
       { label: "Project area", value: `${project.acres} acres` },
       {
         label: "Lake / FTL",
-        value:
-          lakePointCheck?.status === "overlap"
-            ? "Mapped overlap"
-            : lakePointCheck?.status === "clear"
-              ? "No mapped overlap"
-              : "Not checked",
+        value: getLakePointCheckLabel(lakePointCheck),
         icon: "lake" as const,
       },
     ];
@@ -3457,7 +3643,6 @@ export function HyderabadPropertyMapOverlay({
               onLakeSelect={(lake) => {
                 setSelectedLake(lake);
                 setShowLakeHelp(false);
-                setProjectLakePointCheck(null);
               }}
               onMapTap={() => {
                 setIsMagicFiltersOpen(false);
@@ -4203,7 +4388,7 @@ export function HyderabadPropertyMapOverlay({
             </p>
             <p className="mt-1 text-[10px] leading-4 text-white/60">
               Click a highlighted lake for its name, or select a project pin to
-              check whether its map point falls inside the mapped FTL/buffer coverage.
+              see its mapped FTL result and the nearest lake distance.
             </p>
           </div>
         </div>
@@ -4234,10 +4419,16 @@ export function HyderabadPropertyMapOverlay({
                 <p className="mt-1 text-sm font-bold">{selectedPinProject.name}</p>
                 <p className="mt-2 text-xs leading-5 text-white/75">
                   {selectedProjectLakePointCheck?.status === "overlap"
-                    ? `This project point falls inside the mapped ${selectedProjectLakePointCheck.lake?.name ?? "lake"} FTL/buffer polygon.`
+                    ? `This project point falls inside the mapped ${selectedProjectLakePointCheck.lake?.name ?? "lake"} FTL/buffer polygon. Distance to its boundary: 0 km.`
                     : selectedProjectLakePointCheck?.status === "clear"
-                      ? "No overlap was found in the mapped lake/FTL polygons currently visible."
-                      : "Turn on the Lakes layer to check this project point against the mapped FTL/buffer polygons."}
+                      ? selectedProjectLakePointCheck.nearestLake
+                        ? `No mapped FTL overlap. Nearest lake: ${selectedProjectLakePointCheck.nearestLake.lake.name}, ${formatLakeDistance(selectedProjectLakePointCheck.nearestLake.distanceKm)} from this project point.`
+                        : "No mapped FTL overlap was found. A nearby lake was not available in the loaded map tiles."
+                      : selectedProjectLakePointCheck?.status === "checking"
+                        ? "Checking the mapped FTL layer and nearby lake distances…"
+                        : selectedProjectLakePointCheck?.status === "unavailable"
+                          ? "Lake map data is unavailable right now. This project has not been verified against the mapped FTL layer."
+                          : "Turn on the Lakes layer to check this project against mapped FTL/buffer polygons and nearby lakes."}
                 </p>
               </>
             )}
@@ -4270,7 +4461,8 @@ export function HyderabadPropertyMapOverlay({
             )}
             <p className="mt-3 text-[9px] leading-4 text-white/40">
               Preliminary map overlay only; confirm official FTL and buffer
-              boundaries before making a purchase or title decision.
+              boundaries before making a purchase or title decision. Distances
+              are straight-line estimates to mapped lake edges.
             </p>
           </div>
         </div>
@@ -4827,6 +5019,8 @@ export function HyderabadPropertyMapOverlay({
         <ProjectDetailSheet
           project={selectedPinProject}
           lakePointCheck={selectedProjectLakePointCheck}
+          lakesLayerVisible={showLakes}
+          isLakeCheckPending={isLakeCheckPending}
           onCheckLakeStatus={() => {
             setShowLakes(true);
             setShowLakeHelp(false);

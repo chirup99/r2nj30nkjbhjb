@@ -269,7 +269,7 @@ export function MiniPropertyCard({
                             )}
                             {fact.label}
                           </p>
-                          <p className="mt-0.5 truncate text-[7px] font-semibold text-[#3c3b33]">
+                          <p className="mt-0.5 line-clamp-2 break-words text-[7px] font-semibold leading-tight text-[#3c3b33]">
                             {fact.value}
                           </p>
                         </div>
