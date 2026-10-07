@@ -170,6 +170,14 @@ function fileSlug(value: string) {
     .replace(/^-|-$/g, "");
 }
 
+function hexToRgba(color: string, alpha: number) {
+  const match = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(color);
+  if (!match) return `rgba(139, 92, 246, ${alpha})`;
+
+  const [, red, green, blue] = match;
+  return `rgba(${parseInt(red, 16)}, ${parseInt(green, 16)}, ${parseInt(blue, 16)}, ${alpha})`;
+}
+
 function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -215,8 +223,7 @@ export function MiniPropertyCard({
   const cardMapTintStyle =
     cardTheme === "rainbow"
       ? {
-          background: `linear-gradient(135deg, color-mix(in srgb, ${cardAccent} 26%, transparent), transparent 55%, color-mix(in srgb, ${cardAccent} 30%, transparent))`,
-          mixBlendMode: "soft-light" as const,
+          background: `linear-gradient(135deg, ${hexToRgba(cardAccent, 0.16)}, transparent 55%, ${hexToRgba(cardAccent, 0.2)})`,
         }
       : undefined;
   const exportBackgroundColor =
