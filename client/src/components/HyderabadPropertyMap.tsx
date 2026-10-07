@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import type { MapLayerMouseEvent } from "maplibre-gl";
+import type { Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl";
 import {
   BadgeCheck,
   Banknote,
@@ -27,6 +27,7 @@ import {
   Ruler,
   Search,
   Satellite,
+  Share2,
   Sparkles,
   Sun,
   Trees,
@@ -71,6 +72,10 @@ import {
   type DubaiPropertyProject,
 } from "@/data/dubaiProjects";
 import { RRR_ALIGNMENT_COORDINATES } from "@/data/rrrAlignment";
+import {
+  MiniPropertyCard,
+  type MiniPropertyCardData,
+} from "@/components/MiniPropertyCard";
 
 type PropertyProject = (typeof PLOTSVIEW_PROJECTS)[number];
 type MapPinProject = Pick<
@@ -2293,11 +2298,17 @@ function ProjectDetailSheet({
   onClose,
   currency,
   rates,
+  onCreateCard,
+  isPreparingCard,
+  cardError,
 }: {
   project: PropertyProject;
   onClose: () => void;
   currency: DisplayCurrency;
   rates: DailyInrExchangeRates | null;
+  onCreateCard: () => void;
+  isPreparingCard: boolean;
+  cardError: string | null;
 }) {
   const details = getProjectListingDetails(project);
   const mapLink = `https://www.google.com/maps/search/?api=1&query=${project.latitude},${project.longitude}`;
@@ -2360,6 +2371,39 @@ function ProjectDetailSheet({
             <BadgeCheck className="h-3.5 w-3.5" />
             Verified listing
           </div>
+        </div>
+
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={onCreateCard}
+            disabled={isPreparingCard}
+            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[#ded4b9] bg-[#f7f4ec] px-4 py-3 text-left transition hover:border-[#c9b47b] hover:bg-[#f3eddd] disabled:cursor-wait disabled:opacity-70"
+          >
+            <span className="flex min-w-0 items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#252820] text-[#dfc88e]">
+                {isPreparingCard ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Share2 className="h-4 w-4" />
+                )}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-bold text-slate-900">
+                  {isPreparingCard ? "Preparing your map card…" : "Create share card"}
+                </span>
+                <span className="mt-0.5 block truncate text-xs text-slate-500">
+                  Real nearby map, price and published project facts
+                </span>
+              </span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+          </button>
+          {cardError && (
+            <p className="mt-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-800" role="alert">
+              {cardError}
+            </p>
+          )}
         </div>
 
         <div className="mb-4 grid grid-cols-2 gap-2">
@@ -2516,9 +2560,15 @@ function ProjectDetailSheet({
 function DubaiProjectDetailSheet({
   project,
   onClose,
+  onCreateCard,
+  isPreparingCard,
+  cardError,
 }: {
   project: DubaiPropertyProject;
   onClose: () => void;
+  onCreateCard: () => void;
+  isPreparingCard: boolean;
+  cardError: string | null;
 }) {
   const mapSearch = encodeURIComponent(
     `${project.locality}, Dubai, United Arab Emirates`,
@@ -2563,6 +2613,38 @@ function DubaiProjectDetailSheet({
           {project.note}
         </p>
       )}
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={onCreateCard}
+          disabled={isPreparingCard}
+          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[#ded4b9] bg-[#f7f4ec] px-4 py-3 text-left transition hover:border-[#c9b47b] hover:bg-[#f3eddd] disabled:cursor-wait disabled:opacity-70"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#252820] text-[#dfc88e]">
+              {isPreparingCard ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Share2 className="h-4 w-4" />
+              )}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-slate-900">
+                {isPreparingCard ? "Preparing your map card…" : "Create share card"}
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-slate-500">
+                Real nearby map and named development details
+              </span>
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+        </button>
+        {cardError && (
+          <p className="mt-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-800" role="alert">
+            {cardError}
+          </p>
+        )}
+      </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <a
           href={`https://www.google.com/maps/search/?api=1&query=${mapSearch}`}
@@ -2659,6 +2741,17 @@ export function HyderabadPropertyMapOverlay({
     useState<DailyInrExchangeRates | null>(null);
   const [isRadiusFilterOpen, setIsRadiusFilterOpen] = useState(false);
   const mapOverlayRef = useRef<HTMLDivElement>(null);
+  const propertyMapRef = useRef<MapLibreMap | null>(null);
+  const previousCardViewportRef = useRef<{
+    center: [number, number];
+    zoom: number;
+    bearing: number;
+    pitch: number;
+  } | null>(null);
+  const [miniCardData, setMiniCardData] =
+    useState<MiniPropertyCardData | null>(null);
+  const [isPreparingMiniCard, setIsPreparingMiniCard] = useState(false);
+  const [miniCardError, setMiniCardError] = useState<string | null>(null);
   const [radiusInKilometers, setRadiusInKilometers] = useState(25);
   const [userLocation, setUserLocation] = useState<MapCoordinate | null>(null);
   const [locationStatus, setLocationStatus] = useState<
@@ -3120,6 +3213,131 @@ export function HyderabadPropertyMapOverlay({
     setShowLakeHelp(false);
   };
 
+  const restoreMapAfterCard = () => {
+    const previousViewport = previousCardViewportRef.current;
+    const map = propertyMapRef.current;
+    previousCardViewportRef.current = null;
+    if (previousViewport && map) {
+      map.easeTo({ ...previousViewport, duration: 450, essential: true });
+    }
+  };
+
+  const prepareMiniCard = async (
+    coordinates: [number, number],
+    card: Omit<MiniPropertyCardData, "mapImage">,
+  ) => {
+    const map = propertyMapRef.current;
+    if (!map || !map.isStyleLoaded()) {
+      setMiniCardError("The map is still loading. Wait a moment, then try again.");
+      return;
+    }
+    setMiniCardError(null);
+    setIsPreparingMiniCard(true);
+    const currentCenter = map.getCenter();
+    previousCardViewportRef.current = {
+      center: [currentCenter.lng, currentCenter.lat],
+      zoom: map.getZoom(),
+      bearing: map.getBearing(),
+      pitch: map.getPitch(),
+    };
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeout);
+          map.off("idle", finish);
+          resolve();
+        };
+        const timeout = window.setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          map.off("idle", finish);
+          reject(new Error("The nearby map did not finish loading. Please try again."));
+        }, 9000);
+        map.once("idle", finish);
+        map.easeTo({
+          center: coordinates,
+          zoom: activeCity === "dubai" ? 13.2 : 13.4,
+          duration: 650,
+          essential: true,
+        });
+        if (!map.isMoving() && map.loaded()) {
+          window.requestAnimationFrame(finish);
+        }
+      });
+      await new Promise<void>((resolve) =>
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve())),
+      );
+      const mapImage = map.getCanvas().toDataURL("image/png");
+      if (!mapImage.startsWith("data:image/png")) {
+        throw new Error("The map image could not be read. Please try again.");
+      }
+      setMiniCardData({ ...card, mapImage });
+    } catch (error) {
+      restoreMapAfterCard();
+      setMiniCardError(
+        error instanceof Error
+          ? error.message
+          : "The map card could not be prepared. Please try again.",
+      );
+    } finally {
+      setIsPreparingMiniCard(false);
+    }
+  };
+
+  const createHyderabadCard = (project: PropertyProject) => {
+    const details = getProjectListingDetails(project);
+    const facts = [
+      { label: "Development", value: project.type },
+      { label: "Approval", value: `${project.approvalType} approved` },
+      { label: "Plot size", value: project.bedrooms },
+      { label: "Total plots", value: project.totalPlots.toLocaleString("en-IN") },
+      { label: "Project area", value: `${project.acres} acres` },
+      ...(details.availablePlots !== undefined
+        ? [{ label: "Available", value: `${details.availablePlots} plots` }]
+        : []),
+      ...(details.rera ? [{ label: "RERA", value: details.rera }] : []),
+    ];
+    void prepareMiniCard([project.longitude, project.latitude], {
+      market: "Hyderabad",
+      name: project.name,
+      location: details.locationDetail ?? `${project.locality}, Telangana, India`,
+      developer: project.developer,
+      price: project.price.trim()
+        ? formatProjectPrice(project.price, displayCurrency, exchangeRates)
+        : undefined,
+      facts,
+      mapAttribution: isSatelliteMap
+        ? "Imagery © Esri"
+        : "© CARTO · © OpenStreetMap",
+      accent: project.accent,
+    });
+  };
+
+  const createDubaiCard = (project: DubaiPropertyProject) => {
+    void prepareMiniCard([project.longitude, project.latitude], {
+      market: "Dubai",
+      name: project.name,
+      location: `${project.locality}, Dubai, UAE`,
+      developer: project.developer,
+      facts: project.note
+        ? [{ label: "Published note", value: project.note }]
+        : [{ label: "Development", value: "Named Dubai development" }],
+      mapAttribution: isSatelliteMap
+        ? "Imagery © Esri"
+        : "© CARTO · © OpenStreetMap",
+      accent: project.accent,
+    });
+  };
+
+  const closeMiniCard = () => {
+    setMiniCardData(null);
+    restoreMapAfterCard();
+  };
+
   const selectCity = (city: "hyderabad" | "dubai") => {
     if (city === activeCity) return;
     setActiveCity(city);
@@ -3154,8 +3372,10 @@ export function HyderabadPropertyMapOverlay({
     >
       <PropertyMap
         key={activeCity}
+        ref={propertyMapRef}
         center={activeCity === "dubai" ? DUBAI_MAP_CENTER : HYDERABAD_CENTER}
         zoom={activeCity === "dubai" ? 10 : 9}
+        canvasContextAttributes={{ preserveDrawingBuffer: true }}
         theme={isDarkMap ? "dark" : "light"}
         styles={
           isSatelliteMap
@@ -4555,13 +4775,22 @@ export function HyderabadPropertyMapOverlay({
           onClose={() => setSelectedPinProjectId(null)}
           currency={displayCurrency}
           rates={exchangeRates}
+          onCreateCard={() => createHyderabadCard(selectedPinProject)}
+          isPreparingCard={isPreparingMiniCard}
+          cardError={miniCardError}
         />
       )}
       {selectedDubaiProject && (
         <DubaiProjectDetailSheet
           project={selectedDubaiProject}
           onClose={() => setSelectedPinProjectId(null)}
+          onCreateCard={() => createDubaiCard(selectedDubaiProject)}
+          isPreparingCard={isPreparingMiniCard}
+          cardError={miniCardError}
         />
+      )}
+      {miniCardData && (
+        <MiniPropertyCard data={miniCardData} onClose={closeMiniCard} />
       )}
     </motion.div>
   );
